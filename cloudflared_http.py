@@ -1,6 +1,7 @@
+#!/usr/bin/env python
 
 """
-Check if a web site returns a CloudFlare CAPTCHA.
+Check if a web site returns a CloudFlare CAPTCHA using http.client
 
 Original source code:
 https://github.com/NullHypothesis/exitmap/blob/master/src/modules/cloudflared.py
@@ -74,7 +75,8 @@ def main():
     captcha_sign = args.c
 
     if port == 443:
-        result = is_cloudflared(domain, port, timeout, captcha_sign, secured = True)
+        result = is_cloudflared(domain, port, timeout, captcha_sign,
+                                secured = True)
     else:
         result = is_cloudflared(domain, port, timeout, captcha_sign)
 
