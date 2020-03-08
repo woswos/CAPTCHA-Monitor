@@ -2,7 +2,7 @@
 """
 Check if a web site returns a CloudFlare CAPTCHA.
 
-Original code source:
+Original source code:
 https://github.com/NullHypothesis/exitmap/blob/master/src/modules/cloudflared.py
 
 Ported to python 3 and modified to work with regular websites instead of
@@ -39,9 +39,6 @@ from argparse import ArgumentParser
 
 log = logging.getLogger(__name__)
 
-#logging.basicConfig(level = logging.INFO)
-#destinations = 'captcha.wtf:443'
-
 # Mimic Tor Browser's request headers, so CloudFlare won't return a 403 because
 # it thinks we are a bot.
 # domain.name will be replaced with the actual domain name
@@ -76,14 +73,12 @@ def main():
     port = args.p
     captcha_sign = args.c
 
-    unix_time = datetime.datetime.now().strftime("%s")
-
     if port == 443:
         result = is_cloudflared(domain, port, timeout, captcha_sign, secured = True)
     else:
         result = is_cloudflared(domain, port, timeout, captcha_sign)
 
-    print(unix_time + ":http:" + domain + ":" + port + ":" + str(result))
+    print("http:" + domain + ":" + port + ":" + str(result))
 
 
 def decompress(data):
