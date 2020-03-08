@@ -1,10 +1,12 @@
 
 """
+Check if a web site returns a CloudFlare CAPTCHA.
+
 Original code source:
 https://github.com/NullHypothesis/exitmap/blob/master/src/modules/cloudflared.py
 
 Ported to python 3 and modified to work with regular websites instead of
-TOR exit relays
+TOR exit relays. Also added a cli interface.
 """
 
 # Copyright 2016 Philipp Winter <phw@nymity.ch>
@@ -23,10 +25,6 @@ TOR exit relays
 #
 # You should have received a copy of the GNU General Public License
 # along with exitmap.  If not, see <http://www.gnu.org/licenses/>.
-
-"""
-Check if a web site returns a CloudFlare CAPTCHA.
-"""
 
 import sys
 import http.client
