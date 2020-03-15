@@ -3,7 +3,7 @@
 """
 Check if a web site returns a CloudFlare CAPTCHA using selenium and Tor browser
 
-Used library: https://github.com/webfp/tor-browser-selenium
+Library used: https://github.com/webfp/tor-browser-selenium
 """
 
 from argparse import ArgumentParser
@@ -13,6 +13,11 @@ import sys
 import time
 
 
+
+# Returns a dictionary of parameters including the result
+# Result is 0 if CloudFlare captcha is not detected
+# Result is if CloudFlare captcha is detected
+# Result is -1 if an error occurred
 def main():
     # ArgumentParser details
     desc = """Check if a web site returns a CloudFlare CAPTCHA using tor
@@ -38,15 +43,15 @@ def main():
     args['captcha_sign'] = argument_parser_args.c
     args['tbb_path'] = argument_parser_args.t
 
-    params = run_test(args)
+    params = is_cloudflared(args)
 
     # Print the results when run from the command line
     print("tor:" + params.get('url') + ":" + str(params.get('result')))
 
 
 
-# Handles given the argument list and runs the tests
-def run_test(params):
+# Handles given the argument list and runs the test
+def is_cloudflared(params):
     url = params.get('url')
     captcha_sign = params.get('captcha_sign')
     tbb_path = params.get('tbb_path')
@@ -55,22 +60,26 @@ def run_test(params):
     params['time_stamp'] = int(time.time())
 
     # Run the test and return the results with other parameters
-    params['result'] = launch_tb_with_stem(tbb_path, url, captcha_sign)
+    params['result'] = launch_tb(tbb_path, url, captcha_sign)
 
     return params
 
 
 
 # Launch the given url in the browser and check if there is any captcha
-def launch_tb_with_stem(tbb_dir, url, captcha_sign):
-    with TorBrowserDriver(tbb_dir) as driver:
-        driver.load_url(url)
+def launch_tb(tbb_dir, url, captcha_sign):
+    try:
+        with TorBrowserDriver(tbb_dir) as driver:
+            driver.load_url(url)
 
-        # Check if the captcha sign exists within the page
-        if(captcha_sign in driver.page_source):
-            return 1
-        else:
-            return 0
+            # Check if the captcha sign exists within the page
+            if(captcha_sign in driver.page_source):
+                return 1
+            else:
+                return 0
+    except Exception as err:
+        print('Cannot fetch %s: %s' % (url, err))
+        return -1
 
 
 
