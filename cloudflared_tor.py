@@ -13,7 +13,6 @@ import sys
 import time
 
 
-
 # Returns a dictionary of parameters including the result
 # Result is 0 if CloudFlare captcha is not detected
 # Result is if CloudFlare captcha is detected
@@ -49,7 +48,6 @@ def main():
     print("tor:" + params.get('url') + ":" + str(params.get('result')))
 
 
-
 # Handles given the argument list and runs the test
 def is_cloudflared(params):
     url = params.get('url')
@@ -58,12 +56,12 @@ def is_cloudflared(params):
 
     # Insert current UNIX time stamp
     params['time_stamp'] = int(time.time())
+    params['method'] = 'tor'
 
     # Run the test and return the results with other parameters
     params['result'] = launch_tb(tbb_path, url, captcha_sign)
 
     return params
-
 
 
 # Launch the given url in the browser and check if there is any captcha
@@ -80,7 +78,6 @@ def launch_tb(tbb_dir, url, captcha_sign):
     except Exception as err:
         print('Cannot fetch %s: %s' % (url, err))
         return -1
-
 
 
 if __name__ == '__main__':

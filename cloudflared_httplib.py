@@ -39,7 +39,6 @@ import collections
 import time
 
 
-
 # Mimic Tor Browser's request headers, so CloudFlare won't return a 403 because
 # it thinks we are a bot.
 # "domai.name" is replaced automatically with the passed domain name
@@ -52,7 +51,6 @@ default_headers = [("Host", "domain.name"),
                 ("Accept-Encoding", "gzip, deflate, br"),
                 ("Connection", "keep-alive"),
                 ("Upgrade-Insecure-Requests", "1")]
-
 
 
 # Returns a dictionary of parameters including the result
@@ -86,7 +84,6 @@ def main():
     print("httplib:" + params.get('url') + ":" + str(params.get('result')))
 
 
-
 # Handles given the argument list and runs the test
 def is_cloudflared(params):
     url = params.get('url')
@@ -116,12 +113,12 @@ def is_cloudflared(params):
 
     # Insert current UNIX time stamp
     params['time_stamp'] = int(time.time())
+    params['method'] = 'httplib'
 
     # Run the test and return the results with other parameters
     params['result'] = test_url(url, https, domain, path, captcha_sign, headers)
 
     return params
-
 
 
 # Check if site returns a CloudFlare CAPTCHA
@@ -152,7 +149,6 @@ def test_url(url, https, domain, path, captcha_sign, headers):
         return 0
 
 
-
 # Decompress gzipped HTTP response.
 def decompress(data):
     try:
@@ -163,7 +159,6 @@ def decompress(data):
         pass
 
     return data
-
 
 
 if __name__ == '__main__':
