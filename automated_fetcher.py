@@ -15,33 +15,58 @@ import cloudflared_httplib as cf_httplib
 
 
 def main():
-    # Create the output file if doesn't exists
-    fields = {'time_stamp', 'method', 'url', 'result', 'captcha_sign', 'tbb_path'}
     output_file = 'results.csv'
-    check_if_csv_exists(output_file, fields)
+
+    url_list = ['http://captcha.wtf',
+                'https://captcha.wtf',
+                'http://captcha.wtf/complex.html',
+                'https://captcha.wtf/complex.html',
+                'http://bypass.captcha.wtf',
+                'https://bypass.captcha.wtf',
+                'http://bypass.captcha.wtf/complex.html',
+                'https://bypass.captcha.wtf/complex.html',
+                'http://exit11.online',
+                'https://exit11.online',
+                'http://exit11.online/complex.html',
+                'https://exit11.online/complex.html',
+                'http://bypass.exit11.online',
+                'https://bypass.exit11.online',
+                'http://bypass.exit11.online/complex.html',
+                'https://bypass.exit11.online/complex.html']
 
     # The parameters required to run the tests
     params = {}
+    results = {}
     params['captcha_sign'] = 'Attention Required! | Cloudflare'
     params['tbb_path'] = '/home/woswos/tor-browser_en-US'
 
-    params['url'] = 'http://captcha.wtf/complex.html'
+    # Iterate over the url list
+    for i, url in enumerate(url_list):
+        print('Testing %s' % url)
+        params['url'] = url
 
-    result = cf_httplib.is_cloudflared(params)
-    append_to_csv(output_file, result)
+        # Test with httplib
+        results = cf_httplib.is_cloudflared(params)
+        append_to_csv(output_file, results)
+
+        # Test with Tor
+        results = cf_tor.is_cloudflared(params)
+        append_to_csv(output_file, results)
 
 
-def check_if_csv_exists(output_file, fields):
+# Appends the passed result to the CSV file
+def append_to_csv(output_file, data):
+    # Create the output file if it doesn't exists
+    # Insert the header
     if not os.path.isfile(output_file):
         with open(output_file, 'w+') as file:
-            w = csv.DictWriter(file, fields)
-            w.writeheader()
+            writer = csv.DictWriter(file, data.keys())
+            writer.writeheader()
 
-
-def append_to_csv(output_file, data):
-    with open(output_file, 'a') as f:
-        w = csv.DictWriter(f, data.keys())
-        w.writerow(data)
+    # Append to file
+    with open(output_file, 'a') as file:
+        writer = csv.DictWriter(file, data.keys())
+        writer.writerow(data)
 
 
 if __name__ == '__main__':
