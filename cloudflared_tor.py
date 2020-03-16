@@ -72,13 +72,15 @@ def launch_tb(tbb_dir, url, captcha_sign):
 
             # Check if the captcha sign exists within the page
             if(captcha_sign in driver.page_source):
-                return 1
+                result = 1
             else:
-                return 0
+                result = 0
+
     except Exception as err:
         print('Cannot fetch %s: %s' % (url, err))
-        return -1
+        result = -1
 
+    return result
 
 if __name__ == '__main__':
     main()
