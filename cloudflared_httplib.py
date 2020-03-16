@@ -139,7 +139,7 @@ def test_url(url, https, domain, path, captcha_sign, headers):
 
     data = decompress(response.read())
     if not data:
-        print('Did not get any data over %s.' % url)
+        print('Did not get any data over %s using https=%s' % (url, https))
         return -1
 
     # Check if the captcha sign exists within the page
