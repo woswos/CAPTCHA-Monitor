@@ -1,96 +1,74 @@
 #!/usr/bin/env python
 
-import subprocess
-import time
+"""
+Check if a web site returns a CloudFlare CAPTCHA using Tor Browser and httplib
+"""
 
-tbb_dir = "/home/woswos/tor-browser_en-US/"
+import time
+import sys
+import csv
+import itertools
+import os.path
+
+import cloudflared_tor as cf_tor
+import cloudflared_httplib as cf_httplib
+
 
 def main():
+    output_file = 'results.csv'
 
-    while True:
+    url_list = ['http://captcha.wtf',
+                'https://captcha.wtf',
+                'http://captcha.wtf/complex.html',
+                'https://captcha.wtf/complex.html',
+                'http://bypass.captcha.wtf',
+                'https://bypass.captcha.wtf',
+                'http://bypass.captcha.wtf/complex.html',
+                'https://bypass.captcha.wtf/complex.html',
+                'http://exit11.online',
+                'https://exit11.online',
+                'http://exit11.online/complex.html',
+                'https://exit11.online/complex.html',
+                'http://bypass.exit11.online',
+                'https://bypass.exit11.online',
+                'http://bypass.exit11.online/complex.html',
+                'https://bypass.exit11.online/complex.html']
 
-        domain = "captcha.wtf"
-        port = 80
+    # The parameters required to run the tests
+    params = {}
+    results = {}
+    params['captcha_sign'] = 'Attention Required! | Cloudflare'
+    params['tbb_path'] = '/home/woswos/tor-browser_en-US'
 
-        tor_result = tor(domain, port, tbb_dir)
-        http_result = http(domain, port)
+    # Iterate over the url list
+    for i, url in enumerate(url_list):
+        print('Testing %s' % url)
+        params['url'] = url
 
-        print(str(int(time.time()))+":"+ tor_result)
-        print(str(int(time.time()))+":"+ http_result)
+        # Test with httplib
+        results = cf_httplib.is_cloudflared(params)
+        append_to_csv(output_file, results)
 
-
-        domain = "bypass.captcha.wtf"
-        port = 80
-
-        tor_result = tor(domain, port, tbb_dir)
-        http_result = http(domain, port)
-
-        print(str(int(time.time()))+":"+ tor_result)
-        print(str(int(time.time()))+":"+ http_result)
-
-
-        domain = "exit11.online"
-        port = 80
-
-        tor_result = tor(domain, port, tbb_dir)
-        http_result = http(domain, port)
-
-        print(str(int(time.time()))+":"+ tor_result)
-        print(str(int(time.time()))+":"+ http_result)
-
-
-
-        domain = "captcha.wtf"
-        port = 443
-
-        tor_result = tor(domain, port, tbb_dir)
-        http_result = http(domain, port)
-
-        print(str(int(time.time()))+":"+ tor_result)
-        print(str(int(time.time()))+":"+ http_result)
+        # Test with Tor
+        results = cf_tor.is_cloudflared(params)
+        append_to_csv(output_file, results)
 
 
-        domain = "bypass.captcha.wtf"
-        port = 443
+# Appends the passed result to the CSV file
+def append_to_csv(output_file, data):
+    # Create the output file if it doesn't exists
+    # Insert the header
+    if not os.path.isfile(output_file):
+        with open(output_file, 'w+') as file:
+            writer = csv.DictWriter(file, data.keys())
+            writer.writeheader()
 
-        tor_result = tor(domain, port, tbb_dir)
-        http_result = http(domain, port)
-
-        print(str(int(time.time()))+":"+ tor_result)
-        print(str(int(time.time()))+":"+ http_result)
-
-
-        domain = "exit11.online"
-        port = 443
-
-        tor_result = tor(domain, port, tbb_dir)
-        http_result = http(domain, port)
-
-        print(str(int(time.time()))+":"+ tor_result)
-        print(str(int(time.time()))+":"+ http_result)
-
-        time.sleep(30)
-
-
-def tor(domain, port, tbb_dir):
-    proc = subprocess.Popen(['python', 'cloudflared_tor.py', '-d', domain, '-p',
-                            str(port), '-t', tbb_dir],
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT)
-    out = proc.stdout.read()
-
-    return out[0:-1].decode()
-
-
-def http(domain, port):
-    proc = subprocess.Popen(['python', 'cloudflared_http.py', '-d', domain, '-p',
-                            str(port)],
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT)
-    out = proc.stdout.read()
-
-    return out[0:-1].decode()
+    # Append to file
+    with open(output_file, 'a') as file:
+        writer = csv.DictWriter(file, data.keys())
+        writer.writerow(data)
 
 
 if __name__ == '__main__':
     main()
+    sys.exit(0)

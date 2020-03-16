@@ -32,3 +32,5 @@
 *.app
 
 __pycache__
+*.pyc
+results.csv
