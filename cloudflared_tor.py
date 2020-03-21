@@ -13,6 +13,7 @@ if sys.version_info[0] > 2.7:
 
 from argparse import ArgumentParser
 from tbselenium.tbdriver import TorBrowserDriver
+from pyvirtualdisplay import Display
 from selenium.webdriver.support.ui import Select
 import time
 
@@ -71,6 +72,10 @@ def is_cloudflared(params):
 # Launch the given url in the browser and check if there is any captcha
 def launch_tb(tbb_dir, url, captcha_sign):
     try:
+        # start a virtual display
+        xvfb_display = Display(visible=0, size=(1280, 800))
+        xvfb_display.start()
+
         with TorBrowserDriver(tbb_dir) as driver:
             driver.load_url(url)
 
@@ -80,11 +85,14 @@ def launch_tb(tbb_dir, url, captcha_sign):
             else:
                 result = 0
 
+        xvfb_display.stop()
+
     except Exception as err:
         print('Cannot fetch %s: %s' % (url, err))
         result = -1
 
     return result
+
 
 if __name__ == '__main__':
     main()
