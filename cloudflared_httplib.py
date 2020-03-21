@@ -81,7 +81,7 @@ def main():
     params = is_cloudflared(args)
 
     # Print the results when run from the command line
-    print("httplib:" + params.get('url') + ":" + str(params.get('result')))
+    print("httplib;" + params.get('url') + ";" + str(params.get('result')))
 
 
 # Handles given the argument list and runs the test
