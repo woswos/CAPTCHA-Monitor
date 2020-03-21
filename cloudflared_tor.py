@@ -6,10 +6,14 @@ Check if a web site returns a CloudFlare CAPTCHA using selenium and Tor browser
 Library used: https://github.com/webfp/tor-browser-selenium
 """
 
+import sys
+# Throw an error if user is trying to use Python 3 or newer
+if sys.version_info[0] > 2.7:
+    raise Exception("Please use Python 2.7")
+
 from argparse import ArgumentParser
 from tbselenium.tbdriver import TorBrowserDriver
 from selenium.webdriver.support.ui import Select
-import sys
 import time
 
 

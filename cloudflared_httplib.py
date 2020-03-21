@@ -29,9 +29,13 @@ See the original license below:
 # You should have received a copy of the GNU General Public License
 # along with exitmap.  If not, see <http://www.gnu.org/licenses/>.
 
+import sys
+# Throw an error if user is trying to use Python 3 or newer
+if sys.version_info[0] > 2.7:
+    raise Exception("Please use Python 2.7")
+
 from argparse import ArgumentParser
 from urlparse import urlparse
-import sys
 import StringIO
 import gzip
 import httplib
