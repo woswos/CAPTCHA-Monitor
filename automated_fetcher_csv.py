@@ -39,6 +39,7 @@ def main():
     results = {}
     params['captcha_sign'] = 'Attention Required! | Cloudflare'
     params['tbb_path'] = '/home/woswos/tor-browser_en-US'
+    params['headless_mode'] = False # make this True if running on a non-GUI OS
 
     # Iterate over the url list
     for i, url in enumerate(url_list):
