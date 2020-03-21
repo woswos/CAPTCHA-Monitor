@@ -1,5 +1,5 @@
 # Cloudflare-CAPTCHA-Monitoring
-Check if a web site returns a CloudFlare CAPTCHA using both the Tor Browser and Python's httplib. By default, this tool searches for *"Attention Required! | Cloudflare"* text within the fetched page, but it is possible to customize the captcha sign.
+Check if a web site returns a Cloudflare CAPTCHA using both the Tor Browser and Python's httplib. By default, this tool searches for *"Attention Required! | Cloudflare"* text within the fetched page, but it is possible to customize the CAPTCHA sign.
 
 ## Installation Steps
 1. Clone this repository
@@ -19,14 +19,20 @@ Use the following arguments
 - ```-t``` to specify to path to Tor browser bundle 
 - ```--help``` to get further details.
 
-Example usage for checking if a website returns Cloudflare captcha when fetched via Tor browser:
+Example usage for checking if a website returns Cloudflare CAPTCHA when fetched via Tor browser:
 ```
 python cloudflared_tor.py -u http://google.com -t '/path/to/Tor/Browser/Bundle'
 ```
 
-Example usage for checking if a website returns Cloudflare captcha when fetched via Python's httplib:
+Example usage for checking if a website returns Cloudflare CAPTCHA when fetched via Python's httplib:
 ```
 python cloudflared_httplib.py -u http://google.com
 ```
+
+The script will return a result like below in the following format [method]:[tested URL]:[result]
+```
+httplib:http://google.com:0
+```
+If the result field is ```0``` then the tested URL didn't return a CAPTCHA. If the result field is ```1``` then the tested URL did return a CAPTCHA.
 
 Alternatively, you can run ```automated_fetcher.py``` program to fetch a list of website URLs via both the Tor browser & httplib and record the results in a CSV file. Please look at the code for further details.
