@@ -1,4 +1,6 @@
-# Cloudflare-CAPTCHA-Monitoring
+<!-- Unfortunately GitHub markdown doesn't suppor resizing and centering svg images-->
+<p align="center"><img src="logo.svg" alt="CAPTCHA Monitor Logo" width="50%"></p>
+
 Check if a web site returns a Cloudflare CAPTCHA using both the Tor Browser and Python's httplib. By default, this tool searches for *"Attention Required! | Cloudflare"* text within the fetched page, but it is possible to customize the CAPTCHA sign.
 
 ## Installation Steps

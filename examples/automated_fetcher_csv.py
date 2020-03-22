@@ -9,10 +9,16 @@ import sys
 import csv
 import itertools
 import os.path
+import logging
 
 sys.path.append("..")
 import cloudflared_tor as cf_tor
 import cloudflared_httplib as cf_httplib
+
+logger_format = '%(asctime)s :: %(module)s :: %(levelname)s :: %(message)s'
+logging.basicConfig(format=logger_format)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 def main():
@@ -52,14 +58,13 @@ def main():
         # Test with Tor
         test_with(cf_tor, params, output_file)
 
-    print('> Completed testing...')
+    logger.info('Completed testing')
 
 
 # Perform a test with the given paramters and append result to the CSV file
 def test_with(method, params, output_file):
     results = method.is_cloudflared(params)
-    print('> Test result for %s with %s is %s' %
-            (results.get('url'), results.get('method'), results.get('result')))
+    logger.info('Test result for %s with %s is %s' % (results.get('url'), results.get('method'), results.get('result')))
     append_to_csv(output_file, results)
 
 
