@@ -12,10 +12,17 @@ import itertools
 import os.path
 import json
 from influxdb import InfluxDBClient
+import logging
 
 sys.path.append("..")
 import cloudflared_tor as cf_tor
 import cloudflared_httplib as cf_httplib
+
+logger_format = '%(asctime)s :: %(module)s :: %(levelname)s :: %(message)s'
+logging.basicConfig(format=logger_format)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
 
 host = 'localhost'
 port = 8086
@@ -59,20 +66,20 @@ def main():
         # Test with Tor
         test_with(cf_tor, params)
 
-    print('> Completed testing...')
+    logger.info('Completed testing')
 
 
 # Perform a test with the given paramters and send results to DB
 def test_with(method, params):
     results = method.is_cloudflared(params)
-    print('> Test result for %s with %s is %s' %
+    logger.info('Test result for %s with %s is %s' %
             (results.get('url'), results.get('method'), results.get('result')))
     submit_to_influxdb(results)
 
 
 # Submits given results to InfluxDB database
 def submit_to_influxdb(data):
-    # Connect to the database
+    # Set database connection
     client = InfluxDBClient(host, port, user_name, password, db)
 
     # Prepare the json payload in the InfluxDB format
@@ -91,7 +98,14 @@ def submit_to_influxdb(data):
         }
     ]
 
-    client.write_points(influxdb_json)
+    logger.debug(influxdb_json)
+
+    # Try to connect to the database
+    try:
+        client.write_points(influxdb_json)
+
+    except Exception as err:
+        logger.critical('Double check the connection credentials because InfluxDBClient() says: %s' % err)
 
 
 if __name__ == '__main__':

@@ -41,6 +41,12 @@ import StringIO
 import gzip
 import httplib
 import collections
+import logging
+
+logger_format = '%(asctime)s :: %(module)s :: %(levelname)s :: %(message)s'
+logging.basicConfig(format=logger_format)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)
 
 
 # Mimic Tor Browser's request headers, so CloudFlare won't return a 403 because
@@ -82,10 +88,13 @@ def main():
     args['url'] = argument_parser_args.u
     args['captcha_sign'] = argument_parser_args.c
 
+    # Run the test
     params = is_cloudflared(args)
 
     # Print the results when run from the command line
-    print("httplib;" + params.get('url') + ";" + str(params.get('result')))
+    result = "httplib;" + params.get('url') + ";" + str(params.get('result'))
+    logger.info(result)
+    print(result)
 
 
 # Handles given the argument list and runs the test
@@ -127,23 +136,31 @@ def is_cloudflared(params):
 
 # Check if site returns a CloudFlare CAPTCHA
 def test_url(url, https, domain, path, captcha_sign, headers):
-
     # Decide on which protocol to use
     if https:
         conn = httplib.HTTPSConnection(domain)
     else:
         conn = httplib.HTTPConnection(domain)
 
-    conn.request('GET', path, headers=collections.OrderedDict(headers))
+    # Try sending a request to the server
+    try:
+        conn.request('GET', path, headers=collections.OrderedDict(headers))
+
+    except Exception as err:
+        logger.error('Double check the url you have entered because request() says: %s' % err)
+        return -1
+
+    # Get server's response
     try:
         response = conn.getresponse()
     except Exception as err:
-        print('> urlopen() over %s says: %s' % (url, err))
+        logger.error('urlopen() over %s says: %s' % (url, err))
         return -1
 
+    # Decompress the compressed response
     data = decompress(response.read())
     if not data:
-        print('> Did not get any data over %s using https=%s' % (url, https))
+        logger.error('Did not get any data over %s' % url)
         return -1
 
     # Check if the captcha sign exists within the page

@@ -15,11 +15,18 @@ import time
 from argparse import ArgumentParser
 from tbselenium.tbdriver import TorBrowserDriver
 from selenium.webdriver.support.ui import Select
+import logging
+
+logger_format = '%(asctime)s :: %(module)s :: %(levelname)s :: %(message)s'
+logging.basicConfig(format=logger_format)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)
 
 # Only needed if running in headless mode
 try:
     from pyvirtualdisplay import Display
 except ImportError:
+    logger.debug('PyVirtualDisplay is not installed')
     pass
 
 
@@ -56,10 +63,13 @@ def main():
     args['tbb_path'] = argument_parser_args.t
     args['headless_mode'] = argument_parser_args.m
 
+    # Run the test
     params = is_cloudflared(args)
 
     # Print the results when run from the command line
-    print("tor;" + params.get('url') + ";" + str(params.get('result')))
+    result = "tor;" + params.get('url') + ";" + str(params.get('result'))
+    logger.info(result)
+    print(result)
 
 
 # Handles given the argument list and runs the test
@@ -82,15 +92,29 @@ def is_cloudflared(params):
 # Launch the given url in the browser and check if there is any captcha
 def launch_tb(tbb_dir, url, captcha_sign, headless_mode):
     try:
-        if headless_mode:
-            # start a virtual display
-            xvfb_display = Display(visible=0, size=(1280, 800))
-            xvfb_display.start()
 
+        if headless_mode:
+            logger.debug('Running in headless mode')
+
+            # Try starting a virtual display
+            try:
+                # start a virtual display
+                xvfb_display = Display(visible=0, size=(1280, 800))
+                xvfb_display.start()
+
+            except Exception as err:
+                logger.debug(err)
+                logger.error('Check if you installed Xvfb and PyVirtualDisplay')
+                return -1
+
+        # Open Tor Browser
         with TorBrowserDriver(tbb_dir) as driver:
             driver.load_url(url)
 
             # Check if the captcha sign exists within the page
+            # I could have returned the function here but we need to close the
+            #       virtual display if run in headless mode. Otherwise, the
+            #       virtul displays let open fills the memory very quickly
             if(captcha_sign in driver.page_source):
                 result = 1
             else:
@@ -100,14 +124,10 @@ def launch_tb(tbb_dir, url, captcha_sign, headless_mode):
             xvfb_display.stop()
 
     except Exception as err:
-        print('> Cannot fetch %s: %s' % (url, err))
-        message_1 = ('> Please make sure that you are not running in headless'
-                    'mode on non-server OS')
-        print(message_1)
-        message_2 = ('> Also check if you installed Xvfb and PyVirtualDisplay'
-                    'if you are running in headless mode')
-        print(message_2)
-
+        logger.error('Cannot fetch %s: %s' % (url, err))
+        message = ('Sometimes running in headless mode on desktop OS '
+                    'causes issues. Please check that.')
+        logger.warning(message)
         result = -1
 
     return result
