@@ -1,7 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 """
-Check if a web site returns a CloudFlare CAPTCHA using Tor Browser and httplib
+Check if a web site returns a CloudFlare CAPTCHA using Tor Browser & httplib
+and submit results to an InfluxDB database
 """
 
 import time
@@ -9,14 +10,21 @@ import sys
 import csv
 import itertools
 import os.path
+import json
+from influxdb import InfluxDBClient
 
+sys.path.append("..")
 import cloudflared_tor as cf_tor
 import cloudflared_httplib as cf_httplib
 
+host = 'localhost'
+port = 8086
+user_name = ''
+password = ''
+db = 'captcha'
+
 
 def main():
-    output_file = 'results.csv'
-
     url_list = ['http://captcha.wtf',
                 'https://captcha.wtf',
                 'http://captcha.wtf/complex.html',
@@ -43,31 +51,47 @@ def main():
 
     # Iterate over the url list
     for i, url in enumerate(url_list):
-        print('Testing %s' % url)
         params['url'] = url
 
         # Test with httplib
-        results = cf_httplib.is_cloudflared(params)
-        append_to_csv(output_file, results)
+        test_with(cf_httplib, params)
 
         # Test with Tor
-        results = cf_tor.is_cloudflared(params)
-        append_to_csv(output_file, results)
+        test_with(cf_tor, params)
+
+    print('> Completed testing...')
 
 
-# Appends the passed result to the CSV file
-def append_to_csv(output_file, data):
-    # Create the output file if it doesn't exists
-    # Insert the header
-    if not os.path.isfile(output_file):
-        with open(output_file, 'w+') as file:
-            writer = csv.DictWriter(file, data.keys())
-            writer.writeheader()
+# Perform a test with the given paramters and send results to DB
+def test_with(method, params):
+    results = method.is_cloudflared(params)
+    print('> Test result for %s with %s is %s' %
+            (results.get('url'), results.get('method'), results.get('result')))
+    submit_to_influxdb(results)
 
-    # Append to file
-    with open(output_file, 'a') as file:
-        writer = csv.DictWriter(file, data.keys())
-        writer.writerow(data)
+
+# Submits given results to InfluxDB database
+def submit_to_influxdb(data):
+    # Connect to the database
+    client = InfluxDBClient(host, port, user_name, password, db)
+
+    # Prepare the json payload in the InfluxDB format
+    influxdb_json = [
+        {
+            'measurement': data['method'],
+            'tags': {
+                'url': data['url'],
+                'captcha_sign': data['captcha_sign'],
+                'headless_mode': data['headless_mode']
+            },
+            #'time': data['time_stamp'],
+            'fields': {
+                'result': data['result']
+            }
+        }
+    ]
+
+    client.write_points(influxdb_json)
 
 
 if __name__ == '__main__':
