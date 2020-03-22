@@ -17,11 +17,11 @@ Additional steps for running in headless mode:
 ```cloudflared_tor.py``` and ```cloudflared_httplib.py``` can be run directly from the command line. A website URL and the Tor browser bundle location needs to be specified. 
 
 Use the following arguments
-- ```-u``` to specify the website URL, 
-- ```-c``` to specify a captcha sign other than *"Attention Required! | Cloudflare"*, 
-- ```-t``` to specify to path to Tor browser bundle 
-- ```-m True``` to run the tests in the headless mode without a display
-- ```--help``` to get further details.
+- ```-u``` to specify the website URL
+- ```-c``` to specify a captcha sign other than *"Attention Required! | Cloudflare"*,
+- ```-t``` to specify to the path to Tor browser bundle (available for ```cloudflared_tor.py``` only)
+- ```-m True``` to run the tests in the headless mode without a display (available for ```cloudflared_tor.py``` only)
+- ```--help``` to get further details
 
 Example usage for checking if a website returns Cloudflare CAPTCHA when fetched via Tor browser:
 ```
@@ -37,9 +37,9 @@ The script will return a result like below in the following format [method];[tes
 ```
 httplib;http://google.com;0
 ```
-If the result field is ```0``` then the tested URL didn't return a CAPTCHA. If the result field is ```1``` then the tested URL did return a CAPTCHA. Finally, if the result field is ```-1``` then en error occured during the testing and you should check the error logs.
+If the result field is ```0```, then the tested URL didn't return a CAPTCHA. If the result field is ```1``` then the tested URL did return a CAPTCHA. Finally, if the result field is ```-1``` then en error occurred during the testing, and you should check the error logs.
 
 ## Examples
 Alternatively, you can use the example code to automate the experimenting process:
-* [automated_fetcher_csv]() program can be used to fetch a list of website URLs via both the Tor browser & httplib and record the results in a CSV file. 
-* [automated_fetcher_influxdb]() program can be used to fetch a list of website URLs via both the Tor browser & httplib and send the results to a [InfluxDB](https://www.influxdata.com/) database. You should also install [Python client for InfluxDB](https://github.com/influxdata/influxdb-python) via ```$ pip install influxdb```
+* ```automated_fetcher_csv``` program can be used to fetch a list of website URLs via both the Tor browser & httplib and record the results in a CSV file. 
+* ```automated_fetcher_influxdb``` program can be used to fetch a list of website URLs via both the Tor browser & httplib and send the results to a [InfluxDB](https://www.influxdata.com/) database. You should also install [Python client for InfluxDB](https://github.com/influxdata/influxdb-python) via ```$ pip install influxdb```
