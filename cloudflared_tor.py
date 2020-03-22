@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 """
 Check if a web site returns a CloudFlare CAPTCHA using selenium and Tor browser
@@ -11,11 +11,16 @@ import sys
 if sys.version_info[0] > 2.7:
     raise Exception("Please use Python 2.7")
 
+import time
 from argparse import ArgumentParser
 from tbselenium.tbdriver import TorBrowserDriver
-from pyvirtualdisplay import Display
 from selenium.webdriver.support.ui import Select
-import time
+
+# Only needed if running in headless mode
+try:
+    from pyvirtualdisplay import Display
+except ImportError:
+    pass
 
 
 # Returns a dictionary of parameters including the result
@@ -95,8 +100,14 @@ def launch_tb(tbb_dir, url, captcha_sign, headless_mode):
             xvfb_display.stop()
 
     except Exception as err:
-        print('Cannot fetch %s: %s' % (url, err))
-        print('Please make sure that you are not running in headless mode on non-server OS')
+        print('> Cannot fetch %s: %s' % (url, err))
+        message_1 = ('> Please make sure that you are not running in headless'
+                    'mode on non-server OS')
+        print(message_1)
+        message_2 = ('> Also check if you installed Xvfb and PyVirtualDisplay'
+                    'if you are running in headless mode')
+        print(message_2)
+
         result = -1
 
     return result
