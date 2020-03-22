@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 """
 Check if a web site returns a CloudFlare CAPTCHA using http.client
@@ -29,14 +29,18 @@ See the original license below:
 # You should have received a copy of the GNU General Public License
 # along with exitmap.  If not, see <http://www.gnu.org/licenses/>.
 
+import sys
+# Throw an error if user is trying to use Python 3 or newer
+if sys.version_info[0] > 2.7:
+    raise Exception("Please use Python 2.7")
+
 from argparse import ArgumentParser
 from urlparse import urlparse
-import sys
+import time
 import StringIO
 import gzip
 import httplib
 import collections
-import time
 
 
 # Mimic Tor Browser's request headers, so CloudFlare won't return a 403 because
@@ -81,7 +85,7 @@ def main():
     params = is_cloudflared(args)
 
     # Print the results when run from the command line
-    print("httplib:" + params.get('url') + ":" + str(params.get('result')))
+    print("httplib;" + params.get('url') + ";" + str(params.get('result')))
 
 
 # Handles given the argument list and runs the test
@@ -134,12 +138,12 @@ def test_url(url, https, domain, path, captcha_sign, headers):
     try:
         response = conn.getresponse()
     except Exception as err:
-        print('urlopen() over %s says: %s' % (url, err))
+        print('> urlopen() over %s says: %s' % (url, err))
         return -1
 
     data = decompress(response.read())
     if not data:
-        print('Did not get any data over %s using https=%s' % (url, https))
+        print('> Did not get any data over %s using https=%s' % (url, https))
         return -1
 
     # Check if the captcha sign exists within the page

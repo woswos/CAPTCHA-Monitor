@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 """
 Check if a web site returns a CloudFlare CAPTCHA using selenium and Tor browser
@@ -6,11 +6,21 @@ Check if a web site returns a CloudFlare CAPTCHA using selenium and Tor browser
 Library used: https://github.com/webfp/tor-browser-selenium
 """
 
+import sys
+# Throw an error if user is trying to use Python 3 or newer
+if sys.version_info[0] > 2.7:
+    raise Exception("Please use Python 2.7")
+
+import time
 from argparse import ArgumentParser
 from tbselenium.tbdriver import TorBrowserDriver
 from selenium.webdriver.support.ui import Select
-import sys
-import time
+
+# Only needed if running in headless mode
+try:
+    from pyvirtualdisplay import Display
+except ImportError:
+    pass
 
 
 # Returns a dictionary of parameters including the result
@@ -29,6 +39,9 @@ def main():
     parser.add_argument('-t', metavar='tor_browser_path',
         help='path to Tor browser bundle',
         required=True)
+    parser.add_argument('-m', metavar='headless mode',
+        help='make this True to run Tor Browser without GUI',
+        default=False)
     parser.add_argument('-c', metavar='captcha',
         help='the captcha sign expected to see in the page (default: "Attention Required! | Cloudflare")',
         default='Attention Required! | Cloudflare')
@@ -41,11 +54,12 @@ def main():
     args['url'] = argument_parser_args.u
     args['captcha_sign'] = argument_parser_args.c
     args['tbb_path'] = argument_parser_args.t
+    args['headless_mode'] = argument_parser_args.m
 
     params = is_cloudflared(args)
 
     # Print the results when run from the command line
-    print("tor:" + params.get('url') + ":" + str(params.get('result')))
+    print("tor;" + params.get('url') + ";" + str(params.get('result')))
 
 
 # Handles given the argument list and runs the test
@@ -53,20 +67,26 @@ def is_cloudflared(params):
     url = params.get('url')
     captcha_sign = params.get('captcha_sign')
     tbb_path = params.get('tbb_path')
+    headless_mode = params.get('headless_mode')
 
     # Insert current UNIX time stamp
     params['time_stamp'] = int(time.time())
     params['method'] = 'tor'
 
     # Run the test and return the results with other parameters
-    params['result'] = launch_tb(tbb_path, url, captcha_sign)
+    params['result'] = launch_tb(tbb_path, url, captcha_sign, headless_mode)
 
     return params
 
 
 # Launch the given url in the browser and check if there is any captcha
-def launch_tb(tbb_dir, url, captcha_sign):
+def launch_tb(tbb_dir, url, captcha_sign, headless_mode):
     try:
+        if headless_mode:
+            # start a virtual display
+            xvfb_display = Display(visible=0, size=(1280, 800))
+            xvfb_display.start()
+
         with TorBrowserDriver(tbb_dir) as driver:
             driver.load_url(url)
 
@@ -76,11 +96,22 @@ def launch_tb(tbb_dir, url, captcha_sign):
             else:
                 result = 0
 
+        if headless_mode:
+            xvfb_display.stop()
+
     except Exception as err:
-        print('Cannot fetch %s: %s' % (url, err))
+        print('> Cannot fetch %s: %s' % (url, err))
+        message_1 = ('> Please make sure that you are not running in headless'
+                    'mode on non-server OS')
+        print(message_1)
+        message_2 = ('> Also check if you installed Xvfb and PyVirtualDisplay'
+                    'if you are running in headless mode')
+        print(message_2)
+
         result = -1
 
     return result
+
 
 if __name__ == '__main__':
     main()
