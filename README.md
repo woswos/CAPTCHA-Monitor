@@ -45,3 +45,6 @@ If the result field is ```0```, then the tested URL didn't return a CAPTCHA. If 
 Alternatively, you can use the example code to automate the experimenting process:
 * ```automated_fetcher_csv``` program can be used to fetch a list of website URLs via both the Tor browser & httplib and record the results in a CSV file. 
 * ```automated_fetcher_influxdb``` program can be used to fetch a list of website URLs via both the Tor browser & httplib and send the results to a [InfluxDB](https://www.influxdata.com/) database. You should also install [Python client for InfluxDB](https://github.com/influxdata/influxdb-python) via ```$ pip install influxdb```
+
+## Contributing
+Please feel free to report and fix the issues you encounter while using this tool. I am planning to change the way this tool operates fundamentally. Please check the contributing file to see how you contribute to these changes.
