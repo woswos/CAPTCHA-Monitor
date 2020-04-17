@@ -47,4 +47,4 @@ Alternatively, you can use the example code to automate the experimenting proces
 * ```automated_fetcher_influxdb``` program can be used to fetch a list of website URLs via both the Tor browser & httplib and send the results to a [InfluxDB](https://www.influxdata.com/) database. You should also install [Python client for InfluxDB](https://github.com/influxdata/influxdb-python) via ```$ pip install influxdb```
 
 ## Contributing
-Please feel free to report and fix the issues you encounter while using this tool. I am planning to change the way this tool operates fundamentally. Please check the [contributing file](CONTRIBUTING.md) to see how you contribute to these changes.
+Please feel free to report and fix the issues you encounter while using this tool. I'm planning to change the way this tool operates fundamentally. Please check the [contributing file](CONTRIBUTING.md) to see how you can contribute to these changes.
