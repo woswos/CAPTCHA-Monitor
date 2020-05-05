@@ -18,7 +18,7 @@ Additional steps for running in headless mode:
 ## Usage
 ```cloudflared_tor.py``` and ```cloudflared_httplib.py``` can be run directly from the command line. A website URL and the Tor browser bundle location needs to be specified. 
 
-Use the following arguments
+Use the following arguments:
 - ```-u``` to specify the website URL
 - ```-c``` to specify a captcha sign other than *"Attention Required! | Cloudflare"*,
 - ```-t``` to specify to the path to Tor browser bundle (available for ```cloudflared_tor.py``` only)
