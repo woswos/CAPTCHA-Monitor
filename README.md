@@ -27,24 +27,24 @@ Use the following arguments:
 
 Example usage for checking if a website returns Cloudflare CAPTCHA when fetched via Tor browser:
 ```
-python cloudflared_tor.py -u http://google.com -t '/path/to/Tor/Browser/Bundle'
+python cloudflared_tor.py -u https://example.com -t '/path/to/Tor/Browser/Bundle'
 ```
 
 Example usage for checking if a website returns Cloudflare CAPTCHA when fetched via Python's httplib:
 ```
-python cloudflared_httplib.py -u http://google.com
+python cloudflared_httplib.py -u https://example.com
 ```
 
 The script will return a result like below in the following format [method];[tested URL];[result]
 ```
-httplib;http://google.com;0
+httplib;https://example.com;0
 ```
 If the result field is ```0```, then the tested URL didn't return a CAPTCHA. If the result field is ```1``` then the tested URL did return a CAPTCHA. Finally, if the result field is ```-1``` then en error occurred during the testing, and you should check the error logs.
 
 ## Examples
 Alternatively, you can use the example code to automate the experimenting process:
 * ```automated_fetcher_csv``` program can be used to fetch a list of website URLs via both the Tor browser & httplib and record the results in a CSV file.
-* ```automated_fetcher_influxdb``` program can be used to fetch a list of website URLs via both the Tor browser & httplib and send the results to a [InfluxDB](https://www.influxdata.com/) database. You should also install [Python client for InfluxDB](https://github.com/influxdata/influxdb-python) via ```$ pip install influxdb```
+* ```automated_fetcher_influxdb``` program can be used to fetch a list of website URLs via both the Tor browser & httplib and send the results to a [InfluxDB](https://www.influxdata.com) database. You should also install [Python client for InfluxDB](https://github.com/influxdata/influxdb-python) via ```$ pip install influxdb```
 
 ## Contributing
 Please feel free to report and fix the issues you encounter while using this tool. I'm planning to change the way this tool operates fundamentally. Please check the [contributing file](CONTRIBUTING.md) to see how you can contribute to these changes.
