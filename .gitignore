@@ -34,3 +34,7 @@
 __pycache__
 *.pyc
 results.csv
+results.db
+
+# Docs
+_build

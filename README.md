@@ -1,14 +1,14 @@
 <!-- Unfortunately GitHub markdown doesn't suppor resizing and centering svg images-->
 <p align="center"><img src="logo.svg" alt="CAPTCHA Monitor Logo" width="50%"></p>
 
-Check if a web site returns a Cloudflare CAPTCHA using both the Tor Browser and Python's httplib. By default, this tool searches for *"Attention Required! | Cloudflare"* text within the fetched page, but it is possible to customize the CAPTCHA sign.
+Check if a web site returns a Cloudflare CAPTCHA using both the Tor Browser and Python's httplib. By default, this tool searches for *"Cloudflare"* text within the fetched page, but it is possible to customize the CAPTCHA sign, which this tool searches for.
 
 ## Installation Steps
 * Clone this repository to your machine
-* Download the latest version of Tor browser from [torproject.org](https://www.torproject.org/download/) website and extract the archive file
+* Download the latest version of Tor Browser from [torproject.org](https://www.torproject.org/download/) website and extract the archive file
 * Install the ```geckodriver``` from the [geckodriver releases page](https://github.com/mozilla/geckodriver/releases/), v0.23.0 version or newer. [Here](https://askubuntu.com/questions/870530/how-to-install-geckodriver-in-ubuntu) is a simple installation tutorial if you need one.
 * Install Tor via ```$ apt install tor```
-* Install [Tor Browser with Selenium](https://github.com/webfp/tor-browser-selenium) via ```pip install tbselenium```
+* Install [Tor Browser with Selenium](https://github.com/webfp/tor-browser-selenium) via ```$ pip install tbselenium```
 * Install [Tor stem](https://stem.torproject.org/) via ```$ apt install python-stem```
 
 Additional steps for running in headless mode:
@@ -16,35 +16,36 @@ Additional steps for running in headless mode:
 * Install [PyVirtualDisplay](https://pypi.org/project/PyVirtualDisplay/)  display server via ```$ pip install PyVirtualDisplay```
 
 ## Usage
-```cloudflared_tor.py``` and ```cloudflared_httplib.py``` can be run directly from the command line. A website URL and the Tor browser bundle location needs to be specified. 
+```cloudflared_tor.py``` and ```cloudflared_httplib.py``` can be run directly from the command line. A website URL and the Tor Browser bundle location needs to be specified.
 
-Use the following arguments
+Use the following arguments:
 - ```-u``` to specify the website URL
-- ```-c``` to specify a captcha sign other than *"Attention Required! | Cloudflare"*,
-- ```-t``` to specify to the path to Tor browser bundle (available for ```cloudflared_tor.py``` only)
+- ```-c``` to specify a captcha sign other than *"Cloudflare"*,
+- ```-t``` to specify to the path to Tor Browser bundle (available for ```cloudflared_tor.py``` only)
 - ```-m True``` to run the tests in the headless mode without a display (available for ```cloudflared_tor.py``` only)
 - ```--help``` to get further details
 
-Example usage for checking if a website returns Cloudflare CAPTCHA when fetched via Tor browser:
+Example usage for checking if a website returns Cloudflare CAPTCHA when fetched via Tor Browser:
 ```
-python cloudflared_tor.py -u http://google.com -t '/path/to/Tor/Browser/Bundle'
+python cloudflared_tor.py -u https://example.com -t '/path/to/Tor/Browser/Bundle'
 ```
 
 Example usage for checking if a website returns Cloudflare CAPTCHA when fetched via Python's httplib:
 ```
-python cloudflared_httplib.py -u http://google.com
+python cloudflared_httplib.py -u https://example.com
 ```
 
 The script will return a result like below in the following format [method];[tested URL];[result]
 ```
-httplib;http://google.com;0
+httplib;https://example.com;0
 ```
 If the result field is ```0```, then the tested URL didn't return a CAPTCHA. If the result field is ```1``` then the tested URL did return a CAPTCHA. Finally, if the result field is ```-1``` then en error occurred during the testing, and you should check the error logs.
 
 ## Examples
 Alternatively, you can use the example code to automate the experimenting process:
-* ```automated_fetcher_csv``` program can be used to fetch a list of website URLs via both the Tor browser & httplib and record the results in a CSV file. 
-* ```automated_fetcher_influxdb``` program can be used to fetch a list of website URLs via both the Tor browser & httplib and send the results to a [InfluxDB](https://www.influxdata.com/) database. You should also install [Python client for InfluxDB](https://github.com/influxdata/influxdb-python) via ```$ pip install influxdb```
+* ```automated_fetcher_csv``` program can be used to fetch a list of website URLs via both the Tor Browser & httplib and record the results in a CSV file.
+* ```automated_fetcher_sqlite``` program can be used to fetch a list of website URLs via both the Tor Browser & httplib and record the results in a SQLite database.
+* ```automated_fetcher_influxdb``` program can be used to fetch a list of website URLs via both the Tor Browser & httplib and send the results to a [InfluxDB](https://www.influxdata.com) database. You should also install [Python client for InfluxDB](https://github.com/influxdata/influxdb-python) via ```$ pip install influxdb```
 
 ## Contributing
-Please feel free to report and fix the issues you encounter while using this tool. I am planning to change the way this tool operates fundamentally. Please check the [contributing file](CONTRIBUTING.md) to see how you contribute to these changes.
+Please feel free to report and fix the issues you encounter while using this tool. I'm planning to change the way this tool operates fundamentally. Please check the [contributing file](CONTRIBUTING.md) to see how you can contribute to these changes.
