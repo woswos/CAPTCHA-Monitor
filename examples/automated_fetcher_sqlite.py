@@ -117,7 +117,8 @@ def check_if_db_exists(output_db):
                             	url TEXT,
                             	captcha_sign TEXT,
                             	headless_mode TEXT,
-                            	result TEXT
+                            	result TEXT,
+                                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
                                 )'''
 
     conn.cursor().execute(sql_query_create_table)
