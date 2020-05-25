@@ -1,7 +1,7 @@
 <!-- Unfortunately GitHub markdown doesn't suppor resizing and centering svg images-->
 <p align="center"><img src="logo.svg" alt="CAPTCHA Monitor Logo" width="50%"></p>
 
-Check if a web site returns a Cloudflare CAPTCHA using both the Tor Browser and Python's httplib. By default, this tool searches for *"Attention Required! | Cloudflare"* text within the fetched page, but it is possible to customize the CAPTCHA sign.
+Check if a web site returns a Cloudflare CAPTCHA using both the Tor Browser and Python's httplib. By default, this tool searches for *"Cloudflare"* text within the fetched page, but it is possible to customize the CAPTCHA sign, which this tool searches for.
 
 ## Installation Steps
 * Clone this repository to your machine
@@ -20,7 +20,7 @@ Additional steps for running in headless mode:
 
 Use the following arguments:
 - ```-u``` to specify the website URL
-- ```-c``` to specify a captcha sign other than *"Attention Required! | Cloudflare"*,
+- ```-c``` to specify a captcha sign other than *"Cloudflare"*,
 - ```-t``` to specify to the path to Tor browser bundle (available for ```cloudflared_tor.py``` only)
 - ```-m True``` to run the tests in the headless mode without a display (available for ```cloudflared_tor.py``` only)
 - ```--help``` to get further details

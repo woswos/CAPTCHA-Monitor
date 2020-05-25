@@ -14,7 +14,7 @@ import json
 from influxdb import InfluxDBClient
 import logging
 
-sys.path.append("..")
+sys.path.append("../CAPTCHA-Monitor")
 import cloudflared_tor as cf_tor
 import cloudflared_httplib as cf_httplib
 
@@ -52,7 +52,7 @@ def main():
     # The parameters required to run the tests
     params = {}
     results = {}
-    params['captcha_sign'] = 'Attention Required! | Cloudflare'
+    params['captcha_sign'] = 'Cloudflare'
     params['tbb_path'] = '/home/woswos/tor-browser_en-US'
     params['headless_mode'] = False # make this True if running on a non-GUI OS
 
