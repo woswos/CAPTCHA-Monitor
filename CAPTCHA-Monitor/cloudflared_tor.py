@@ -43,16 +43,16 @@ def main():
     """
     parser = ArgumentParser(description=desc)
     parser.add_argument('-u', metavar='url', help='destination url',
-        required=True)
+                        required=True)
     parser.add_argument('-t', metavar='tor_browser_path',
-        help='path to Tor browser bundle',
-        required=True)
+                        help='path to Tor browser bundle',
+                        required=True)
     parser.add_argument('-m', metavar='headless mode',
-        help='make this True to run Tor Browser without GUI',
-        default=False)
+                        help='make this True to run Tor Browser without GUI',
+                        default=False)
     parser.add_argument('-c', metavar='captcha',
-        help='the captcha sign expected to see in the page (default: "Cloudflare")',
-        default='Cloudflare')
+                        help='the captcha sign expected to see in the page (default: "Cloudflare")',
+                        default='Cloudflare')
 
     # Parse the arguments
     argument_parser_args = parser.parse_args()
@@ -123,7 +123,7 @@ def launch_tb(tbb_dir, url, captcha_sign, headless_mode):
     except Exception as err:
         logger.error('Cannot fetch %s: %s' % (url, err))
         message = ('Sometimes running in headless mode on desktop OS '
-                    'causes issues. Please check that.')
+                   'causes issues. Please check that.')
         logger.warning(message)
         result = -1
 

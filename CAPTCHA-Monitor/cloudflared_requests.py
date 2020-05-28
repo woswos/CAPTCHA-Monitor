@@ -35,13 +35,13 @@ def main():
     """
     parser = ArgumentParser(description=desc)
     parser.add_argument('-u', metavar='url', help='destination url',
-        required=True)
+                        required=True)
     parser.add_argument('-c', metavar='captcha',
-        help='the captcha sign expected to see in the page (default: "Cloudflare")',
-        default='Cloudflare')
+                        help='the captcha sign expected to see in the page (default: "Cloudflare")',
+                        default='Cloudflare')
     parser.add_argument('-r', metavar='headers',
-        help='use this argument to place any custom headers you want to include',
-        default=None)
+                        help='use this argument to place any custom headers you want to include',
+                        default=None)
 
     # Parse the arguments
     argument_parser_args = parser.parse_args()
