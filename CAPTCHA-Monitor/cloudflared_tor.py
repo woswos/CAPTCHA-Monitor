@@ -7,7 +7,7 @@ Library used: https://github.com/webfp/tor-browser-selenium
 """
 
 import sys
-# Throw an error if user is trying to use Python 3 or newer
+# Throw an error if user is trying to use Python 2.7 or older
 if not (sys.version_info[0] > 2.7):
     raise Exception("Please use Python 3+")
 
@@ -38,8 +38,8 @@ except ImportError:
 def main():
     # ArgumentParser details
     desc = """Check if a web site returns a CloudFlare CAPTCHA using tor
-    browser. By default, this tool is looking for the
-    'Attention Required! | Cloudflare' text within the fetched web site.
+    browser. By default, this tool is looking for the 'Cloudflare' text within
+    the fetched web site.
     """
     parser = ArgumentParser(description=desc)
     parser.add_argument('-u', metavar='url', help='destination url',
@@ -51,8 +51,8 @@ def main():
         help='make this True to run Tor Browser without GUI',
         default=False)
     parser.add_argument('-c', metavar='captcha',
-        help='the captcha sign expected to see in the page (default: "Attention Required! | Cloudflare")',
-        default='Attention Required! | Cloudflare')
+        help='the captcha sign expected to see in the page (default: "Cloudflare")',
+        default='Cloudflare')
 
     # Parse the arguments
     argument_parser_args = parser.parse_args()
@@ -73,7 +73,7 @@ def main():
     print(result)
 
 
-# Handles given the argument list and runs the test
+# Handles the given argument list and runs the test
 def is_cloudflared(params):
     url = params.get('url')
     captcha_sign = params.get('captcha_sign')
@@ -115,10 +115,7 @@ def launch_tb(tbb_dir, url, captcha_sign, headless_mode):
             # I could have returned the function here but we need to close the
             #       virtual display if run in headless mode. Otherwise, the
             #       virtul displays let open fills the memory very quickly
-            if(captcha_sign in driver.page_source):
-                result = 1
-            else:
-                result = 0
+            result = int(captcha_sign in driver.page_source)
 
         if headless_mode:
             stop_xvfb(xvfb_display)

@@ -70,15 +70,15 @@ default_headers = [("Host", "domain.name"),
 def main():
     # ArgumentParser details
     desc = """Check if a web site returns a CloudFlare CAPTCHA using httplib.
-     By default, this tool is looking for the
-    'Attention Required! | Cloudflare' text within the fetched web site.
+     By default, this tool is looking for the 'Cloudflare' text within the
+     fetched web site.
     """
     parser = ArgumentParser(description=desc)
     parser.add_argument('-u', metavar='url', help='destination url',
         required=True)
     parser.add_argument('-c', metavar='captcha',
-        help='the captcha sign expected to see in the page (default: "Attention Required! | Cloudflare")',
-        default='Attention Required! | Cloudflare')
+        help='the captcha sign expected to see in the page (default: "Cloudflare")',
+        default='Cloudflare')
 
     # Parse the arguments
     argument_parser_args = parser.parse_args()
@@ -97,7 +97,7 @@ def main():
     print(result)
 
 
-# Handles given the argument list and runs the test
+# Handles the given argument list and runs the test
 def is_cloudflared(params):
     url = params.get('url')
 
