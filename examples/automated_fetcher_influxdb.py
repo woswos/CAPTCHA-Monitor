@@ -5,6 +5,8 @@ Check if a web site returns a CloudFlare CAPTCHA using Tor Browser & httplib
 and submit results to an InfluxDB database
 """
 
+import cloudflared_httplib as cf_httplib
+import cloudflared_tor as cf_tor
 import time
 import sys
 import csv
@@ -15,8 +17,6 @@ from influxdb import InfluxDBClient
 import logging
 
 sys.path.append("../CAPTCHA-Monitor")
-import cloudflared_tor as cf_tor
-import cloudflared_httplib as cf_httplib
 
 logger_format = '%(asctime)s :: %(module)s :: %(levelname)s :: %(message)s'
 logging.basicConfig(format=logger_format)
@@ -54,7 +54,7 @@ def main():
     results = {}
     params['captcha_sign'] = 'Cloudflare'
     params['tbb_path'] = '/home/woswos/tor-browser_en-US'
-    params['headless_mode'] = False # make this True if running on a non-GUI OS
+    params['headless_mode'] = False  # make this True if running on a non-GUI OS
 
     # Iterate over the url list
     for i, url in enumerate(url_list):
@@ -73,7 +73,7 @@ def main():
 def test_with(method, params):
     results = method.is_cloudflared(params)
     logger.info('Test result for %s with %s is %s' %
-            (results.get('url'), results.get('method'), results.get('result')))
+                (results.get('url'), results.get('method'), results.get('result')))
     submit_to_influxdb(results)
 
 
@@ -91,7 +91,7 @@ def submit_to_influxdb(data):
                 'captcha_sign': data['captcha_sign'],
                 'headless_mode': data['headless_mode']
             },
-            #'time': data['time_stamp'],
+            # 'time': data['time_stamp'],
             'fields': {
                 'result': data['result']
             }
@@ -105,7 +105,8 @@ def submit_to_influxdb(data):
         client.write_points(influxdb_json)
 
     except Exception as err:
-        logger.critical('Double check the connection credentials because InfluxDBClient() says: %s' % err)
+        logger.critical(
+            'Double check the connection credentials because InfluxDBClient() says: %s' % err)
 
 
 if __name__ == '__main__':

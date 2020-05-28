@@ -5,6 +5,8 @@ Check if a web site returns a CloudFlare CAPTCHA using Tor Browser & httplib
 and save results into an SQLite database
 """
 
+import cloudflared_httplib as cf_httplib
+import cloudflared_tor as cf_tor
 import time
 import sys
 import sqlite3
@@ -13,8 +15,6 @@ import os.path
 import logging
 
 sys.path.append("../CAPTCHA-Monitor")
-import cloudflared_tor as cf_tor
-import cloudflared_httplib as cf_httplib
 
 logger_format = '%(asctime)s :: %(module)s :: %(levelname)s :: %(message)s'
 logging.basicConfig(format=logger_format)
@@ -52,7 +52,7 @@ def main():
     results = {}
     params['captcha_sign'] = 'Cloudflare'
     params['tbb_path'] = '/home/woswos/tor-browser_en-US'
-    params['headless_mode'] = False # make this True if running on a non-GUI OS
+    params['headless_mode'] = False  # make this True if running on a non-GUI OS
 
     # Iterate over the url list
     for i, url in enumerate(url_list):
@@ -70,7 +70,8 @@ def main():
 # Perform a test with the given paramters and append result to the CSV file
 def test_with(method, params, output_db):
     results = method.is_cloudflared(params)
-    logger.info('Test result for %s with %s is %s' % (results.get('url'), results.get('method'), results.get('result')))
+    logger.info('Test result for %s with %s is %s' %
+                (results.get('url'), results.get('method'), results.get('result')))
     submit_to_sqlite_db(output_db, results)
 
 
@@ -81,7 +82,8 @@ def submit_to_sqlite_db(output_db, data):
 
     # Prepare the SQL query
     sql_query = "INSERT INTO captcha (measurement, url, captcha_sign, headless_mode, result) VALUES (?, ?, ?, ?, ?)"
-    sql_params = (data['method'], data['url'], data['captcha_sign'], data['headless_mode'], data['result'])
+    sql_params = (data['method'], data['url'], data['captcha_sign'],
+                  data['headless_mode'], data['result'])
 
     logger.debug(sql_query)
     logger.debug(sql_params)
@@ -92,7 +94,8 @@ def submit_to_sqlite_db(output_db, data):
         conn.commit()
 
     except Exception as err:
-        logger.critical('Double check the SQL query because sqlite3.connect.cursor.execute() says: %s' % err)
+        logger.critical(
+            'Double check the SQL query because sqlite3.connect.cursor.execute() says: %s' % err)
 
     conn.close()
 

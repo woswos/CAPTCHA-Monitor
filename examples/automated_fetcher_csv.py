@@ -4,6 +4,8 @@
 Check if a web site returns a CloudFlare CAPTCHA using Tor Browser and httplib
 """
 
+import cloudflared_httplib as cf_httplib
+import cloudflared_tor as cf_tor
 import time
 import sys
 import csv
@@ -12,8 +14,6 @@ import os.path
 import logging
 
 sys.path.append("../CAPTCHA-Monitor")
-import cloudflared_tor as cf_tor
-import cloudflared_httplib as cf_httplib
 
 logger_format = '%(asctime)s :: %(module)s :: %(levelname)s :: %(message)s'
 logging.basicConfig(format=logger_format)
@@ -46,7 +46,7 @@ def main():
     results = {}
     params['captcha_sign'] = 'Cloudflare'
     params['tbb_path'] = '/home/woswos/tor-browser_en-US'
-    params['headless_mode'] = False # make this True if running on a non-GUI OS
+    params['headless_mode'] = False  # make this True if running on a non-GUI OS
 
     # Iterate over the url list
     for i, url in enumerate(url_list):
@@ -64,7 +64,8 @@ def main():
 # Perform a test with the given paramters and append result to the CSV file
 def test_with(method, params, output_file):
     results = method.is_cloudflared(params)
-    logger.info('Test result for %s with %s is %s' % (results.get('url'), results.get('method'), results.get('result')))
+    logger.info('Test result for %s with %s is %s' %
+                (results.get('url'), results.get('method'), results.get('result')))
     append_to_csv(output_file, results)
 
 
