@@ -8,12 +8,13 @@ Library used: https://github.com/webfp/tor-browser-selenium
 
 import sys
 # Throw an error if user is trying to use Python 3 or newer
-if sys.version_info[0] > 2.7:
-    raise Exception("Please use Python 2.7")
+if not (sys.version_info[0] > 2.7):
+    raise Exception("Please use Python 3+")
 
 import time
 from argparse import ArgumentParser
 from tbselenium.tbdriver import TorBrowserDriver
+from tbselenium.utils import start_xvfb, stop_xvfb
 from selenium.webdriver.support.ui import Select
 import logging
 
@@ -99,8 +100,7 @@ def launch_tb(tbb_dir, url, captcha_sign, headless_mode):
             # Try starting a virtual display
             try:
                 # start a virtual display
-                xvfb_display = Display(visible=0, size=(1280, 800))
-                xvfb_display.start()
+                xvfb_display = start_xvfb()
 
             except Exception as err:
                 logger.debug(err)
@@ -121,7 +121,7 @@ def launch_tb(tbb_dir, url, captcha_sign, headless_mode):
                 result = 0
 
         if headless_mode:
-            xvfb_display.stop()
+            stop_xvfb(xvfb_display)
 
     except Exception as err:
         logger.error('Cannot fetch %s: %s' % (url, err))
