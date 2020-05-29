@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Fetch a given URL using selenium and Tor browser
+Fetch a given URL using selenium, Firefox, and Tor
 """
 
 import os
@@ -17,16 +17,13 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-def run(url, additional_headers, tbb_path, tor_socks_address, tor_socks_port):
+def run(url, additional_headers, tor_socks_address, tor_socks_port):
     results = {}
-
-    os.popen(os.path.join(tbb_path, 'Browser/firefox'))
-    profile = FirefoxProfile(os.path.join(tbb_path, 'Browser/TorBrowser/Data/Browser/profile.default'))
 
     options = {
         'proxy': {
-            'http': 'socks5h://127.0.0.1:9050',
-            'https': 'socks5h://127.0.0.1:9050'
+            'http': 'socks5h://' + tor_socks_address + ':' + tor_socks_port,
+            'https': 'socks5h://' + tor_socks_address + ':' + tor_socks_port
         }
     }
 

@@ -1,7 +1,8 @@
 import configparser
 import time
 import logging
-from captchamonitor.fetchers import tor
+from captchamonitor.fetchers import firefox_with_tor
+from captchamonitor.fetchers import tor_browser
 from captchamonitor.fetchers import requests
 from captchamonitor.fetchers import firefox
 from captchamonitor.utils.sqlite import SQLite
@@ -48,8 +49,18 @@ class CaptchaMonitor:
 
         logger.info('Fetching "%s" via "%s"', url, method)
 
-        if(method == 'tor'):
-            results = tor.run(url, additional_headers, tbb_path, tor_socks_address, tor_socks_port)
+        if(method == 'firefox_with_tor'):
+            results = firefox_with_tor.run(url=url,
+                                           additional_headers=additional_headers,
+                                           tor_socks_address=tor_socks_address,
+                                           tor_socks_port=tor_socks_port)
+
+        elif(method == 'tor_browser'):
+            results = tor_browser.run(url=url,
+                                      additional_headers=additional_headers,
+                                      tbb_path=tbb_path,
+                                      tor_socks_address=tor_socks_address,
+                                      tor_socks_port=tor_socks_port)
 
         elif(method == 'requests'):
             results = requests.run(url, additional_headers)
