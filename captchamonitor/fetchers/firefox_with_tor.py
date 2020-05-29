@@ -9,8 +9,6 @@ import logging
 import json
 from urltools import compare
 from seleniumwire import webdriver
-from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
-from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 from pyvirtualdisplay import Display
 
 logger = logging.getLogger(__name__)
