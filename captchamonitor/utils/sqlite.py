@@ -24,17 +24,19 @@ class SQLite:
                     url,
                     captcha_sign,
                     html_data,
-                    result,
+                    all_headers,
                     request_headers,
-                    response_headers
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?)'''
+                    response_headers,
+                    is_captcha_found
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'''
         sql_params = (self.params['method'],
                       self.params['url'],
                       self.params['captcha_sign'],
                       self.params['html_data'],
-                      self.params['result'],
+                      self.params['all_headers'],
                       self.params['request_headers'],
-                      self.params['response_headers']
+                      self.params['response_headers'],
+                      self.params['is_captcha_found'],
                       )
 
         logger.debug(sql_query)
@@ -77,9 +79,10 @@ class SQLite:
                                 	url TEXT,
                                 	captcha_sign TEXT,
                                     html_data TEXT,
-                                	result TEXT,
+                                    all_headers TEXT,
                                     request_headers TEXT,
-                                    response_headers TEXT
+                                    response_headers TEXT,
+                                	is_captcha_found TEXT,
                                     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
                                     )'''
 

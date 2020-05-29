@@ -4,73 +4,61 @@
 Fetch a given URL using selenium and Tor browser
 """
 
+import os
 import logging
-from tbselenium.tbdriver import TorBrowserDriver
-from tbselenium.utils import start_xvfb, stop_xvfb
-from selenium.webdriver.support.ui import Select
+import json
+from urltools import compare
+from seleniumwire import webdriver
+from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
+from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
+from pyvirtualdisplay import Display
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-# Only needed if running in headless mode
-try:
-    from pyvirtualdisplay import Display
-except ImportError:
-    logger.debug('PyVirtualDisplay is not installed')
-    pass
 
+def run(url, additional_headers, tbb_path, tor_socks_address, tor_socks_port):
+    results = {}
 
-def fetch(params):
-    """
-    Does the required conversions
-    """
-    url = params.get('url')
-    tbb_path = params.get('tbb_path')
-    request_headers = params.get('request_headers')
+    os.popen(os.path.join(tbb_path, 'Browser/firefox'))
+    profile = FirefoxProfile(os.path.join(tbb_path, 'Browser/TorBrowser/Data/Browser/profile.default'))
 
-    # Run the test and return the results with other parameters
-    params['html_data'] = fetch_url(tbb_path, url)
+    options = {
+        'proxy': {
+            'http': 'socks5h://127.0.0.1:9050',
+            'https': 'socks5h://127.0.0.1:9050'
+        }
+    }
 
-    params['request_headers'] = "N/A"
-    params['status_code'] = "N/A"
-    params['response_headers'] = "N/A"
+    xvfb_display = Display(visible=0, size=(1600, 900))
+    xvfb_display.start()
 
-    return params
+    driver = webdriver.Firefox(seleniumwire_options=options)
 
+    if additional_headers:
+        driver.header_overrides = json.loads(additional_headers)
 
-def fetch_url(tbb_dir, url):
-    """
-    Launch the given url in the browser and get the result
-    """
+    # Try sending a request to the server and get server's response
     try:
-
-        # Try starting a virtual display
-        try:
-            # start a virtual display
-            xvfb_display = start_xvfb()
-
-        except Exception as err:
-            logger.debug(err)
-            logger.error('Check if you installed Xvfb and PyVirtualDisplay')
-            return -1
-
-        # Open Tor Browser
-        with TorBrowserDriver(tbb_dir) as driver:
-            driver.load_url(url)
-
-            # Check if the captcha sign exists within the page
-            # I could have returned the function here but we need to close the
-            #       virtual display if run in headless mode. Otherwise, the
-            #       virtul displays let open fills the memory very quickly
-            result = driver.page_source
-
-        stop_xvfb(xvfb_display)
+        driver.get(url)
 
     except Exception as err:
-        logger.error('Cannot fetch %s: %s' % (url, err))
-        message = ('Sometimes running in headless mode on desktop OS '
-                   'causes issues. Please check that.')
-        logger.warning(message)
-        result = -1
+        logger.error('webdriver.Firefox.get() says: %s' % err)
+        return -1
 
-    return result
+    # Record the results
+    results['html_data'] = driver.page_source
+    results['all_headers'] = str(driver.requests)
+
+    for request in driver.requests:
+        if(compare(request.path, url)):
+                results['request_headers'] = json.dumps(dict(request.headers))
+                results['response_headers'] = json.dumps(dict(request.response.headers))
+
+    logger.debug('I\'m done fetching %s', url)
+
+    driver.quit()
+
+    xvfb_display.stop()
+
+    return results
