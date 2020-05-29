@@ -2,6 +2,7 @@ import configparser
 import time
 import logging
 from captchamonitor.fetchers import tor
+from captchamonitor.fetchers import tor_reg_sel
 from captchamonitor.fetchers import requests
 from captchamonitor.fetchers import firefox
 from captchamonitor.utils.sqlite import SQLite
@@ -39,17 +40,21 @@ class CaptchaMonitor:
         self.params['url'] = url
         self.params['request_headers'] = request_headers
         self.params['time_stamp'] = int(time.time())
+        method = self.params['method']
 
-        logger.info('Fetching "%s" via "%s"', self.params['url'], self.params['method'])
+        logger.info('Fetching "%s" via "%s"', url, method)
 
-        if(self.params['method'] == 'tor'):
+        if(method == 'tor'):
             self.params = tor.fetch(self.params)
 
-        elif(self.params['method'] == 'requests'):
+        elif(method == 'requests'):
             self.params = requests.fetch(self.params)
 
-        elif(self.params['method'] == 'firefox'):
+        elif(method == 'firefox'):
             self.params = firefox.fetch(self.params)
+
+        elif(method == 'tor_reg_sel'):
+            self.params = tor_reg_sel.fetch(self.params)
 
     def detect_captcha(self):
         captcha_sign = self.params.get('captcha_sign')
@@ -58,7 +63,10 @@ class CaptchaMonitor:
         logger.info('Searching for "%s" in "%s"', self.params['captcha_sign'], self.params['url'])
 
         if(self.params.get('html_data') != -1):
-            self.params['result'] = int(html_data.find(captcha_sign) > 0)
+            result = int(html_data.find(captcha_sign) > 0)
+            self.params['result'] = result
+            if(result == 1):
+                logger.info('I found "%s" in "%s"', self.params['captcha_sign'], self.params['url'])
 
     def store(self):
         db_mode = self.params['db_mode']

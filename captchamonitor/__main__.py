@@ -10,12 +10,13 @@ if __name__ == '__main__':
 
     logger.info('Found a new request in the queue, cooking...')
 
+    #http://check.torproject.org
     url = 'https://bypass.captcha.wtf/'
     headers = '{"user-agent": "Mozilla/5.0 (Windows NT 10.0; rv:68.0) Gecko/20100101 Firefox/68.0"}'
 
-    cm = CaptchaMonitor('tor')
+    cm = CaptchaMonitor('tor_reg_sel')
     cm.create_params()
-    cm.fetch(url, headers)
+    cm.fetch(url)
     cm.detect_captcha()
     cm.store()
 

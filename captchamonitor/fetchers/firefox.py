@@ -33,6 +33,8 @@ def fetch(params):
                 params['status_code'] = request.response.status_code
                 params['response_headers'] = json.dumps(dict(request.response.headers))
 
+    logger.debug('I\'m done fetching %s', url)
+    
     return params
 
 
