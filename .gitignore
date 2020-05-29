@@ -36,6 +36,7 @@ __pycache__
 results.csv
 results.db
 cm.db
+geckodriver.log
 
 # Docs
 _build
