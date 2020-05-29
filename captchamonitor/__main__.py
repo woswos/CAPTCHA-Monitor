@@ -7,14 +7,16 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 if __name__ == '__main__':
-    print('Starting to cook...')
 
-    url = "https://example.com/"
+    logger.info('Found a new request in the queue, cooking...')
+
+    url = 'https://bypass.captcha.wtf/'
+    headers = '{"user-agent": "Mozilla/5.0 (Windows NT 10.0; rv:68.0) Gecko/20100101 Firefox/68.0"}'
 
     cm = CaptchaMonitor('tor')
     cm.create_params()
-    cm.fetch(url)
+    cm.fetch(url, headers)
     cm.detect_captcha()
     cm.store()
 
-    print('Ready to serve')
+    logger.info('Done, Bon Appetit!')

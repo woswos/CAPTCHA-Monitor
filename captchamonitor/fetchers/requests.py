@@ -6,34 +6,43 @@ Fetch a given URL using the requests library
 
 import logging
 import requests
+import json
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-# Handles given the argument list and runs the test
+
 def fetch(params):
+    """
+    Does the required conversions
+    """
     url = params.get('url')
     captcha_sign = params.get('captcha_sign')
-    headers = params.get('headers')
-
-    # Insert current UNIX time stamp
-    params['time_stamp'] = int(time.time())
-    params['method'] = 'requests'
+    request_headers = params.get('request_headers')
+    if(request_headers != None):
+        request_headers = json.loads(request_headers)
 
     # Run the test and return the results with other parameters
-    params['html_data'] = fetch_url(url, captcha_sign, headers)
+    data = fetch_url(url, request_headers)
+
+    params['request_headers'] = json.dumps(dict(data.request.headers))
+    params['html_data'] = data.text
+    params['status_code'] = data.status_code
+    params['response_headers'] = json.dumps(dict(data.headers))
 
     return params
 
 
-# Check if site returns a CloudFlare CAPTCHA
-def fetch_url(url, captcha_sign, headers):
+def fetch_url(url, request_headers):
+    """
+    Fetch the website
+    """
     # Try sending a request to the server and get server's response
     try:
-        data = requests.get(url, headers=headers)
+        data = requests.get(url, headers=request_headers)
 
     except Exception as err:
-        logger.error('Double check the url you have entered because request.get() says: %s' % err)
+        logger.error('request.get() says: %s' % err)
         return -1
 
-    return data.text
+    return data

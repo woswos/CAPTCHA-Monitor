@@ -20,32 +20,39 @@ except ImportError:
     pass
 
 
-# Handles the given argument list and runs the test
 def fetch(params):
+    """
+    Does the required conversions
+    """
     url = params.get('url')
     tbb_path = params.get('tbb_path')
-    headless_mode = params.get('headless_mode')
+    request_headers = params.get('request_headers')
 
     # Run the test and return the results with other parameters
-    return fetch_url(tbb_path, url, headless_mode)
+    params['html_data'] = fetch_url(tbb_path, url)
+
+    params['request_headers'] = "N/A"
+    params['status_code'] = "N/A"
+    params['response_headers'] = "N/A"
+
+    return params
 
 
-# Launch the given url in the browser and get the result
-def fetch_url(tbb_dir, url, headless_mode):
+def fetch_url(tbb_dir, url):
+    """
+    Launch the given url in the browser and get the result
+    """
     try:
 
-        if headless_mode:
-            logger.debug('Running in headless mode')
+        # Try starting a virtual display
+        try:
+            # start a virtual display
+            xvfb_display = start_xvfb()
 
-            # Try starting a virtual display
-            try:
-                # start a virtual display
-                xvfb_display = start_xvfb()
-
-            except Exception as err:
-                logger.debug(err)
-                logger.error('Check if you installed Xvfb and PyVirtualDisplay')
-                return -1
+        except Exception as err:
+            logger.debug(err)
+            logger.error('Check if you installed Xvfb and PyVirtualDisplay')
+            return -1
 
         # Open Tor Browser
         with TorBrowserDriver(tbb_dir) as driver:
@@ -57,8 +64,7 @@ def fetch_url(tbb_dir, url, headless_mode):
             #       virtul displays let open fills the memory very quickly
             result = driver.page_source
 
-        if headless_mode:
-            stop_xvfb(xvfb_display)
+        stop_xvfb(xvfb_display)
 
     except Exception as err:
         logger.error('Cannot fetch %s: %s' % (url, err))
