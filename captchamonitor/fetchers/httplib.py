@@ -34,20 +34,14 @@ import sys
 if sys.version_info[0] > 2.7:
     raise Exception("Please use Python 2.7")
 
-from argparse import ArgumentParser
 from urlparse import urlparse
-import time
 import StringIO
 import gzip
 import httplib
 import collections
 import logging
-
-logger_format = '%(asctime)s :: %(module)s :: %(levelname)s :: %(message)s'
-logging.basicConfig(format=logger_format)
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARNING)
-
+logger.setLevel(logging.DEBUG)
 
 # Mimic Tor Browser's request headers, so CloudFlare won't return a 403 because
 # it thinks we are a bot.
@@ -63,42 +57,8 @@ default_headers = [("Host", "domain.name"),
                    ("Upgrade-Insecure-Requests", "1")]
 
 
-# Returns a dictionary of parameters including the result
-# Result is 0 if CloudFlare captcha is not detected
-# Result is if CloudFlare captcha is detected
-# Result is -1 if an error occurred
-def main():
-    # ArgumentParser details
-    desc = """Check if a web site returns a CloudFlare CAPTCHA using httplib.
-     By default, this tool is looking for the 'Cloudflare' text within the
-     fetched web site.
-    """
-    parser = ArgumentParser(description=desc)
-    parser.add_argument('-u', metavar='url', help='destination url',
-                        required=True)
-    parser.add_argument('-c', metavar='captcha',
-                        help='the captcha sign expected to see in the page (default: "Cloudflare")',
-                        default='Cloudflare')
-
-    # Parse the arguments
-    argument_parser_args = parser.parse_args()
-
-    # Transfer the arguments to a dictionary to be passed to run_test() function
-    args = {}
-    args['url'] = argument_parser_args.u
-    args['captcha_sign'] = argument_parser_args.c
-
-    # Run the test
-    params = is_cloudflared(args)
-
-    # Print the results when run from the command line
-    result = "httplib;" + params.get('url') + ";" + str(params.get('result'))
-    logger.info(result)
-    print(result)
-
-
 # Handles the given argument list and runs the test
-def is_cloudflared(params):
+def fetch(params):
     url = params.get('url')
 
     # Parse the given url to get different sections
@@ -124,18 +84,14 @@ def is_cloudflared(params):
     else:
         headers = default_headers
 
-    # Insert current UNIX time stamp
-    params['time_stamp'] = int(time.time())
-    params['method'] = 'httplib'
-
     # Run the test and return the results with other parameters
-    params['result'] = test_url(url, https, domain, path, captcha_sign, headers)
+    params['html_data'] = fetch_url(url, https, domain, path, headers)
 
     return params
 
 
 # Check if site returns a CloudFlare CAPTCHA
-def test_url(url, https, domain, path, captcha_sign, headers):
+def fetch_url(url, https, domain, path, headers):
     # Decide on which protocol to use
     if https:
         conn = httplib.HTTPSConnection(domain)
@@ -164,10 +120,7 @@ def test_url(url, https, domain, path, captcha_sign, headers):
         return -1
 
     # Check if the captcha sign exists within the page
-    if(captcha_sign in data):
-        return 1
-    else:
-        return 0
+    return data
 
 
 # Decompress gzipped HTTP response.
@@ -180,8 +133,3 @@ def decompress(data):
         pass
 
     return data
-
-
-if __name__ == '__main__':
-    main()
-    sys.exit(0)
