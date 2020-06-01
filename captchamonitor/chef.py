@@ -6,22 +6,39 @@ from captchamonitor.fetchers import tor_browser
 from captchamonitor.fetchers import requests
 from captchamonitor.fetchers import firefox
 from captchamonitor.utils.sqlite import SQLite
+from captchamonitor.utils.queue import Queue
 from selenium.webdriver.common.utils import is_connectable
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
 class CaptchaMonitor:
-    def __init__(self, method, config_file):
+    def run(config_file):
+
+        if(Queue.check() > 0):
+            logger.info('Found a new request in the queue, cooking...')
+
+            url = Queue.get_url()
+            headers = Queue.get_headers()
+            job_id = Queue.get_job_id()
+
+            cm = CaptchaMonitor('firefox', config_file, job_id)
+            cm.create_params()
+            cm.fetch(url, headers)
+            cm.detect_captcha()
+            cm.store()
+
+            logger.info('Done, Bon Appetit!')
+
+    def __init__(self, method, config_file, job_id=None):
         self.params = {}
         self.params['method'] = method
         self.params['config_file'] = config_file
+        self.params['job_id'] = job_id
 
         # Set the default values
         self.params['html_data'] = -1
-
-    def cook(self, url, request_headers=None):
-        pass
 
     def create_params(self):
         config_file = self.params['config_file']
@@ -92,7 +109,8 @@ class CaptchaMonitor:
 
     def store(self):
         db_mode = self.params['db_mode']
-        html_data = self.params.get('html_data')
+        job_id = self.params['job_id']
+        html_data = self.params['html_data']
 
         if(html_data == -1):
             logger.info('There was an error during the process, cannot save to db')
@@ -103,6 +121,9 @@ class CaptchaMonitor:
         if(db_mode == 'SQLite'):
             db = SQLite(self.params)
             db.submit()
+
+        if job_id is not None:
+            Queue.mark_as_completed(job_id)
 
     def is_tor_running(self):
         tor_socks_port = self.params['tor_socks_port']

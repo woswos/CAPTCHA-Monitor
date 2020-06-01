@@ -8,16 +8,7 @@ logger.setLevel(logging.DEBUG)
 
 if __name__ == '__main__':
 
-    logger.info('Found a new request in the queue, cooking...')
+    config_file = '/home/woswos/CAPTCHA-Monitor/captchamonitor/resources/config.ini'
 
-    #http://check.torproject.org
-    url = 'https://check.torproject.org'
-    headers = '{"user-agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:57.0) Gecko/20100101 Firefox/57.0"}'
-
-    cm = CaptchaMonitor('firefox')
-    cm.create_params()
-    cm.fetch(url)
-    cm.detect_captcha()
-    cm.store()
-
-    logger.info('Done, Bon Appetit!')
+    while True:
+        CaptchaMonitor.run(config_file)
