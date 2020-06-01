@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-def run(url, additional_headers, tbb_path, tor_socks_address, tor_socks_port):
+def run(url, additional_headers, tbb_path, tor_socks_host, tor_socks_port):
     results = {}
 
     # Disable Tor Launcher to prevent it connecting the Tor Browser to Tor directly
@@ -43,8 +43,8 @@ def run(url, additional_headers, tbb_path, tor_socks_address, tor_socks_port):
     #   to a load page that requires a lot of requests. It is in seconds.
     seleniumwire_options = {
         'proxy': {
-            'http': 'socks5h://127.0.0.1:9050',
-            'https': 'socks5h://127.0.0.1:9050',
+            'http': 'socks5h://' + tor_socks_host + ':' + tor_socks_port,
+            'https': 'socks5h://' + tor_socks_host + ':' + tor_socks_port,
             'connection_timeout': 10
         }
     }
@@ -68,10 +68,6 @@ def run(url, additional_headers, tbb_path, tor_socks_address, tor_socks_port):
     except Exception as err:
         logger.error('webdriver.Firefox.get() says: %s' % err)
         return -1
-
-
-    print(driver.page_source)
-
 
     # Record the results
     results['html_data'] = driver.page_source

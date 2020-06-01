@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Fetch a given URL using selenium, Firefox, and Tor
+Fetch a given URL using seleniumwire, Firefox, and Tor
 """
 
 import os
@@ -9,26 +9,32 @@ import logging
 import json
 from urltools import compare
 from seleniumwire import webdriver
-from pyvirtualdisplay import Display
+from selenium.webdriver.firefox.options import Options
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-def run(url, additional_headers, tor_socks_address, tor_socks_port):
+def run(url, additional_headers, tor_socks_host, tor_socks_port):
     results = {}
 
-    options = {
+    # Configure seleniumwire to upstream traffic to Tor running on port 9050
+    #   You might want to increase/decrease the timeout if you are trying
+    #   to a load page that requires a lot of requests. It is in seconds.
+    seleniumwire_options = {
         'proxy': {
-            'http': 'socks5h://' + tor_socks_address + ':' + tor_socks_port,
-            'https': 'socks5h://' + tor_socks_address + ':' + tor_socks_port
+            'http': 'socks5h://' + tor_socks_host + ':' + tor_socks_port,
+            'https': 'socks5h://' + tor_socks_host + ':' + tor_socks_port,
+            'connection_timeout': 10
         }
     }
 
-    xvfb_display = Display(visible=0, size=(1600, 900))
-    xvfb_display.start()
+    # Choose the headless mode
+    options = Options()
+    options.headless = True
 
-    driver = webdriver.Firefox(seleniumwire_options=options)
+    driver = webdriver.Firefox(options=options,
+                               seleniumwire_options=seleniumwire_options)
 
     if additional_headers:
         driver.header_overrides = json.loads(additional_headers)
@@ -53,7 +59,5 @@ def run(url, additional_headers, tor_socks_address, tor_socks_port):
     logger.debug('I\'m done fetching %s', url)
 
     driver.quit()
-
-    xvfb_display.stop()
 
     return results

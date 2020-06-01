@@ -29,7 +29,7 @@ class CaptchaMonitor:
         self.params['captcha_sign'] = config['GENERAL']['captcha_sign']
         self.params['tbb_path'] = config['GENERAL']['tbb_path']
         self.params['db_mode'] = config['GENERAL']['db_mode']
-        self.params['tor_socks_address'] = config['GENERAL']['tor_socks_address']
+        self.params['tor_socks_host'] = config['GENERAL']['tor_socks_host']
         self.params['tor_socks_port'] = config['GENERAL']['tor_socks_port']
 
         if(self.params['db_mode'] == 'SQLite'):
@@ -44,7 +44,7 @@ class CaptchaMonitor:
         self.params['time_stamp'] = int(time.time())
         method = self.params['method']
         tbb_path = self.params['tbb_path']
-        tor_socks_address = self.params['tor_socks_address']
+        tor_socks_host = self.params['tor_socks_host']
         tor_socks_port = self.params['tor_socks_port']
 
         logger.info('Fetching "%s" via "%s"', url, method)
@@ -52,14 +52,14 @@ class CaptchaMonitor:
         if(method == 'firefox_with_tor'):
             results = firefox_with_tor.run(url=url,
                                            additional_headers=additional_headers,
-                                           tor_socks_address=tor_socks_address,
+                                           tor_socks_host=tor_socks_host,
                                            tor_socks_port=tor_socks_port)
 
         elif(method == 'tor_browser'):
             results = tor_browser.run(url=url,
                                       additional_headers=additional_headers,
                                       tbb_path=tbb_path,
-                                      tor_socks_address=tor_socks_address,
+                                      tor_socks_host=tor_socks_host,
                                       tor_socks_port=tor_socks_port)
 
         elif(method == 'requests'):

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Fetch a given URL using selenium and Firefox
+Fetch a given URL using seleniumwire and Firefox
 """
 
 import logging
@@ -18,7 +18,7 @@ logger.setLevel(logging.DEBUG)
 def run(url, additional_headers):
     results = {}
 
-    # Create a new instance of the Firefox driver
+    # Choose the headless mode
     options = Options()
     options.headless = True
     driver = webdriver.Firefox(options=options)
