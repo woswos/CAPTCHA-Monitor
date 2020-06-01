@@ -11,9 +11,10 @@ logger.setLevel(logging.DEBUG)
 
 
 class CaptchaMonitor:
-    def __init__(self, method):
+    def __init__(self, method, config_file):
         self.params = {}
         self.params['method'] = method
+        self.params['config_file'] = config_file
 
         # Set the default values
         self.params['html_data'] = -1
@@ -22,8 +23,9 @@ class CaptchaMonitor:
         pass
 
     def create_params(self):
+        config_file = self.params['config_file']
         config = configparser.ConfigParser()
-        config.read('captchamonitor/resources/config.ini')
+        config.read(config_file)
 
         # The parameters required to run the tests
         self.params['captcha_sign'] = config['GENERAL']['captcha_sign']
