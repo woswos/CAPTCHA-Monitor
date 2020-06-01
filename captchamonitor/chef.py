@@ -6,6 +6,7 @@ from captchamonitor.fetchers import tor_browser
 from captchamonitor.fetchers import requests
 from captchamonitor.fetchers import firefox
 from captchamonitor.utils.sqlite import SQLite
+from selenium.webdriver.common.utils import is_connectable
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
@@ -52,12 +53,14 @@ class CaptchaMonitor:
         logger.info('Fetching "%s" via "%s"', url, method)
 
         if(method == 'firefox_with_tor'):
+            self.is_tor_running()
             results = firefox_with_tor.run(url=url,
                                            additional_headers=additional_headers,
                                            tor_socks_host=tor_socks_host,
                                            tor_socks_port=tor_socks_port)
 
         elif(method == 'tor_browser'):
+            self.is_tor_running()
             results = tor_browser.run(url=url,
                                       additional_headers=additional_headers,
                                       tbb_path=tbb_path,
@@ -100,3 +103,8 @@ class CaptchaMonitor:
         if(db_mode == 'SQLite'):
             db = SQLite(self.params)
             db.submit()
+
+    def is_tor_running(self):
+        tor_socks_port = self.params['tor_socks_port']
+        if not is_connectable(tor_socks_port):
+            logger.warning('Is Tor running at port %s? I can\'t detect it', tor_socks_port)
