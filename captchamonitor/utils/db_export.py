@@ -1,4 +1,5 @@
 '''
+Export the SQlite database to JSON file
 
 Original code taken from https://github.com/Austyns/sqlite-to-json-python
 '''
@@ -9,6 +10,7 @@ import configparser
 import os
 
 logger = logging.getLogger(__name__)
+
 
 def dict_factory(cursor, row):
     d = {}
