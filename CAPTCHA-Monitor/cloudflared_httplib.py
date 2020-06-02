@@ -53,14 +53,14 @@ logger.setLevel(logging.WARNING)
 # it thinks we are a bot.
 # "domai.name" is replaced automatically with the passed domain name
 default_headers = [("Host", "domain.name"),
-                ("User-Agent", "Mozilla/5.0 (Windows NT 6.1; rv:52.0) "
-                 "Gecko/20100101 Firefox/52.0"),
-                ("Accept", "text/html,application/xhtml+xml,"
-                           "application/xml;q=0.9,*/*;q=0.8"),
-                ("Accept-Language", "en-US,en;q=0.5"),
-                ("Accept-Encoding", "gzip, deflate, br"),
-                ("Connection", "keep-alive"),
-                ("Upgrade-Insecure-Requests", "1")]
+                   ("User-Agent", "Mozilla/5.0 (Windows NT 6.1; rv:52.0) "
+                    "Gecko/20100101 Firefox/52.0"),
+                   ("Accept", "text/html,application/xhtml+xml,"
+                    "application/xml;q=0.9,*/*;q=0.8"),
+                   ("Accept-Language", "en-US,en;q=0.5"),
+                   ("Accept-Encoding", "gzip, deflate, br"),
+                   ("Connection", "keep-alive"),
+                   ("Upgrade-Insecure-Requests", "1")]
 
 
 # Returns a dictionary of parameters including the result
@@ -70,15 +70,15 @@ default_headers = [("Host", "domain.name"),
 def main():
     # ArgumentParser details
     desc = """Check if a web site returns a CloudFlare CAPTCHA using httplib.
-     By default, this tool is looking for the
-    'Attention Required! | Cloudflare' text within the fetched web site.
+     By default, this tool is looking for the 'Cloudflare' text within the
+     fetched web site.
     """
     parser = ArgumentParser(description=desc)
     parser.add_argument('-u', metavar='url', help='destination url',
-        required=True)
+                        required=True)
     parser.add_argument('-c', metavar='captcha',
-        help='the captcha sign expected to see in the page (default: "Attention Required! | Cloudflare")',
-        default='Attention Required! | Cloudflare')
+                        help='the captcha sign expected to see in the page (default: "Cloudflare")',
+                        default='Cloudflare')
 
     # Parse the arguments
     argument_parser_args = parser.parse_args()
@@ -97,7 +97,7 @@ def main():
     print(result)
 
 
-# Handles given the argument list and runs the test
+# Handles the given argument list and runs the test
 def is_cloudflared(params):
     url = params.get('url')
 
