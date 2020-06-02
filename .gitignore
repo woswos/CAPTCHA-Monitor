@@ -38,6 +38,7 @@ results.db
 cm.db
 geckodriver.log
 CAPTCHA_Monitor.egg-info
+*.json
 
 # Docs
 _build
