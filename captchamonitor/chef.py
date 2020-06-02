@@ -16,18 +16,25 @@ logger.setLevel(logging.DEBUG)
 class CaptchaMonitor:
     def run(config_file):
 
-        if(Queue.check() > 0):
+        queue = Queue(config_file)
+        queue_size = queue.check()
+        if(queue_size > 0) and (queue_size != None):
             logger.info('Found a new request in the queue, cooking...')
 
-            url = Queue.get_url()
-            headers = Queue.get_headers()
-            job_id = Queue.get_job_id()
+            # Retrive parameters for the job in the queue
+            queue_params = {}
+            queue_params = queue.get_params()
+            job_id = queue_params['job_id']
+            url = queue_params['url']
+            additional_headers = queue_params['additional_headers']
+            method = queue_params['method']
 
-            cm = CaptchaMonitor('firefox', config_file, job_id)
+            # Run the test using given parameters
+            cm = CaptchaMonitor(method, config_file, job_id)
             cm.create_params()
-            cm.fetch(url, headers)
+            cm.fetch(url, additional_headers)
             cm.detect_captcha()
-            cm.store()
+            cm.store_results()
 
             logger.info('Done, Bon Appetit!')
 
@@ -107,10 +114,11 @@ class CaptchaMonitor:
             if(is_captcha_found == 1):
                 logger.info('I found "%s" in "%s"', self.params['captcha_sign'], self.params['url'])
 
-    def store(self):
+    def store_results(self):
         db_mode = self.params['db_mode']
         job_id = self.params['job_id']
         html_data = self.params['html_data']
+        config_file = self.params['config_file']
 
         if(html_data == -1):
             logger.info('There was an error during the process, cannot save to db')
@@ -120,12 +128,12 @@ class CaptchaMonitor:
 
         if(db_mode == 'SQLite'):
             db = SQLite(self.params)
-            db.submit()
-
-        if job_id is not None:
-            Queue.mark_as_completed(job_id)
+            if(job_id is None):
+                db.insert_results()
+            else:
+                db.update_results()
 
     def is_tor_running(self):
         tor_socks_port = self.params['tor_socks_port']
         if not is_connectable(tor_socks_port):
-            logger.warning('Is Tor running at port %s? I can\'t detect it', tor_socks_port)
+            logger.critical('Is Tor running at port %s? I can\'t detect it', tor_socks_port)

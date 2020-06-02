@@ -1,5 +1,6 @@
 from captchamonitor.chef import CaptchaMonitor
 import logging
+import time
 
 logger_format = '%(asctime)s %(module)s [%(levelname)s] %(message)s'
 logging.basicConfig(format=logger_format)
@@ -12,3 +13,4 @@ if __name__ == '__main__':
 
     while True:
         CaptchaMonitor.run(config_file)
+        time.sleep(1)

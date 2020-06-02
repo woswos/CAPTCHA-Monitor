@@ -10,7 +10,7 @@ class SQLite:
         self.params = params
         self.check_if_db_exists()
 
-    def submit(self):
+    def insert_results(self):
         """
         Submits given results to the SQLite database
         """
@@ -20,15 +20,16 @@ class SQLite:
 
         # Prepare the SQL query
         sql_query = '''INSERT INTO captcha (
-                    measurement,
+                    method,
                     url,
                     captcha_sign,
                     html_data,
                     all_headers,
                     request_headers,
                     response_headers,
-                    is_captcha_found
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'''
+                    is_captcha_found,
+                    is_completed
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'''
         sql_params = (self.params['method'],
                       self.params['url'],
                       self.params['captcha_sign'],
@@ -37,21 +38,115 @@ class SQLite:
                       self.params['request_headers'],
                       self.params['response_headers'],
                       self.params['is_captcha_found'],
+                      1
                       )
 
         logger.debug(sql_query)
         logger.debug(sql_params)
 
+        cur = conn.cursor()
+
         # Try to connect to the database
         try:
-            conn.cursor().execute(sql_query, sql_params)
+            cur.execute(sql_query, sql_params)
             conn.commit()
 
         except Exception as err:
-            logger.critical(
-                'sqlite3.connect.cursor.execute() says: %s' % err)
+            logger.critical('sqlite3.connect.cursor.execute() says: %s' % err)
 
         conn.close()
+
+    def update_results(self):
+        """
+        Submits given results to the SQLite database
+        """
+
+        # Set database connection
+        conn = sqlite3.connect(self.params['db_file'])
+
+        # Prepare the SQL query
+        # I know this is a bad practice but I will fix it
+        sql_query = '''UPDATE captcha SET
+                    html_data = ?,
+                    all_headers = ?,
+                    request_headers = ?,
+                    response_headers = ?,
+                    is_captcha_found = ?,
+                    is_completed = ?
+                    WHERE id = ''' + str(self.params['job_id'])
+        sql_params = (self.params['html_data'],
+                      self.params['all_headers'],
+                      self.params['request_headers'],
+                      self.params['response_headers'],
+                      self.params['is_captcha_found'],
+                      1
+                      )
+
+        logger.debug(sql_query)
+        logger.debug(sql_params)
+
+        cur = conn.cursor()
+
+        # Try to connect to the database
+        try:
+            cur.execute(sql_query, sql_params)
+            conn.commit()
+
+        except Exception as err:
+            logger.critical('sqlite3.connect.cursor.execute() says: %s' % err)
+
+        conn.close()
+
+    def get_number_of_not_completed_jobs(self):
+        # Set database connection
+        conn = sqlite3.connect(self.params['db_file'])
+
+        # Prepare the SQL query
+        sql_query = 'SELECT count(*) FROM captcha WHERE is_completed = 0'
+
+        logger.debug(sql_query)
+
+        cur = conn.cursor()
+
+        # Try to connect to the database
+        try:
+            cur.execute(sql_query)
+
+        except Exception as err:
+            logger.critical('sqlite3.connect.cursor.execute() says: %s' % err)
+
+        result = cur.fetchone()[0]
+
+        conn.close()
+
+        return result
+
+    def get_first_not_completed_job(self):
+        # Set database connection
+        conn = sqlite3.connect(self.params['db_file'])
+
+        # Prepare the SQL query
+        sql_query = 'SELECT * FROM captcha WHERE id = (SELECT min(id) FROM captcha WHERE is_completed = 0)'
+
+        logger.debug(sql_query)
+
+        cur = conn.cursor()
+
+        # Try to connect to the database
+        try:
+            cur.execute(sql_query)
+
+        except Exception as err:
+            logger.critical('sqlite3.connect.cursor.execute() says: %s' % err)
+
+        result = cur.fetchall()
+
+        # Place returned data into a dictionary
+        data = dict(zip([c[0] for c in cur.description], result[0]))
+
+        conn.close()
+
+        return data
 
     def check_if_db_exists(self):
         """
@@ -75,7 +170,8 @@ class SQLite:
         # SQL query to create the tables for the first time run
         sql_query_create_table = '''CREATE TABLE captcha (
                                 	id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                	measurement TEXT,
+                                    is_completed INTEGER DEFAULT 0,
+                                	method TEXT,
                                 	url TEXT,
                                 	captcha_sign TEXT,
                                     html_data TEXT,
