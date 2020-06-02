@@ -37,6 +37,7 @@ results.csv
 results.db
 cm.db
 geckodriver.log
+CAPTCHA_Monitor.egg-info
 
 # Docs
 _build
