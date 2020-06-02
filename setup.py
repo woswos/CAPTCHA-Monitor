@@ -10,7 +10,8 @@ setup(name='CAPTCHA Monitor',
       packages=['captchamonitor'],
       install_requires=[
             'selenium-wire',
-            'urltools'
+            'urltools',
+            'urllib3<1.25'
       ],
       zip_safe=False,
       entry_points={
