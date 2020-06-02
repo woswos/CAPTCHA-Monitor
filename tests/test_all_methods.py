@@ -12,7 +12,7 @@ logger.setLevel(logging.INFO)
 
 if __name__ == '__main__':
 
-    url = 'https://bypass.captcha.wtf'
+    url = 'https://check.torproject.org/'
     methods = ['firefox', 'firefox_with_tor', 'tor_browser', 'requests']
 
     config_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.ini')

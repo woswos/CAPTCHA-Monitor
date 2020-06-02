@@ -26,8 +26,8 @@ def run(url, additional_headers):
         return -1
 
     results['request_headers'] = json.dumps(dict(data.request.headers))
-    results['html_data'] = data.text
-    results['all_headers'] = data.status_code
+    results['html_data'] = str(data.text)
+    results['all_headers'] = str(data.status_code)
     results['response_headers'] = json.dumps(dict(data.headers))
 
     logger.debug('I\'m done fetching %s', url)

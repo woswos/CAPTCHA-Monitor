@@ -76,7 +76,10 @@ def run(url, additional_headers, tbb_path, tor_socks_host, tor_socks_port):
     for request in driver.requests:
         if(compare(request.path, url)):
                 results['request_headers'] = json.dumps(dict(request.headers))
-                results['response_headers'] = json.dumps(dict(request.response.headers))
+                if(request.response):
+                    results['response_headers'] = json.dumps(dict(request.response.headers))
+                else:
+                    results['response_headers'] = " "
 
     logger.debug('I\'m done fetching %s', url)
 
