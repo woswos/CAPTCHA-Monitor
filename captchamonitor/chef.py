@@ -28,11 +28,12 @@ class CaptchaMonitor:
             url = queue_params['url']
             additional_headers = queue_params['additional_headers']
             method = queue_params['method']
+            captcha_sign = queue_params['captcha_sign']
 
             # Run the test using given parameters
             cm = CaptchaMonitor(method, config_file, job_id)
             cm.create_params()
-            cm.fetch(url, additional_headers)
+            cm.fetch(url, captcha_sign, additional_headers)
             cm.detect_captcha()
             cm.store_results()
 
@@ -53,7 +54,6 @@ class CaptchaMonitor:
         config.read(config_file)
 
         # The parameters required to run the tests
-        self.params['captcha_sign'] = config['GENERAL']['captcha_sign']
         self.params['tbb_path'] = config['GENERAL']['tbb_path']
         self.params['db_mode'] = config['GENERAL']['db_mode']
         self.params['tor_socks_host'] = config['GENERAL']['tor_socks_host']
@@ -65,8 +65,9 @@ class CaptchaMonitor:
     def get_params(self):
         return self.params
 
-    def fetch(self, url, additional_headers=None):
+    def fetch(self, url, captcha_sign, additional_headers=None):
         results = {}
+        self.params['captcha_sign'] = captcha_sign
         self.params['url'] = url
         self.params['time_stamp'] = int(time.time())
         method = self.params['method']

@@ -14,7 +14,7 @@ if __name__ == '__main__':
 
     url = 'https://check.torproject.org/'
     methods = ['firefox', 'firefox_with_tor', 'tor_browser', 'requests']
-
+    captcha_sign = 'Cloudflare'
     config_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.ini')
 
     logger.info('Deleting the existing db')
@@ -28,7 +28,7 @@ if __name__ == '__main__':
     for method in methods:
         cm = CaptchaMonitor(method, config_file)
         cm.create_params()
-        cm.fetch(url)
+        cm.fetch(url, captcha_sign)
         cm.detect_captcha()
         cm.store_results()
     logger.info('Done testing')

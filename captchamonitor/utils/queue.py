@@ -23,10 +23,8 @@ class Queue:
         db = SQLite(self.params)
         result = db.get_first_not_completed_job()
 
-        params = {}
-        params['url'] = result['url']
-        params['additional_headers'] = result['request_headers']
-        params['job_id'] = result['id']
-        params['method'] = result['method']
+        # params to rename and the rest is same
+        result['additional_headers'] = result['request_headers']
+        result['job_id'] = result['id']
 
-        return params
+        return result
