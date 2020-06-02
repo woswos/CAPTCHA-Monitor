@@ -7,8 +7,9 @@ from captchamonitor.chef import CaptchaMonitor
 
 logger_format = '%(asctime)s %(module)s [%(levelname)s] %(message)s'
 logging.basicConfig(format=logger_format)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('captchamonitor')
 logger.setLevel(logging.INFO)
+
 
 if __name__ == '__main__':
 

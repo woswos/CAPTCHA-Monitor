@@ -12,7 +12,6 @@ from seleniumwire import webdriver
 from selenium.webdriver.firefox.options import Options
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 def run(url, additional_headers):
@@ -40,11 +39,11 @@ def run(url, additional_headers):
 
     for request in driver.requests:
         if(compare(request.path, url)):
-                results['request_headers'] = json.dumps(dict(request.headers))
-                if(request.response):
-                    results['response_headers'] = json.dumps(dict(request.response.headers))
-                else:
-                    results['response_headers'] = " "
+            results['request_headers'] = json.dumps(dict(request.headers))
+            if(request.response):
+                results['response_headers'] = json.dumps(dict(request.response.headers))
+            else:
+                results['response_headers'] = " "
 
     logger.debug('I\'m done fetching %s', url)
 

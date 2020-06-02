@@ -1,8 +1,8 @@
 import logging
 import configparser
 from captchamonitor.utils.sqlite import SQLite
+
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 class Queue:

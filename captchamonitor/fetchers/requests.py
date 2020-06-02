@@ -9,7 +9,6 @@ import requests
 import json
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 def run(url, additional_headers):

@@ -10,7 +10,6 @@ from captchamonitor.utils.queue import Queue
 from selenium.webdriver.common.utils import is_connectable
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 class CaptchaMonitor:
