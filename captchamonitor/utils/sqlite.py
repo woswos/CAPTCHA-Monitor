@@ -10,6 +10,44 @@ class SQLite:
         self.params = params
         self.check_if_db_exists()
 
+    def insert_job(self, data):
+        """
+        Submits given results to the SQLite database
+        """
+
+        # Set database connection
+        conn = sqlite3.connect(self.params['db_file'])
+
+        # Prepare the SQL query
+        sql_query = '''INSERT INTO captcha (
+                    method,
+                    url,
+                    captcha_sign,
+                    request_headers,
+                    is_completed
+                    ) VALUES (?, ?, ?, ?, ?)'''
+        sql_params = (data['method'],
+                      data['url'],
+                      data['captcha_sign'],
+                      data['additional_headers'],
+                      0
+                      )
+
+        logger.debug(sql_query)
+        logger.debug(sql_params)
+
+        cur = conn.cursor()
+
+        # Try to connect to the database
+        try:
+            cur.execute(sql_query, sql_params)
+            conn.commit()
+
+        except Exception as err:
+            logger.critical('sqlite3.connect.cursor.execute() says: %s' % err)
+
+        conn.close()
+
     def insert_results(self):
         """
         Submits given results to the SQLite database
