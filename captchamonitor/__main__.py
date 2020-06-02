@@ -1,5 +1,6 @@
 from captchamonitor.chef import CaptchaMonitor
 from captchamonitor.utils.db_export import export
+from captchamonitor.utils.queue import Queue
 import logging
 import time
 import argparse
@@ -9,7 +10,7 @@ import os
 logger_format = '%(asctime)s %(module)s [%(levelname)s] %(message)s'
 logging.basicConfig(format=logger_format)
 logger = logging.getLogger('captchamonitor')
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 class main():
@@ -32,6 +33,33 @@ add     Add a new job to the database
         # Run the corresponding command
         getattr(self, args.command)()
 
+    def add(self):
+        if os.path.isfile(self.default_config_file_path) and os.access(self.default_config_file_path, os.R_OK):
+            config_file = self.default_config_file_path
+            parser = argparse.ArgumentParser()
+            parser.add_argument('-u', '--url')
+            parser.add_argument('-m', '--method')
+            parser.add_argument('-c', '--captcha_sign')
+            parser.add_argument('-a', '--additional_headers')
+            args = parser.parse_args(sys.argv[2:])
+            logger.info('Using the configuration file found in the current working directory')
+
+        else:
+            parser = argparse.ArgumentParser()
+            parser.add_argument('config_file')
+            parser.add_argument('-u', '--url')
+            parser.add_argument('-m', '--method')
+            parser.add_argument('-c', '--captcha_sign')
+            parser.add_argument('-a', '--additional_headers')
+            args = parser.parse_args(sys.argv[2:])
+            config_file = args.config_file
+            logger.info('Using the given configuration file')
+
+        queue = Queue(config_file)
+        queue.add_job(args.method, args.url, args.captcha_sign, args.additional_headers)
+
+        sys.exit()
+
     def run(self):
         if os.path.isfile(self.default_config_file_path) and os.access(self.default_config_file_path, os.R_OK):
             config_file = self.default_config_file_path
@@ -41,9 +69,10 @@ add     Add a new job to the database
             parser.add_argument('config_file')
             args = parser.parse_args(sys.argv[2:])
             config_file = args.config_file
-            logger.info('Running CAPTCHA Monitor with the given configuration file')
+            logger.info('Using the given configuration file')
 
         try:
+            logger.info('Started running CAPTCHA Monitor in the continous mode')
             while True:
                 CaptchaMonitor.run(config_file)
                 time.sleep(1)
@@ -61,7 +90,7 @@ add     Add a new job to the database
             parser.add_argument('config_file')
             args = parser.parse_args(sys.argv[2:])
             config_file = args.config_file
-            logger.info('Running CAPTCHA Monitor with the given configuration file')
+            logger.info('Using the given configuration file')
 
         try:
             logger.info('Exporting...')

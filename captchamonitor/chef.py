@@ -29,14 +29,16 @@ class CaptchaMonitor:
             method = queue_params['method']
             captcha_sign = queue_params['captcha_sign']
 
-            # Run the test using given parameters
-            cm = CaptchaMonitor(method, config_file, job_id)
-            cm.create_params()
-            cm.fetch(url, captcha_sign, additional_headers)
-            cm.detect_captcha()
-            cm.store_results()
-
-            logger.info('Done, Bon Appetit!')
+            if((method != None) and (url != None) and (captcha_sign != None)):
+                # Run the test using given parameters
+                cm = CaptchaMonitor(method, config_file, job_id)
+                cm.create_params()
+                cm.fetch(url, captcha_sign, additional_headers)
+                cm.detect_captcha()
+                cm.store_results()
+                logger.info('Done, Bon Appetit!')
+            else:
+                logger.warning('Job entry (id: %s) is faulty, skipping', job_id)
 
     def __init__(self, method, config_file, job_id=None):
         self.params = {}

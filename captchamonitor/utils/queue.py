@@ -38,3 +38,5 @@ class Queue:
 
         db = SQLite(self.params)
         db.insert_job(data)
+
+        logger.info('Added new job for fetching "%s" via "%s" to database', url, method)
