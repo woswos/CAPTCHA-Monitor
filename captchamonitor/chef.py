@@ -1,7 +1,7 @@
 import configparser
 import time
 import logging
-from captchamonitor.fetchers import firefox_with_tor
+from captchamonitor.fetchers import firefox_over_tor
 from captchamonitor.fetchers import tor_browser
 from captchamonitor.fetchers import requests
 from captchamonitor.fetchers import firefox
@@ -79,8 +79,8 @@ class CaptchaMonitor:
 
         logger.info('Fetching "%s" via "%s"', url, method)
 
-        if(method == 'firefox_with_tor'):
-            results = firefox_with_tor.run(url=url,
+        if(method == 'firefox_over_tor'):
+            results = firefox_over_tor.run(url=url,
                                            additional_headers=additional_headers,
                                            tor_socks_host=tor_socks_host,
                                            tor_socks_port=tor_socks_port,

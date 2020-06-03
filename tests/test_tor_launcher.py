@@ -14,7 +14,7 @@ logger.setLevel(logging.INFO)
 
 if __name__ == '__main__':
 
-    methods = ['firefox_with_tor', 'tor_browser']
+    methods = ['firefox_over_tor', 'tor_browser']
 
     # Get the list of latest exit nodes and choose the first one in the list
     tor_bulk_exit_list = requests.get('https://check.torproject.org/torbulkexitlist')
