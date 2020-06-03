@@ -41,6 +41,7 @@ add     Add a new job to the database
             parser.add_argument('-m', '--method')
             parser.add_argument('-c', '--captcha_sign')
             parser.add_argument('-a', '--additional_headers')
+            parser.add_argument('-e', '--exit_node')
             args = parser.parse_args(sys.argv[2:])
             logger.info('Using the configuration file found in the current working directory')
 
@@ -51,12 +52,13 @@ add     Add a new job to the database
             parser.add_argument('-m', '--method')
             parser.add_argument('-c', '--captcha_sign')
             parser.add_argument('-a', '--additional_headers')
+            parser.add_argument('-e', '--exit_node')
             args = parser.parse_args(sys.argv[2:])
             config_file = args.config_file
             logger.info('Using the given configuration file')
 
         queue = Queue(config_file)
-        queue.add_job(args.method, args.url, args.captcha_sign, args.additional_headers)
+        queue.add_job(args.method, args.url, args.captcha_sign, args.additional_headers, args.exit_node)
 
         sys.exit()
 
