@@ -24,12 +24,14 @@ class SQLite:
                     url,
                     captcha_sign,
                     request_headers,
+                    exit_node,
                     is_completed
-                    ) VALUES (?, ?, ?, ?, ?)'''
+                    ) VALUES (?, ?, ?, ?, ?, ?)'''
         sql_params = (data['method'],
                       data['url'],
                       data['captcha_sign'],
                       data['additional_headers'],
+                      data['exit_node'],
                       0
                       )
 
@@ -44,7 +46,7 @@ class SQLite:
             conn.commit()
 
         except Exception as err:
-            logger.critical('sqlite3.connect.cursor.execute() says: %s' % err)
+            logger.critical('sqlite3.connect.cursor.execute() at insert_job() says: %s' % err)
 
         conn.close()
 
@@ -66,8 +68,9 @@ class SQLite:
                     request_headers,
                     response_headers,
                     is_captcha_found,
+                    exit_node,
                     is_completed
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'''
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
         sql_params = (self.params['method'],
                       self.params['url'],
                       self.params['captcha_sign'],
@@ -76,6 +79,7 @@ class SQLite:
                       self.params['request_headers'],
                       self.params['response_headers'],
                       self.params['is_captcha_found'],
+                      self.params['exit_node'],
                       1
                       )
 
@@ -90,7 +94,7 @@ class SQLite:
             conn.commit()
 
         except Exception as err:
-            logger.critical('sqlite3.connect.cursor.execute() says: %s' % err)
+            logger.critical('sqlite3.connect.cursor.execute() at insert_results() says: %s' % err)
 
         conn.close()
 
@@ -110,6 +114,7 @@ class SQLite:
                     request_headers = ?,
                     response_headers = ?,
                     is_captcha_found = ?,
+                    exit_node = ?,
                     is_completed = ?
                     WHERE id = ''' + str(self.params['job_id'])
         sql_params = (self.params['html_data'],
@@ -117,6 +122,7 @@ class SQLite:
                       self.params['request_headers'],
                       self.params['response_headers'],
                       self.params['is_captcha_found'],
+                      self.params['exit_node'],
                       1
                       )
 
@@ -131,7 +137,7 @@ class SQLite:
             conn.commit()
 
         except Exception as err:
-            logger.critical('sqlite3.connect.cursor.execute() says: %s' % err)
+            logger.critical('sqlite3.connect.cursor.execute() at update_results() says: %s' % err)
 
         conn.close()
 
@@ -151,7 +157,7 @@ class SQLite:
             cur.execute(sql_query)
 
         except Exception as err:
-            logger.critical('sqlite3.connect.cursor.execute() says: %s' % err)
+            logger.critical('sqlite3.connect.cursor.execute() at get_number_of_not_completed_jobs() says: %s' % err)
 
         result = cur.fetchone()[0]
 
@@ -211,6 +217,7 @@ class SQLite:
                                     is_completed INTEGER DEFAULT 0,
                                 	method TEXT,
                                 	url TEXT,
+                                    exit_node TEXT,
                                 	captcha_sign TEXT,
                                     html_data TEXT,
                                     all_headers TEXT,

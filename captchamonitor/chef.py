@@ -7,7 +7,6 @@ from captchamonitor.fetchers import requests
 from captchamonitor.fetchers import firefox
 from captchamonitor.utils.sqlite import SQLite
 from captchamonitor.utils.queue import Queue
-from selenium.webdriver.common.utils import is_connectable
 
 logger = logging.getLogger(__name__)
 
@@ -28,12 +27,13 @@ class CaptchaMonitor:
             additional_headers = queue_params['additional_headers']
             method = queue_params['method']
             captcha_sign = queue_params['captcha_sign']
+            exit_node = queue_params['exit_node']
 
             if((method != None) and (url != None) and (captcha_sign != None)):
                 # Run the test using given parameters
                 cm = CaptchaMonitor(method, config_file, job_id)
                 cm.create_params()
-                cm.fetch(url, captcha_sign, additional_headers)
+                cm.fetch(url, captcha_sign, additional_headers, exit_node)
                 cm.detect_captcha()
                 cm.store_results()
                 logger.info('Done, Bon Appetit!')
@@ -66,10 +66,11 @@ class CaptchaMonitor:
     def get_params(self):
         return self.params
 
-    def fetch(self, url, captcha_sign, additional_headers=None):
+    def fetch(self, url, captcha_sign, additional_headers=None, exit_node=None):
         results = {}
         self.params['captcha_sign'] = captcha_sign
         self.params['url'] = url
+        self.params['exit_node'] = exit_node
         self.params['time_stamp'] = int(time.time())
         method = self.params['method']
         tbb_path = self.params['tbb_path']
@@ -79,19 +80,19 @@ class CaptchaMonitor:
         logger.info('Fetching "%s" via "%s"', url, method)
 
         if(method == 'firefox_with_tor'):
-            self.is_tor_running()
             results = firefox_with_tor.run(url=url,
                                            additional_headers=additional_headers,
                                            tor_socks_host=tor_socks_host,
-                                           tor_socks_port=tor_socks_port)
+                                           tor_socks_port=tor_socks_port,
+                                           exit_node=exit_node)
 
         elif(method == 'tor_browser'):
-            self.is_tor_running()
             results = tor_browser.run(url=url,
                                       additional_headers=additional_headers,
                                       tbb_path=tbb_path,
                                       tor_socks_host=tor_socks_host,
-                                      tor_socks_port=tor_socks_port)
+                                      tor_socks_port=tor_socks_port,
+                                      exit_node=exit_node)
 
         elif(method == 'requests'):
             results = requests.run(url, additional_headers)
@@ -134,8 +135,3 @@ class CaptchaMonitor:
                 db.insert_results()
             else:
                 db.update_results()
-
-    def is_tor_running(self):
-        tor_socks_port = self.params['tor_socks_port']
-        if not is_connectable(tor_socks_port):
-            logger.critical('Is Tor running at port %s? I can\'t detect it', tor_socks_port)

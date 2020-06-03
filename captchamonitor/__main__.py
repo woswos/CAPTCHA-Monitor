@@ -10,7 +10,7 @@ import os
 logger_format = '%(asctime)s %(module)s [%(levelname)s] %(message)s'
 logging.basicConfig(format=logger_format)
 logger = logging.getLogger('captchamonitor')
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 class main():

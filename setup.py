@@ -11,7 +11,9 @@ setup(name='CAPTCHA Monitor',
       install_requires=[
             'selenium-wire',
             'urltools',
-            'urllib3<1.25'
+            'urllib3<1.25',
+            'stem',
+            'pysocks'
       ],
       zip_safe=False,
       entry_points={

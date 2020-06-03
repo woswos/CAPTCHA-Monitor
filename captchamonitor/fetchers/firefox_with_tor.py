@@ -10,11 +10,19 @@ import json
 from urltools import compare
 from seleniumwire import webdriver
 from selenium.webdriver.firefox.options import Options
+import captchamonitor.utils.tor_launcher as tor_launcher
 
 logger = logging.getLogger(__name__)
 
 
-def run(url, additional_headers, tor_socks_host, tor_socks_port):
+def run(url, additional_headers, tor_socks_host, tor_socks_port, exit_node):
+
+    tor_process = tor_launcher.launch_tor_with_config(tor_socks_port, exit_node)
+
+    # Wait until Tor starts
+    while(not tor_launcher.is_tor_running(tor_socks_port)):
+        pass
+
     results = {}
 
     # Configure seleniumwire to upstream traffic to Tor running on port 9050
@@ -61,5 +69,7 @@ def run(url, additional_headers, tor_socks_host, tor_socks_port):
     logger.debug('I\'m done fetching %s', url)
 
     driver.quit()
+
+    tor_launcher.kill(tor_process)
 
     return results

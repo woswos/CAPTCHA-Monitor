@@ -29,12 +29,13 @@ class Queue:
 
         return result
 
-    def add_job(self, method, url, captcha_sign, additional_headers=None):
+    def add_job(self, method, url, captcha_sign, additional_headers=None, exit_node=None):
         data = {}
         data['method'] = method
         data['url'] = url
         data['captcha_sign'] = captcha_sign
         data['additional_headers'] = additional_headers
+        data['exit_node'] = exit_node
 
         db = SQLite(self.params)
         db.insert_job(data)

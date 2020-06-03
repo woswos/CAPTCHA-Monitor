@@ -12,11 +12,19 @@ from seleniumwire import webdriver
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 from selenium.webdriver.firefox.options import Options
+import captchamonitor.utils.tor_launcher as tor_launcher
 
 logger = logging.getLogger(__name__)
 
 
-def run(url, additional_headers, tbb_path, tor_socks_host, tor_socks_port):
+def run(url, additional_headers, tbb_path, tor_socks_host, tor_socks_port, exit_node):
+
+    tor_process = tor_launcher.launch_tor_with_config(tor_socks_port, exit_node)
+
+    # Wait until Tor starts
+    while(not tor_launcher.is_tor_running(tor_socks_port)):
+        pass
+
     results = {}
 
     # Disable Tor Launcher to prevent it connecting the Tor Browser to Tor directly
@@ -83,5 +91,7 @@ def run(url, additional_headers, tbb_path, tor_socks_host, tor_socks_port):
     logger.debug('I\'m done fetching %s', url)
 
     driver.quit()
+
+    tor_launcher.kill(tor_process)
 
     return results
