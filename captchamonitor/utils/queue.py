@@ -1,6 +1,9 @@
 import logging
-import configparser
 from captchamonitor.utils.sqlite import SQLite
+try:
+    import configparser
+except ImportError:
+    import ConfigParser as configparser
 
 logger = logging.getLogger(__name__)
 

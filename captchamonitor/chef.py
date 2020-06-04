@@ -1,9 +1,12 @@
-import configparser
 import time
 import logging
 from captchamonitor import fetchers
 from captchamonitor.utils.sqlite import SQLite
 from captchamonitor.utils.queue import Queue
+try:
+    import configparser
+except ImportError:
+    import ConfigParser as configparser
 
 logger = logging.getLogger(__name__)
 

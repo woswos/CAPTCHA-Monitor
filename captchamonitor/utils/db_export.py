@@ -6,8 +6,10 @@ Original code taken from https://github.com/Austyns/sqlite-to-json-python
 
 import sqlite3
 import logging
-import configparser
-import os
+try:
+    import configparser
+except ImportError:
+    import ConfigParser as configparser
 
 logger = logging.getLogger(__name__)
 
