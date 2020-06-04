@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 Fetch a given URL using seleniumwire and Firefox
 """
