@@ -10,6 +10,7 @@ CAPTCHA Monitor documentation
    :maxdepth: 2
    :caption: Contents:
 
+   source/captchamonitor
 
 
 Indices and tables
