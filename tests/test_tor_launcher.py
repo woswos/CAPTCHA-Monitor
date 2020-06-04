@@ -1,10 +1,9 @@
+from captchamonitor import CaptchaMonitor
 import logging
 import sys
 import configparser
 import os
 import requests
-sys.path.append('../')
-from captchamonitor import CaptchaMonitor
 
 logger_format = '%(asctime)s %(module)s [%(levelname)s] %(message)s'
 logging.basicConfig(format=logger_format)
@@ -14,7 +13,11 @@ logger.setLevel(logging.INFO)
 
 if __name__ == '__main__':
 
-    methods = ['firefox_over_tor', 'tor_browser']
+    methods = ['firefox_over_tor',
+               'tor_browser',
+               'chromium_over_tor',
+               'requests_over_tor'
+               ]
 
     # Get the list of latest exit nodes and choose the first one in the list
     tor_bulk_exit_list = requests.get('https://check.torproject.org/torbulkexitlist')

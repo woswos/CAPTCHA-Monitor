@@ -76,14 +76,7 @@ class CaptchaMonitor:
 
         logger.info('Fetching "%s" via "%s"', url, method)
 
-        if(method == 'firefox_over_tor'):
-            results = fetchers.firefox_over_tor(url=url,
-                                                    additional_headers=additional_headers,
-                                                    tor_socks_host=tor_socks_host,
-                                                    tor_socks_port=tor_socks_port,
-                                                    exit_node=exit_node)
-
-        elif(method == 'tor_browser'):
+        if(method == 'tor_browser'):
             results = fetchers.tor_browser(url=url,
                                                additional_headers=additional_headers,
                                                tbb_path=tbb_path,
@@ -91,8 +84,23 @@ class CaptchaMonitor:
                                                tor_socks_port=tor_socks_port,
                                                exit_node=exit_node)
 
+
+        elif(method == 'firefox_over_tor'):
+            results = fetchers.firefox_over_tor(url=url,
+                                                    additional_headers=additional_headers,
+                                                    tor_socks_host=tor_socks_host,
+                                                    tor_socks_port=tor_socks_port,
+                                                    exit_node=exit_node)
+
         elif(method == 'chromium_over_tor'):
             results = fetchers.chromium_over_tor(url=url,
+                                                     additional_headers=additional_headers,
+                                                     tor_socks_host=tor_socks_host,
+                                                     tor_socks_port=tor_socks_port,
+                                                     exit_node=exit_node)
+
+        elif(method == 'requests_over_tor'):
+            results = fetchers.requests_over_tor(url=url,
                                                      additional_headers=additional_headers,
                                                      tor_socks_host=tor_socks_host,
                                                      tor_socks_port=tor_socks_port,

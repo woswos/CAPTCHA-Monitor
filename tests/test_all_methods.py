@@ -1,9 +1,8 @@
+from captchamonitor import CaptchaMonitor
 import logging
 import sys
 import configparser
 import os
-sys.path.append('../')
-from captchamonitor import CaptchaMonitor
 
 logger_format = '%(asctime)s %(module)s [%(levelname)s] %(message)s'
 logging.basicConfig(format=logger_format)
@@ -14,7 +13,14 @@ logger.setLevel(logging.INFO)
 if __name__ == '__main__':
 
     url = 'https://check.torproject.org/'
-    methods = ['chromium', 'chromium_over_tor', 'firefox', 'firefox_over_tor', 'tor_browser', 'requests']
+    methods = ['chromium',
+               'chromium_over_tor',
+               'firefox',
+               'firefox_over_tor',
+               'tor_browser',
+               'requests',
+               'requests_over_tor'
+               ]
     captcha_sign = 'Cloudflare'
     config_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.ini')
 
