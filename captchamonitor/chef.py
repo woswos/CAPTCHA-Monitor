@@ -5,6 +5,9 @@ from captchamonitor.fetchers import firefox_over_tor
 from captchamonitor.fetchers import tor_browser
 from captchamonitor.fetchers import requests
 from captchamonitor.fetchers import firefox
+from captchamonitor.fetchers import chromium
+from captchamonitor.fetchers import chromium_over_tor
+from captchamonitor.fetchers import curl
 from captchamonitor.utils.sqlite import SQLite
 from captchamonitor.utils.queue import Queue
 
@@ -94,11 +97,24 @@ class CaptchaMonitor:
                                       tor_socks_port=tor_socks_port,
                                       exit_node=exit_node)
 
+        elif(method == 'chromium_over_tor'):
+            results = chromium_over_tor.run(url=url,
+                                           additional_headers=additional_headers,
+                                           tor_socks_host=tor_socks_host,
+                                           tor_socks_port=tor_socks_port,
+                                           exit_node=exit_node)
+
         elif(method == 'requests'):
             results = requests.run(url, additional_headers)
 
         elif(method == 'firefox'):
             results = firefox.run(url, additional_headers)
+
+        elif(method == 'chromium'):
+            results = chromium.run(url, additional_headers)
+
+        elif(method == 'curl'):
+            results = curl.run(url, additional_headers)
 
         self.params['all_headers'] = results['all_headers']
         self.params['request_headers'] = results['request_headers']

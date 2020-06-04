@@ -14,7 +14,7 @@ logger.setLevel(logging.INFO)
 if __name__ == '__main__':
 
     url = 'https://check.torproject.org/'
-    methods = ['firefox', 'firefox_over_tor', 'tor_browser', 'requests']
+    methods = ['chromium', 'chromium_over_tor', 'firefox', 'firefox_over_tor', 'tor_browser', 'requests']
     captcha_sign = 'Cloudflare'
     config_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.ini')
 
