@@ -1,13 +1,7 @@
 import configparser
 import time
 import logging
-from captchamonitor.fetchers import firefox_over_tor
-from captchamonitor.fetchers import tor_browser
-from captchamonitor.fetchers import requests
-from captchamonitor.fetchers import firefox
-from captchamonitor.fetchers import chromium
-from captchamonitor.fetchers import chromium_over_tor
-from captchamonitor.fetchers import curl
+from captchamonitor import fetchers
 from captchamonitor.utils.sqlite import SQLite
 from captchamonitor.utils.queue import Queue
 
@@ -83,38 +77,38 @@ class CaptchaMonitor:
         logger.info('Fetching "%s" via "%s"', url, method)
 
         if(method == 'firefox_over_tor'):
-            results = firefox_over_tor.run(url=url,
-                                           additional_headers=additional_headers,
-                                           tor_socks_host=tor_socks_host,
-                                           tor_socks_port=tor_socks_port,
-                                           exit_node=exit_node)
+            results = fetchers.firefox_over_tor(url=url,
+                                                    additional_headers=additional_headers,
+                                                    tor_socks_host=tor_socks_host,
+                                                    tor_socks_port=tor_socks_port,
+                                                    exit_node=exit_node)
 
         elif(method == 'tor_browser'):
-            results = tor_browser.run(url=url,
-                                      additional_headers=additional_headers,
-                                      tbb_path=tbb_path,
-                                      tor_socks_host=tor_socks_host,
-                                      tor_socks_port=tor_socks_port,
-                                      exit_node=exit_node)
+            results = fetchers.tor_browser(url=url,
+                                               additional_headers=additional_headers,
+                                               tbb_path=tbb_path,
+                                               tor_socks_host=tor_socks_host,
+                                               tor_socks_port=tor_socks_port,
+                                               exit_node=exit_node)
 
         elif(method == 'chromium_over_tor'):
-            results = chromium_over_tor.run(url=url,
-                                           additional_headers=additional_headers,
-                                           tor_socks_host=tor_socks_host,
-                                           tor_socks_port=tor_socks_port,
-                                           exit_node=exit_node)
+            results = fetchers.chromium_over_tor(url=url,
+                                                     additional_headers=additional_headers,
+                                                     tor_socks_host=tor_socks_host,
+                                                     tor_socks_port=tor_socks_port,
+                                                     exit_node=exit_node)
 
         elif(method == 'requests'):
-            results = requests.run(url, additional_headers)
+            results = fetchers.requests(url, additional_headers)
 
         elif(method == 'firefox'):
-            results = firefox.run(url, additional_headers)
+            results = fetchers.firefox(url, additional_headers)
 
         elif(method == 'chromium'):
-            results = chromium.run(url, additional_headers)
+            results = fetchers.chromium(url, additional_headers)
 
         elif(method == 'curl'):
-            results = curl.run(url, additional_headers)
+            results = fetchers.curl(url, additional_headers)
 
         self.params['all_headers'] = results['all_headers']
         self.params['request_headers'] = results['request_headers']

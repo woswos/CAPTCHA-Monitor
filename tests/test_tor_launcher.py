@@ -1,10 +1,10 @@
-from captchamonitor.chef import CaptchaMonitor
 import logging
 import sys
 import configparser
 import os
 import requests
 sys.path.append('../')
+from captchamonitor import CaptchaMonitor
 
 logger_format = '%(asctime)s %(module)s [%(levelname)s] %(message)s'
 logging.basicConfig(format=logger_format)
