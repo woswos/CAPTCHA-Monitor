@@ -1,51 +1,43 @@
 <!-- Unfortunately GitHub markdown doesn't suppor resizing and centering svg images-->
 <p align="center"><img src="logo.svg" alt="CAPTCHA Monitor Logo" width="50%"></p>
 
-Check if a web site returns a Cloudflare CAPTCHA using both the Tor Browser and Python's httplib. By default, this tool searches for *"Cloudflare"* text within the fetched page, but it is possible to customize the CAPTCHA sign, which this tool searches for.
+Check if a website returns a Cloudflare CAPTCHA using the Tor Browser and other mainstream web browsers/tools. By default, this tool searches for *"Cloudflare"* text within the fetched page, but it is possible to customize the CAPTCHA sign, which this tool searches for.
 
 ## Installation Steps
 * Clone this repository to your machine
-* Download the latest version of Tor Browser from [torproject.org](https://www.torproject.org/download/) website and extract the archive file
-* Install the ```geckodriver``` from the [geckodriver releases page](https://github.com/mozilla/geckodriver/releases/), v0.23.0 version or newer. [Here](https://askubuntu.com/questions/870530/how-to-install-geckodriver-in-ubuntu) is a simple installation tutorial if you need one.
+* Change the working directory into the cloned repository and install the CAPTCHA Monitor via ```$ pip install -e .```
 * Install Tor via ```$ apt install tor```
-* Install [Tor Browser with Selenium](https://github.com/webfp/tor-browser-selenium) via ```$ pip install tbselenium```
-* Install [Tor stem](https://stem.torproject.org/) via ```$ apt install python-stem```
+* Download the latest version of Tor Browser Bundle from [torproject.org](https://www.torproject.org/download/) website and extract the archive file
+* Install Firefox via ```$ apt install firefox```
+* Install the ```geckodriver``` from the [geckodriver releases](https://github.com/mozilla/geckodriver/releases/) page, v0.23.0 version or newer. [Here](https://askubuntu.com/questions/870530/how-to-install-geckodriver-in-ubuntu) is a simple installation tutorial if you need one.
+* Install Chromium via ```$ apt install chromium-browser```
+* Install the ```ChromeDriver``` from [chromium.org](https://chromedriver.chromium.org/downloads) website. Choose the one that matches the Chromium version you installed in the previous step.
 
-Additional steps for running in headless mode:
-* Install [Xvfb](https://en.wikipedia.org/wiki/Xvfb)  display server via ```$ apt install xvfb```
-* Install [PyVirtualDisplay](https://pypi.org/project/PyVirtualDisplay/)  display server via ```$ pip install PyVirtualDisplay```
+## Configuring the CAPTCHA Monitor
+You need to provide a configuration file to CAPTCHA Monitor to run it. A sample configuration file can be found [here](https://github.com/woswos/CAPTCHA-Monitor/blob/master/captchamonitor/resources/config.ini). You simply need to provide the path to the Tor Browser Bundle and the location for the database. You can either modify the sample configuration file or create a new one in a location you prefer.
 
 ## Usage
-```cloudflared_tor.py``` and ```cloudflared_httplib.py``` can be run directly from the command line. A website URL and the Tor Browser bundle location needs to be specified.
+CAPTCHA Monitor is designed to have a job queue and a worker that processes the jobs in the queue. You can run the "worker" with ```captchamonitor run``` command. By default, it searches for a configuration file called ```config.ini``` in the current working directory. If you have it in another location or with a different name, you can use the ```captchamonitor run /path/to/config.ini``` command the specify the file location and/or name.
 
-Use the following arguments:
+You can add new jobs to the queue with ```captchamonitor add <details of the job>``` command. The added job will be processed once the worker runs on the system. The results will be available in the database you specified in the ```config.ini``` file. 
+In order to specify the details of the job, you can use the following arguments:
 - ```-u``` to specify the website URL
-- ```-c``` to specify a captcha sign other than *"Cloudflare"*,
-- ```-t``` to specify to the path to Tor Browser bundle (available for ```cloudflared_tor.py``` only)
-- ```-m True``` to run the tests in the headless mode without a display (available for ```cloudflared_tor.py``` only)
-- ```--help``` to get further details
+- ```-m``` to specify the method (see the methods section below)
+- ```-c``` to specify a captcha sign other than *"Cloudflare"*
+- ```-a``` to specify additional request headers (the ones colliding will be overwritten with the ones you provided)
+- ```-e``` to specify the Tor exit node (if fetching over Tor)
 
-Example usage for checking if a website returns Cloudflare CAPTCHA when fetched via Tor Browser:
-```
-python cloudflared_tor.py -u https://example.com -t '/path/to/Tor/Browser/Bundle'
-```
-
-Example usage for checking if a website returns Cloudflare CAPTCHA when fetched via Python's httplib:
-```
-python cloudflared_httplib.py -u https://example.com
-```
-
-The script will return a result like below in the following format [method];[tested URL];[result]
-```
-httplib;https://example.com;0
-```
-If the result field is ```0```, then the tested URL didn't return a CAPTCHA. If the result field is ```1``` then the tested URL did return a CAPTCHA. Finally, if the result field is ```-1``` then en error occurred during the testing, and you should check the error logs.
+### Methods
+Currently, you can fetch a URL using Tor Browser (```tor_browser```), Chromium (```chromium```), Firefox (```firefox```), Python requests library (```requests```), Chromium over Tor (```chromium_over_tor```), Firefox (```firefox_over_tor```), and Python requests library over Tor (```requests_over_tor```).
 
 ## Examples
-Alternatively, you can use the example code to automate the experimenting process:
-* ```automated_fetcher_csv``` program can be used to fetch a list of website URLs via both the Tor Browser & httplib and record the results in a CSV file.
-* ```automated_fetcher_sqlite``` program can be used to fetch a list of website URLs via both the Tor Browser & httplib and record the results in a SQLite database.
-* ```automated_fetcher_influxdb``` program can be used to fetch a list of website URLs via both the Tor Browser & httplib and send the results to a [InfluxDB](https://www.influxdata.com) database. You should also install [Python client for InfluxDB](https://github.com/influxdata/influxdb-python) via ```$ pip install influxdb```
+Let's say I want to check if I get a Cloudflare CAPTCHA when I browse ```https://example.com``` with Tor Browser. In that case, I need to add a new job with ```captchamonitor add -u https://example.com -m tor_browser -c Cloudflare``` and I need to run the worker afterward with ```captchamonitor run```. 
+
+What if I want to see if I get a CAPTCHA when exiting through a specific Tor exit Node? Then, I just need to add another job using ```captchamonitor add -u https://example.com -m tor_browser -c Cloudflare -e [exit.node.IP.address]``` and run the worker.
+
+Finally, I want to compare these results with a case where I use Firefox without Tor. Then, I need to add another job using ```captchamonitor add -u https://example.com -m firefox -c Cloudflare``` and run the worker.
+
+I could also leave the worker running in the background, and it would process jobs once they were added. The worker and the boss work asynchronously.
 
 ## Contributing
-Please feel free to report and fix the issues you encounter while using this tool. I'm planning to change the way this tool operates fundamentally. Please check the [contributing file](CONTRIBUTING.md) to see how you can contribute to these changes.
+Please feel free to report and fix the issues you encounter while using this tool. Please check the [contributing file](CONTRIBUTING.md) to see how you can contribute.
