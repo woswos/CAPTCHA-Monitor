@@ -29,6 +29,7 @@ if __name__ == '__main__':
     url = 'https://check.torproject.org/'
     captcha_sign = 'Cloudflare'
     additional_headers = None
+    security_level = 'medium'
     config_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.ini')
 
     logger.info('Deleting the existing db')
@@ -42,7 +43,7 @@ if __name__ == '__main__':
     for method in methods:
         cm = CaptchaMonitor(method, config_file)
         cm.create_params()
-        cm.fetch(url, captcha_sign, additional_headers, exit_node)
+        cm.fetch(url, captcha_sign, additional_headers, security_level, exit_node)
 
         if exit_node not in cm.params['html_data']:
             logger.warning('This fetcher is not connected to the specified exit node!')

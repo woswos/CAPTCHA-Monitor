@@ -25,6 +25,7 @@ class SQLite:
                     captcha_sign,
                     request_headers,
                     exit_node,
+                    tbb_security_level,
                     is_completed
                     ) VALUES (?, ?, ?, ?, ?, ?)'''
         sql_params = (data['method'],
@@ -32,6 +33,7 @@ class SQLite:
                       data['captcha_sign'],
                       data['additional_headers'],
                       data['exit_node'],
+                      data['tbb_security_level'],
                       0
                       )
 
@@ -69,8 +71,9 @@ class SQLite:
                     response_headers,
                     is_captcha_found,
                     exit_node,
+                    tbb_security_level,
                     is_completed
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
         sql_params = (self.params['method'],
                       self.params['url'],
                       self.params['captcha_sign'],
@@ -80,6 +83,7 @@ class SQLite:
                       self.params['response_headers'],
                       self.params['is_captcha_found'],
                       self.params['exit_node'],
+                      self.params['security_level'],
                       1
                       )
 
@@ -115,6 +119,7 @@ class SQLite:
                     response_headers = ?,
                     is_captcha_found = ?,
                     exit_node = ?,
+                    tbb_security_level = ?,
                     is_completed = ?
                     WHERE id = ''' + str(self.params['job_id'])
         sql_params = (self.params['html_data'],
@@ -123,6 +128,7 @@ class SQLite:
                       self.params['response_headers'],
                       self.params['is_captcha_found'],
                       self.params['exit_node'],
+                      self.params['security_level'],
                       1
                       )
 
@@ -223,6 +229,7 @@ class SQLite:
                                     all_headers TEXT,
                                     request_headers TEXT,
                                     response_headers TEXT,
+                                    tbb_security_level TEXT,
                                 	is_captcha_found TEXT,
                                     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
                                     )'''

@@ -15,7 +15,9 @@ import captchamonitor.utils.tor_launcher as tor_launcher
 logger = logging.getLogger(__name__)
 
 
-def run(url, additional_headers, tbb_path, tor_socks_host, tor_socks_port, exit_node):
+def run(url, additional_headers, tbb_path, tor_socks_host, tor_socks_port, security_level, exit_node):
+
+    security_levels = {'high':1, 'medium':2, 'low':4}
 
     tor_process = tor_launcher.launch_tor_with_config(tor_socks_port, exit_node)
 
@@ -42,6 +44,9 @@ def run(url, additional_headers, tbb_path, tor_socks_host, tor_socks_port, exit_
     profile.set_preference("network.stricttransportsecurity.preloadlist", False)
     profile.set_preference("extensions.torbutton.local_tor_check", False)
     profile.set_preference("extensions.torbutton.use_nontor_proxy", True)
+
+    # Set the security level
+    profile.set_preference("extensions.torbutton.security_slider", security_levels[security_level])
 
     # Configure seleniumwire to upstream traffic to Tor running on port 9050
     #   You might want to increase/decrease the timeout if you are trying

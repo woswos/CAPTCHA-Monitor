@@ -29,16 +29,18 @@ class Queue:
         # params to rename and the rest is same
         result['additional_headers'] = result['request_headers']
         result['job_id'] = result['id']
+        result['security_level'] = result['tbb_security_level']
 
         return result
 
-    def add_job(self, method, url, captcha_sign, additional_headers=None, exit_node=None):
+    def add_job(self, method, url, captcha_sign, additional_headers=None, exit_node=None, security_level='low'):
         data = {}
         data['method'] = method
         data['url'] = url
         data['captcha_sign'] = captcha_sign
         data['additional_headers'] = additional_headers
         data['exit_node'] = exit_node
+        data['tbb_security_level'] = security_level
 
         db = SQLite(self.params)
         db.insert_job(data)

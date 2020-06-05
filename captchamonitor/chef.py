@@ -28,12 +28,13 @@ class CaptchaMonitor:
             method = queue_params['method']
             captcha_sign = queue_params['captcha_sign']
             exit_node = queue_params['exit_node']
+            security_level = queue_params['security_level']
 
             if((method != None) and (url != None) and (captcha_sign != None)):
                 # Run the test using given parameters
                 cm = CaptchaMonitor(method, config_file, job_id)
                 cm.create_params()
-                cm.fetch(url, captcha_sign, additional_headers, exit_node)
+                cm.fetch(url, captcha_sign, additional_headers, security_level, exit_node)
                 cm.detect_captcha()
                 cm.store_results()
                 logger.info('Done, Bon Appetit!')
@@ -66,10 +67,11 @@ class CaptchaMonitor:
     def get_params(self):
         return self.params
 
-    def fetch(self, url, captcha_sign, additional_headers=None, exit_node=None):
+    def fetch(self, url, captcha_sign, additional_headers=None, security_level='low', exit_node=None):
         results = {}
         self.params['captcha_sign'] = captcha_sign
         self.params['url'] = url
+        self.params['security_level'] = security_level
         self.params['exit_node'] = exit_node
         self.params['time_stamp'] = int(time.time())
         method = self.params['method']
@@ -85,6 +87,7 @@ class CaptchaMonitor:
                                                tbb_path=tbb_path,
                                                tor_socks_host=tor_socks_host,
                                                tor_socks_port=tor_socks_port,
+                                               security_level=security_level,
                                                exit_node=exit_node)
 
 
