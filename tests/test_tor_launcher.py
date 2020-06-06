@@ -16,7 +16,8 @@ if __name__ == '__main__':
     methods = ['firefox_over_tor',
                'tor_browser',
                'chromium_over_tor',
-               'requests_over_tor'
+               'requests_over_tor',
+               'curl_over_tor'
                ]
 
     # Get the list of latest exit nodes and choose the first one in the list

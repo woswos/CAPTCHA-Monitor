@@ -5,3 +5,5 @@ from .firefox import run as firefox
 from .firefox_over_tor import run as firefox_over_tor
 from .requests import run as requests
 from .requests_over_tor import run as requests_over_tor
+from .curl import run as curl
+from .curl_over_tor import run as curl_over_tor

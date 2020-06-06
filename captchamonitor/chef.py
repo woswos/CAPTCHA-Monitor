@@ -112,6 +112,13 @@ class CaptchaMonitor:
                                                      tor_socks_port=tor_socks_port,
                                                      exit_node=exit_node)
 
+        elif(method == 'curl_over_tor'):
+            results = fetchers.curl_over_tor(url=url,
+                                                     additional_headers=additional_headers,
+                                                     tor_socks_host=tor_socks_host,
+                                                     tor_socks_port=tor_socks_port,
+                                                     exit_node=exit_node)
+
         elif(method == 'requests'):
             results = fetchers.requests(url, additional_headers)
 
