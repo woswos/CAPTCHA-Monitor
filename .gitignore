@@ -39,6 +39,7 @@ cm.db
 geckodriver.log
 CAPTCHA_Monitor.egg-info
 *.json
+config.ini
 
 # Docs
 _build
