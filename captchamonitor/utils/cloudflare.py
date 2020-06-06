@@ -39,7 +39,6 @@ class Cloudflare:
         curl.setopt(pycurl.HTTPHEADER, self.credentials)
 
         request_data = str(json.dumps({"value": security_level}))
-        print(request_data)
         curl.setopt(pycurl.CUSTOMREQUEST, "PATCH")
         curl.setopt(pycurl.POSTFIELDS, request_data)
 
@@ -62,7 +61,7 @@ class Cloudflare:
 
         curl.close()
 
-        print(response)
+        logger.error('successfully changed the security level to %s' % security_level)
 
     def get_zone_ids(self):
 
