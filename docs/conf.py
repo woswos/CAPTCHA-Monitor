@@ -41,7 +41,6 @@ release = u'0.1.0'
 # ones.
 
 extensions = [
-    'sphinxcontrib.napoleon',
     'sphinx_rtd_theme'
 ]
 
