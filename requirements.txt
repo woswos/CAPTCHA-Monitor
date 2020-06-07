@@ -3,3 +3,4 @@ urltools
 urllib3<1.25
 stem
 pysocks
+pycurl

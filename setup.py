@@ -13,7 +13,8 @@ setup(name='CAPTCHA Monitor',
             'urltools',
             'urllib3<1.25',
             'stem',
-            'pysocks'
+            'pysocks',
+            'pycurl'
       ],
       zip_safe=False,
       entry_points={
