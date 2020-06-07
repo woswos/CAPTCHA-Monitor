@@ -1,5 +1,8 @@
 from setuptools import setup
 
+with open('requirements.txt') as f:
+    install_requires = f.readlines()
+
 setup(name='CAPTCHA Monitor',
       version='0.1',
       description='Check if a web site returns a CAPTCHA',
@@ -8,17 +11,10 @@ setup(name='CAPTCHA Monitor',
       author_email='barkin@nyu.edu',
       license='GPL-3.0',
       packages=['captchamonitor'],
-      install_requires=[
-            'selenium-wire',
-            'urltools',
-            'urllib3<1.25',
-            'stem',
-            'pysocks',
-            'pycurl'
-      ],
+      install_requires=install_requires,
       zip_safe=False,
       entry_points={
             'console_scripts': [
-            'captchamonitor = captchamonitor.__main__:main'
+            'captchamonitor = captchamonitor.captchamonitor:main'
             ]
       })

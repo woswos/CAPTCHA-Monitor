@@ -108,4 +108,5 @@ add     Add a new job to the database
 
 
 if __name__ == '__main__':
+    print('test')
     main()

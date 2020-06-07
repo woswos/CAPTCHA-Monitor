@@ -27,7 +27,7 @@ class SQLite:
                     exit_node,
                     tbb_security_level,
                     is_completed
-                    ) VALUES (?, ?, ?, ?, ?, ?)'''
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?)'''
         sql_params = (data['method'],
                       data['url'],
                       data['captcha_sign'],
