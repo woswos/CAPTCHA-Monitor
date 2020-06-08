@@ -1,48 +1,34 @@
 import logging
 from captchamonitor.utils.sqlite import SQLite
-try:
-    import configparser
-except ImportError:
-    import ConfigParser as configparser
 
 logger = logging.getLogger(__name__)
 
 
 class Queue:
-    def __init__(self, config_file):
-        self.params = {}
-        config = configparser.ConfigParser()
-        config.read(config_file)
-        self.params['db_file'] = config['SQLite']['db_file']
-        pass
+    def __init__(self, db_file):
+        """
+        This class is an abstraction layer for the SQLite class to have a simpler interface
+        """
+        self.db_file = db_file
+        db = SQLite(db_file)
+        db.check_if_db_exists()
 
-    def check(self):
-        db = SQLite(self.params)
-        result = db.get_number_of_not_completed_jobs()
-        logger.debug('%s job(s) available', result)
+    def get_job(self):
+        db_file = self.db_file
+        db = SQLite(db_file)
+        result = db.get_first_uncompleted_job()
+        if result is None:
+            logger.debug('No jobs available in the queue')
         return result
 
-    def get_params(self):
-        db = SQLite(self.params)
-        result = db.get_first_not_completed_job()
-
-        # params to rename and the rest is same
-        result['additional_headers'] = result['request_headers']
-        result['job_id'] = result['id']
-        result['security_level'] = result['tbb_security_level']
-
-        return result
-
-    def add_job(self, method, url, captcha_sign, additional_headers=None, exit_node=None, security_level='low'):
-        data = {}
-        data['method'] = method
-        data['url'] = url
-        data['captcha_sign'] = captcha_sign
-        data['additional_headers'] = additional_headers
-        data['exit_node'] = exit_node
-        data['tbb_security_level'] = security_level
-
-        db = SQLite(self.params)
+    def add_job(self, data):
+        db_file = self.db_file
+        db = SQLite(db_file)
         db.insert_job(data)
+        logger.info('Added new job for fetching "%s" via "%s" to database', data['url'], data['method'])
 
-        logger.info('Added new job for fetching "%s" via "%s" to database', url, method)
+    def remove_job(self, id):
+        db_file = self.db_file
+        db = SQLite(db_file)
+        db.remove_job(id)
+        logger.info('Removed the job with id "%s" from database', id)
