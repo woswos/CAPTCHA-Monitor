@@ -1,55 +1,16 @@
-from captchamonitor import CaptchaMonitor
-import logging
-import sys
-import configparser
-import os
-import requests
-
-logger_format = '%(asctime)s %(module)s [%(levelname)s] %(message)s'
-logging.basicConfig(format=logger_format)
-logger = logging.getLogger('captchamonitor')
-logger.setLevel(logging.INFO)
+import pytest
+import captchamonitor.utils.tor_launcher as tor_launcher
+import time
 
 
-if __name__ == '__main__':
+def test_tor_launcher_start_without_exit_node():
+    port = 9050
+    tor_process = tor_launcher.launch_tor_with_config(port)
+    time.sleep(5)
+    assert tor_launcher.is_tor_running(port) == True
 
-    methods = ['firefox_over_tor',
-               'tor_browser',
-               'chromium_over_tor',
-               'requests_over_tor',
-               'curl_over_tor'
-               ]
-
-    # Get the list of latest exit nodes and choose the first one in the list
-    tor_bulk_exit_list = requests.get('https://check.torproject.org/torbulkexitlist')
-    for exit in tor_bulk_exit_list.iter_lines():
-        exit_node = exit.decode("utf-8")
-        logger.info('Using "%s" as the exit node', exit_node)
-        break
-
-    url = 'https://check.torproject.org/'
-    captcha_sign = 'Cloudflare'
-    additional_headers = None
-    security_level = 'medium'
-    config_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.ini')
-
-    logger.info('Deleting the existing db')
-    config = configparser.ConfigParser()
-    config.read(config_file)
-    db_file = config['SQLite']['db_file']
-    if os.path.exists(db_file):
-        os.remove(db_file)
-
-    logger.info('Testing the Tor launcher')
-    for method in methods:
-        cm = CaptchaMonitor(method, config_file)
-        cm.create_params()
-        cm.fetch(url, captcha_sign, additional_headers, security_level, exit_node)
-
-        if exit_node not in cm.params['html_data']:
-            logger.warning('This fetcher is not connected to the specified exit node!')
-            exit()
-        else:
-            logger.info('This fetcher is connected to the specified exit node, cool')
-
-    logger.info('Done testing')
+# def test_tor_launcher_kill_without_exit_node(port):
+#     tor_process = test_tor_launcher_start_without_exit_node()
+#     tor_launcher.kill(tor_process)
+#     time.sleep(5)
+#     assert tor_launcher.is_tor_running(port) == False

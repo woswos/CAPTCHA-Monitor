@@ -9,7 +9,7 @@ import json
 logger = logging.getLogger(__name__)
 
 
-def run(url, additional_headers):
+def run(url, additional_headers=None, **kwargs):
     if additional_headers:
         additional_headers = json.loads(additional_headers)
     results = {}

@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 headers = {}
 
 
-def run(url, additional_headers):
+def run(url, additional_headers=None, **kwargs):
     results = {}
     temp = []
     default_curl_request_headers = {"host": url, "user-agent": "curl/7.58.0", "accept": "*/*"}

@@ -15,7 +15,7 @@ import captchamonitor.utils.tor_launcher as tor_launcher
 logger = logging.getLogger(__name__)
 
 
-def run(url, additional_headers, tbb_path, tor_socks_host, tor_socks_port, security_level, exit_node):
+def run(url, tbb_path, tor_socks_host, tor_socks_port, additional_headers=None, security_level='medium', exit_node=None, **kwargs):
 
     security_levels = {'high':1, 'medium':2, 'low':4}
 

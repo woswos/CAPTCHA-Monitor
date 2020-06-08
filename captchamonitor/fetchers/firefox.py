@@ -12,7 +12,7 @@ from selenium.webdriver.firefox.options import Options
 logger = logging.getLogger(__name__)
 
 
-def run(url, additional_headers):
+def run(url, additional_headers=None, **kwargs):
     results = {}
 
     # Choose the headless mode
