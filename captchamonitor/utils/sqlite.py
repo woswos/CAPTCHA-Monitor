@@ -223,3 +223,5 @@ class SQLite:
             logger.critical('sqlite3.connect.cursor.execute() at insert_job() says: %s' % err)
 
         conn.close()
+
+        logger.info('Inserted the results of %s into the database', data['url'])

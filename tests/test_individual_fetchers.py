@@ -1,6 +1,5 @@
 import pytest
 import sys
-import configparser
 import os
 import requests
 from captchamonitor import fetchers

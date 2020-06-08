@@ -30,4 +30,4 @@ class Queue:
     def remove_job(self, id):
         db = SQLite()
         db.remove_job(id)
-        logger.info('Removed the job with id "%s" from database', id)
+        logger.info('Removed the job with id "%s" from queue', id)
