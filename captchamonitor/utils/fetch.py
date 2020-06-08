@@ -25,7 +25,7 @@ def fetch_via_method(data):
                                        tbb_path=tbb_path,
                                        tor_socks_host=tor_socks_host,
                                        tor_socks_port=tor_socks_port,
-                                       security_level=security_level,
+                                       security_level=tbb_security_level,
                                        exit_node=exit_node)
 
     elif(method == 'firefox_over_tor'):
@@ -67,5 +67,9 @@ def fetch_via_method(data):
 
     elif(method == 'curl'):
         results = fetchers.curl(url, additional_headers)
+
+    # Replace results if a fetcher returned an error
+    if results == -1:
+        results = None
 
     return results
