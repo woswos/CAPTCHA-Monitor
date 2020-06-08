@@ -47,6 +47,7 @@ def fresh_db():
 
     # Create a new test db
     db = SQLite(db_file)
+    db.check_if_db_exists()
     return db
 
 
