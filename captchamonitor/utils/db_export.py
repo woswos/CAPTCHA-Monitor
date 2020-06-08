@@ -1,15 +1,6 @@
-'''
-Export the SQlite database to JSON file
-
-Original code taken from https://github.com/Austyns/sqlite-to-json-python
-'''
-
 import sqlite3
 import logging
-try:
-    import configparser
-except ImportError:
-    import ConfigParser as configparser
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -21,12 +12,18 @@ def dict_factory(cursor, row):
     return d
 
 
-def export(config_file):
-    # Get the configuration file
-    config = configparser.ConfigParser()
-    config.read(config_file)
-    db_file = config['SQLite']['db_file']
-    db_export_location = config['GENERAL']['db_export_location']
+def export(path):
+    '''
+    Export the SQlite database to JSON file
+
+    Original code taken from https://github.com/Austyns/sqlite-to-json-python
+    '''
+
+    db_file = os.environ['CM_DB_FILE_PATH']
+    db_export_location = path
+
+    if not os.path.exists(db_export_location):
+        os.makedirs(db_export_location)
 
     # connect to the SQlite databases
     connection = sqlite3.connect(db_file)
@@ -48,7 +45,6 @@ def export(config_file):
         cur1.execute("SELECT * FROM " + table_name['name'])
 
         # fetch all or one we'll go for all.
-
         results = cur1.fetchall()
 
         # generate and save JSON files with the table name for each of the database tables
