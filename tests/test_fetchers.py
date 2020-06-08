@@ -71,26 +71,3 @@ def test_additional_headers(method):
     test_2 = ('pytest' in data['request_headers'])
 
     assert (test_1 and test_2) == True
-
-
-# @pytest.mark.parametrize('method', methods_all)
-# def test_captcha_check(method):
-#     url = 'https://www.cloudflare.com/'
-#
-#     captcha_sign = 'Cloudflare'
-#     tor_socks_host = '127.0.0.1'
-#     tor_socks_port = '9090'
-#     tbb_path = '/home/woswos/tor-browser_en-US'
-#
-#     data = method(url=url,
-#                   tbb_path=tbb_path,
-#                   tor_socks_host=tor_socks_host,
-#                   tor_socks_port=tor_socks_port)
-#
-#     # Check if the custom header was sent to the server
-#     test_1 = ('pytest' in data['html_data'])
-#
-#     # Check if the custom header was included in the requests headers
-#     test_2 = ('pytest' in data['request_headers'])
-#
-#     assert (test_1 and test_2) == True
