@@ -2,21 +2,13 @@ import logging
 import pycurl
 from io import BytesIO
 import json
-try:
-    import configparser
-except ImportError:
-    import ConfigParser as configparser
 
 logger = logging.getLogger(__name__)
 
 
 class Cloudflare:
-    def __init__(self, config_file):
+    def __init__(self, cloudflare_email, cloudflare_api_token):
         self.params = {}
-        config = configparser.ConfigParser()
-        config.read(config_file)
-        cloudflare_email = config['CLOUDFLARE']['cloudflare_email']
-        cloudflare_api_token = config['CLOUDFLARE']['cloudflare_api_token']
         self.credentials = ['x-auth-email: {0}'.format(cloudflare_email),
                             'Authorization: Bearer {0}'.format(cloudflare_api_token),
                             'Content-Type: application/json']
