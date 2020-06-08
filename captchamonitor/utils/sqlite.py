@@ -7,6 +7,9 @@ logger = logging.getLogger(__name__)
 
 class SQLite:
     def __init__(self, db_file):
+        """
+        The class that communicates with the database directly
+        """
         tables = {
             'results':
             {
@@ -39,8 +42,6 @@ class SQLite:
         self.tables = tables
         self.queue_table_name = 'queue'
         self.results_table_name = 'results'
-
-        self.check_if_db_exists()
 
     def check_if_db_exists(self):
         """
