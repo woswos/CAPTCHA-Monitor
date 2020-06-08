@@ -11,7 +11,8 @@ def randomString(stringLength=10):
     return ''.join(random.choice(letters) for i in range(stringLength))
 
 
-db_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'cm.db')
+os.environ['CM_DB_FILE_PATH'] = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'cm.db')
+db_file = os.environ['CM_DB_FILE_PATH']
 
 job_1 = {'method': randomString(),
          'url': randomString(),
@@ -46,7 +47,7 @@ def fresh_db():
         os.remove(db_file)
 
     # Create a new test db
-    db = SQLite(db_file)
+    db = SQLite()
     db.check_if_db_exists()
     return db
 

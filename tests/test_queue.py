@@ -11,7 +11,8 @@ def randomString(stringLength=10):
     return ''.join(random.choice(letters) for i in range(stringLength))
 
 
-db_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'cm.db')
+os.environ['CM_DB_FILE_PATH'] = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'cm.db')
+db_file = os.environ['CM_DB_FILE_PATH']
 
 job_1 = {'method': randomString(),
          'url': randomString(),
@@ -35,7 +36,7 @@ def fresh_queue():
         os.remove(db_file)
 
     # Create a new test queue
-    queue = Queue(db_file)
+    queue = Queue()
     return queue
 
 
@@ -52,9 +53,8 @@ def test_queue_add_job(fresh_queue):
 def test_queue_remove_job_with_single_job(fresh_queue):
     fresh_queue.add_job(job_1)
 
-    # Remove the job
+    # Remove the job internally
     job = fresh_queue.get_job()
-    fresh_queue.remove_job(job['id'])
 
     assert fresh_queue.get_job() == None
 
@@ -63,9 +63,8 @@ def test_queue_remove_job_with_multiple_job(fresh_queue):
     fresh_queue.add_job(job_1)
     fresh_queue.add_job(job_2)
 
-    # Remove the first job
+    # Remove the first job internally
     job = fresh_queue.get_job()
-    fresh_queue.remove_job(job['id'])
 
     # Get the remaining jobs, which should be job 2
     job = fresh_queue.get_job()

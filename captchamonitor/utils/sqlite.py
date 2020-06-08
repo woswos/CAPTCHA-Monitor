@@ -1,4 +1,4 @@
-import os.path
+import os
 import sqlite3
 import logging
 
@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 
 class SQLite:
-    def __init__(self, db_file):
+    def __init__(self):
         """
         The class that communicates with the database directly
         """
@@ -38,7 +38,7 @@ class SQLite:
             }
         }
 
-        self.db_file = db_file
+        self.db_file = os.environ['CM_DB_FILE_PATH']
         self.tables = tables
         self.queue_table_name = 'queue'
         self.results_table_name = 'results'
@@ -91,23 +91,26 @@ class SQLite:
         conn = sqlite3.connect(db_file)
 
         data_fields = ''
-        data_values = ''
+        data_q_marks = ''
+        data_values = []
         for field in data:
             data_fields += '%s,' % field
-            data_values += '"%s",' % data[field]
+            data_q_marks += '?,'
+            data_values.append(data[field])
 
         sql_query = 'INSERT INTO %s (%s) VALUES (%s)' % (table_name,
                                                          data_fields[:-1],
-                                                         data_values[:-1]
+                                                         data_q_marks[:-1]
                                                          )
 
         logger.debug(sql_query)
+        logger.debug(data_values)
 
         cur = conn.cursor()
 
         # Try to connect to the database
         try:
-            cur.execute(sql_query)
+            cur.execute(sql_query, data_values)
             conn.commit()
 
         except Exception as err:
@@ -194,23 +197,26 @@ class SQLite:
         conn = sqlite3.connect(db_file)
 
         data_fields = ''
-        data_values = ''
+        data_q_marks = ''
+        data_values = []
         for field in data:
             data_fields += '%s,' % field
-            data_values += '"%s",' % data[field]
+            data_q_marks += '?,'
+            data_values.append(data[field])
 
         sql_query = 'INSERT INTO %s (%s) VALUES (%s)' % (table_name,
                                                          data_fields[:-1],
-                                                         data_values[:-1]
+                                                         data_q_marks[:-1]
                                                          )
 
         logger.debug(sql_query)
-        print(sql_query)
+        logger.debug(data_values)
+
         cur = conn.cursor()
 
         # Try to connect to the database
         try:
-            cur.execute(sql_query)
+            cur.execute(sql_query, data_values)
             conn.commit()
 
         except Exception as err:
