@@ -41,6 +41,7 @@ CAPTCHA_Monitor.egg-info
 *.json
 config.ini
 .coverage
+captchamonitor.db
 
 # Docs
 _build
