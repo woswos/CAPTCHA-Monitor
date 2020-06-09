@@ -10,7 +10,7 @@ import captchamonitor.utils.tor_launcher as tor_launcher
 logger = logging.getLogger(__name__)
 
 
-def run(url, tor_socks_host, tor_socks_port, additional_headers=None, exit_node=None, **kwargs):
+def requests_over_tor(url, tor_socks_host, tor_socks_port, additional_headers=None, exit_node=None, **kwargs):
 
     tor_process = tor_launcher.launch_tor_with_config(tor_socks_port, exit_node)
 
