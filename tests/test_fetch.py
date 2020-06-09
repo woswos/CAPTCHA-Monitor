@@ -12,10 +12,6 @@ def randomString(stringLength=10):
     return ''.join(random.choice(letters) for i in range(stringLength))
 
 
-os.environ['CM_TBB_PATH'] = '/home/woswos/tor-browser_en-US'
-os.environ['CM_TOR_HOST'] = '127.0.0.1'
-os.environ['CM_TOR_PORT'] = '9090'
-
 methods = ['firefox',
            'firefox_over_tor',
            'tor_browser',

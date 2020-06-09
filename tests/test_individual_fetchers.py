@@ -26,9 +26,9 @@ for exit in tor_bulk_exit_list.iter_lines():
     break
 
 captcha_sign = 'Cloudflare'
-tor_socks_host = '127.0.0.1'
-tor_socks_port = '9090'
-tbb_path = '/home/woswos/tor-browser_en-US'
+tbb_path = os.environ['CM_TBB_PATH']
+tor_socks_host = os.environ['CM_TOR_HOST']
+tor_socks_port = os.environ['CM_TOR_PORT']
 
 
 @pytest.mark.parametrize('method', methods_over_tor)
