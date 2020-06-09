@@ -67,9 +67,5 @@ def fetch_via_method(data):
 
     elif(method == 'curl'):
         results = fetchers.curl(url, additional_headers)
-
-    # Replace results if a fetcher returned an error
-    if results == -1:
-        results = None
-
+        
     return results

@@ -13,7 +13,7 @@ import captchamonitor.utils.tor_launcher as tor_launcher
 logger = logging.getLogger(__name__)
 
 
-def chromium_over_tor(url, tor_socks_host, tor_socks_port, additional_headers=None, exit_node=None, **kwargs):
+def fetch_via_chromium_over_tor(url, tor_socks_host, tor_socks_port, additional_headers=None, exit_node=None, **kwargs):
 
     tor_process = tor_launcher.launch_tor_with_config(tor_socks_port, exit_node)
 
@@ -50,7 +50,7 @@ def chromium_over_tor(url, tor_socks_host, tor_socks_port, additional_headers=No
 
     except Exception as err:
         logger.error('webdriver.Chrome.get() says: %s' % err)
-        return -1
+        return None
 
     # Record the results
     results['html_data'] = driver.page_source

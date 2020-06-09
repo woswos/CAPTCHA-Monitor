@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 headers = {}
 
 
-def curl(url, additional_headers=None, **kwargs):
+def fetch_via_curl(url, additional_headers=None, **kwargs):
     results = {}
     temp = []
     default_curl_request_headers = {"host": url, "user-agent": "curl/7.58.0", "accept": "*/*"}
@@ -51,7 +51,7 @@ def curl(url, additional_headers=None, **kwargs):
 
     except Exception as err:
         logger.error('pycurl.perform() says: %s' % err)
-        return -1
+        return None
 
     data = b_obj.getvalue().decode('utf8')
 

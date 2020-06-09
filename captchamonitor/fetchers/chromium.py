@@ -12,7 +12,7 @@ from selenium.webdriver.chrome.options import Options
 logger = logging.getLogger(__name__)
 
 
-def chromium(url, additional_headers=None, **kwargs):
+def fetch_via_chromium(url, additional_headers=None, **kwargs):
     results = {}
 
     # Choose the headless mode
@@ -29,7 +29,7 @@ def chromium(url, additional_headers=None, **kwargs):
 
     except Exception as err:
         logger.error('webdriver.Chrome.get() says: %s' % err)
-        return -1
+        return None
 
     # Record the results
     results['html_data'] = driver.page_source

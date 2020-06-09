@@ -15,7 +15,7 @@ import captchamonitor.utils.tor_launcher as tor_launcher
 logger = logging.getLogger(__name__)
 
 
-def tor_browser(url, tbb_path, tor_socks_host, tor_socks_port, additional_headers=None, security_level='medium', exit_node=None, **kwargs):
+def fetch_via_tor_browser(url, tbb_path, tor_socks_host, tor_socks_port, additional_headers=None, security_level='medium', exit_node=None, **kwargs):
 
     security_levels = {'high':1, 'medium':2, 'low':4}
 
@@ -77,7 +77,7 @@ def tor_browser(url, tbb_path, tor_socks_host, tor_socks_port, additional_header
 
     except Exception as err:
         logger.error('webdriver.Firefox.get() says: %s' % err)
-        return -1
+        return None
 
     # Record the results
     results['html_data'] = driver.page_source

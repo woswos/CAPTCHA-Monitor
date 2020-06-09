@@ -12,7 +12,7 @@ from selenium.webdriver.firefox.options import Options
 logger = logging.getLogger(__name__)
 
 
-def firefox(url, additional_headers=None, **kwargs):
+def fetch_via_firefox(url, additional_headers=None, **kwargs):
     results = {}
 
     # Choose the headless mode
@@ -29,7 +29,7 @@ def firefox(url, additional_headers=None, **kwargs):
 
     except Exception as err:
         logger.error('webdriver.Firefox.get() says: %s' % err)
-        return -1
+        return None
 
     # Record the results
     results['html_data'] = driver.page_source

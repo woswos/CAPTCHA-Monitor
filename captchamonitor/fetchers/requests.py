@@ -9,7 +9,7 @@ import json
 logger = logging.getLogger(__name__)
 
 
-def requests(url, additional_headers=None, **kwargs):
+def fetch_via_requests(url, additional_headers=None, **kwargs):
     if additional_headers:
         additional_headers = json.loads(additional_headers)
     results = {}
@@ -20,7 +20,7 @@ def requests(url, additional_headers=None, **kwargs):
 
     except Exception as err:
         logger.error('request.get() says: %s' % err)
-        return -1
+        return None
 
     results['request_headers'] = json.dumps(dict(data.request.headers))
     results['html_data'] = str(data.text)
