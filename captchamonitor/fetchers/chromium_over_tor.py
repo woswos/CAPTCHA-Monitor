@@ -37,6 +37,8 @@ def fetch_via_chromium_over_tor(url, tor_socks_host, tor_socks_port, additional_
     # Choose the headless mode
     options = Options()
     options.headless = True
+    options.add_argument("--no-sandbox")
+    options.add_argument("--headless")
 
     driver = webdriver.Chrome(options=options,
                                seleniumwire_options=seleniumwire_options)

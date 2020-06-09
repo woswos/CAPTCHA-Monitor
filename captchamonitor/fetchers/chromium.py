@@ -18,6 +18,9 @@ def fetch_via_chromium(url, additional_headers=None, **kwargs):
     # Choose the headless mode
     options = Options()
     options.headless = True
+    options.add_argument("--no-sandbox")
+    options.add_argument("--headless")
+    
     driver = webdriver.Chrome(options=options)
 
     if additional_headers:
