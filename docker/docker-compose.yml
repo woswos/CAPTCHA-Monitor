@@ -3,5 +3,5 @@ services:
   captcha_monitor:
     build: ./
     volumes:
-      - ./:/db
+      - ~/captcha_monitor:/root/db
     restart: always
