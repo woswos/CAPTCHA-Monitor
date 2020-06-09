@@ -1,0 +1,7 @@
+version: "3.0"
+services:
+  captcha_monitor:
+    build: ./
+    volumes:
+      - ./:/db
+    restart: always
