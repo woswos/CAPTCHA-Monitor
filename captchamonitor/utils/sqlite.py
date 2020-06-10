@@ -29,6 +29,7 @@ class SQLite:
             'queue':
             {
                 'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+                'claimed_by': 'TEXT DEFAULT "None"',
                 'method': 'TEXT',
                 'url': 'TEXT',
                 'captcha_sign': 'TEXT',
@@ -114,14 +115,13 @@ class SQLite:
             conn.commit()
 
         except Exception as err:
-            logger.critical('sqlite3.connect.cursor.execute() at insert_job() says: %s' % err)
+            logger.critical('sqlite3.execute() at insert_job() says: %s' % err)
 
         conn.close()
 
-    def get_first_uncompleted_job(self):
+    def claim_first_uncompleted_job(self, worker_id):
         """
-        Gets the details of the first uncompleted job in the queue
-        Returns none if there are no jobs in the queue
+        Claims the first uncompleted job in the queue
         """
 
         table_name = self.queue_table_name
@@ -130,8 +130,9 @@ class SQLite:
         # Set database connection
         conn = sqlite3.connect(db_file)
 
-        # Prepare the SQL query
-        sql_query = 'SELECT * FROM %s ORDER BY id ASC LIMIT 1' % table_name
+        sql_query = '''UPDATE %s SET claimed_by = "%s"
+                    WHERE id = (SELECT min(id) FROM %s WHERE claimed_by = "None")''' % (
+                    table_name, worker_id, table_name)
 
         logger.debug(sql_query)
 
@@ -143,7 +144,36 @@ class SQLite:
             conn.commit()
 
         except Exception as err:
-            logger.critical('sqlite3.connect.cursor.execute() says: %s' % err)
+            logger.critical('sqlite3.execute() at claim_first_uncompleted_job() says: %s' % err)
+
+        conn.close()
+
+    def get_claimed_job(self, worker_id):
+        """
+        Gets the details of the claimed job
+        Returns none if no job was claimed or there are no jobs in the queue
+        """
+
+        table_name = self.queue_table_name
+        db_file = self.db_file
+
+        # Set database connection
+        conn = sqlite3.connect(db_file)
+
+        # Prepare the SQL query
+        sql_query = 'SELECT * FROM %s WHERE claimed_by = "%s"' % (table_name, worker_id)
+
+        logger.debug(sql_query)
+
+        cur = conn.cursor()
+
+        # Try to connect to the database
+        try:
+            cur.execute(sql_query)
+            conn.commit()
+
+        except Exception as err:
+            logger.critical('sqlite3.execute() at get_claimed_job() says: %s' % err)
 
         result = cur.fetchall()
 
@@ -157,7 +187,7 @@ class SQLite:
 
         return result
 
-    def remove_job(self, id):
+    def remove_job(self, job_id):
         """
         Removes the job with given id
         """
@@ -169,7 +199,7 @@ class SQLite:
         conn = sqlite3.connect(db_file)
 
         # Prepare the SQL query
-        sql_query = 'DELETE from %s WHERE id = "%s"' % (table_name, id)
+        sql_query = 'DELETE from %s WHERE id = "%s"' % (table_name, job_id)
 
         logger.debug(sql_query)
 
@@ -181,7 +211,7 @@ class SQLite:
             conn.commit()
 
         except Exception as err:
-            logger.critical('sqlite3.connect.cursor.execute() says: %s' % err)
+            logger.critical('sqlite3.execute() at remove_job() says: %s' % err)
 
         conn.close()
 
@@ -220,7 +250,7 @@ class SQLite:
             conn.commit()
 
         except Exception as err:
-            logger.critical('sqlite3.connect.cursor.execute() at insert_job() says: %s' % err)
+            logger.critical('sqlite3.connect.cursor.execute() at insert_result() says: %s' % err)
 
         conn.close()
 

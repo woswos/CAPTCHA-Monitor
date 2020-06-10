@@ -13,13 +13,12 @@ class Queue:
         db = SQLite()
         db.check_if_db_exists()
 
-    def get_job(self):
+    def get_job(self, worker_id):
         db = SQLite()
-        result = db.get_first_uncompleted_job()
+        db.claim_first_uncompleted_job(worker_id)
+        result = db.get_claimed_job(worker_id)
         if result is None:
             logger.debug('No jobs available in the queue')
-        else:
-            self.remove_job(result['id'])
         return result
 
     def add_job(self, data):
@@ -27,7 +26,7 @@ class Queue:
         db.insert_job(data)
         logger.info('Added new job for fetching "%s" via "%s" to database', data['url'], data['method'])
 
-    def remove_job(self, id):
+    def remove_job(self, job_id):
         db = SQLite()
-        db.remove_job(id)
-        logger.info('Removed the job with id "%s" from queue', id)
+        db.remove_job(job_id)
+        logger.info('Removed the job with id "%s" from queue', job_id)

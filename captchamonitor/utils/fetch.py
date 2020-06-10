@@ -67,5 +67,9 @@ def fetch_via_method(data):
 
     elif(method == 'curl'):
         results = fetchers.curl(url, additional_headers)
-        
+
+    else:
+        logger.info('"%s" is not available, please check the method name"', method)
+        return None
+
     return results

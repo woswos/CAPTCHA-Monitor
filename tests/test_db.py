@@ -6,9 +6,8 @@ import random
 import string
 
 
-def randomString(stringLength=10):
-    letters = string.ascii_lowercase
-    return ''.join(random.choice(letters) for i in range(stringLength))
+def randomString(size=10, chars=string.ascii_uppercase + string.digits):
+    return ''.join(random.choice(chars) for _ in range(size))
 
 
 os.environ['CM_DB_FILE_PATH'] = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'cm.db')
@@ -72,14 +71,18 @@ def test_db_insert_job(fresh_db):
 
 
 def test_db_get_uncompleted_job_with_no_job(fresh_db):
-    job = fresh_db.get_first_uncompleted_job()
+    worker_id = randomString(32)
+    fresh_db.claim_first_uncompleted_job(worker_id)
+    job = fresh_db.get_claimed_job(worker_id)
     assert job == None
 
 
 def test_db_get_uncompleted_job_with_job(fresh_db):
     fresh_db.insert_job(job_1)
 
-    job = fresh_db.get_first_uncompleted_job()
+    worker_id = randomString(32)
+    fresh_db.claim_first_uncompleted_job(worker_id)
+    job = fresh_db.get_claimed_job(worker_id)
 
     assert job['url'] == job_1['url']
 
@@ -89,7 +92,9 @@ def test_db_get_uncompleted_job_with_multiple_jobs(fresh_db):
     fresh_db.insert_job(job_2)
 
     # Should give priority to first inserted job
-    job = fresh_db.get_first_uncompleted_job()
+    worker_id = randomString(32)
+    fresh_db.claim_first_uncompleted_job(worker_id)
+    job = fresh_db.get_claimed_job(worker_id)
 
     assert job['url'] == job_1['url']
 
@@ -98,7 +103,9 @@ def test_db_remove_job(fresh_db):
     fresh_db.insert_job(job_1)
 
     # Get the job
-    job = fresh_db.get_first_uncompleted_job()
+    worker_id = randomString(32)
+    fresh_db.claim_first_uncompleted_job(worker_id)
+    job = fresh_db.get_claimed_job(worker_id)
 
     # Delete the job
     fresh_db.remove_job(job['id'])
@@ -119,7 +126,9 @@ def test_db_remove_job_with_multiple_jobs_in_the_queue(fresh_db):
     fresh_db.insert_job(job_2)
 
     # Get the job
-    job = fresh_db.get_first_uncompleted_job()
+    worker_id = randomString(32)
+    fresh_db.claim_first_uncompleted_job(worker_id)
+    job = fresh_db.get_claimed_job(worker_id)
 
     # Delete the first job
     fresh_db.remove_job(job['id'])

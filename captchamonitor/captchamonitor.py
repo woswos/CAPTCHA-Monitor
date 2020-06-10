@@ -98,6 +98,18 @@ class main():
 
         run_parser.set_defaults(func=self.run, formatter_class=formatter_class)
 
+        run_parser.add_argument('-r', '--retry',
+                                help="""specify the number of retries for failed jobs""",
+                                metavar='N',
+                                type=int,
+                                default=3)
+
+        run_parser.add_argument('-t', '--timeout',
+                                help="""specify the number of seconds to allow each job to run""",
+                                metavar='N',
+                                type=int,
+                                default=60)
+
         run_parser.add_argument('-l', '--loop',
                                 help="""use this argument to process jobs in a loop""",
                                 action='store_true')
@@ -179,8 +191,18 @@ class main():
         from captchamonitor.utils.captcha import detect
         from captchamonitor.utils.sqlite import SQLite
         import time
+        import random
+        import string
+
+        def randomString(size=10, chars=string.ascii_uppercase + string.digits):
+            return ''.join(random.choice(chars) for _ in range(size))
 
         loop = args.loop
+        retry_budget = args.retry
+        timeout_value = int(args.timeout)
+
+        # Generate a worker id
+        worker_id = randomString(64)
 
         try:
             if loop:
@@ -188,30 +210,50 @@ class main():
             else:
                 logger.info('Started running CAPTCHA Monitor')
 
-            queue = Queue()
             db = SQLite()
+            queue = Queue()
 
             while True:
-                job_details = queue.get_job()
+                job_details = queue.get_job(worker_id)
 
                 # Process the job if there is one in the queue
                 if job_details is not None:
-                    # Fetch the URL using the method specified
-                    fetched_data = fetch_via_method(job_details)
+                    
+                    job_id = job_details['id']
+                    success = False
 
-                    # Detect any CAPTCHAs
-                    fetched_data['is_captcha_found'] = detect(
-                        job_details['captcha_sign'], fetched_data['html_data'])
+                    # Retry fetching the same job up to the specified amount
+                    for number_of_retries in range(retry_budget):
+                        # Fetch the URL using the method specified
+                        fetched_data = fetch_via_method(job_details)
 
-                    # Delete columns that we don't want in the results table
-                    del job_details['id']
-                    del job_details['additional_headers']
+                        # Stop retry loop if a meaningful result was returned
+                        if fetched_data is not None:
+                            success = True
+                            break
 
-                    # Combine the fetched data and job details
-                    results = {**job_details, **fetched_data}
+                    # Process the results if the fetch was successful
+                    if success:
+                        # Detect any CAPTCHAs
+                        fetched_data['is_captcha_found'] = detect(job_details['captcha_sign'],
+                                                                  fetched_data['html_data'])
 
-                    # Insert into the database
-                    db.insert_result(results)
+                        # Delete columns that we don't want in the results table
+                        del job_details['id']
+                        del job_details['additional_headers']
+                        del job_details['claimed_by']
+
+                        # Combine the fetched data and job details
+                        results = {**job_details, **fetched_data}
+
+                        # Insert into the database
+                        db.insert_result(results)
+
+                    else:
+                        logger.info('Job %s failed %s time(s), giving up...', job_id, retry_budget)
+
+                    # Remove completed job from queue
+                    queue.remove_job(job_id)
 
                 elif not loop:
                     logger.info('No job found in the queue, exitting...')
