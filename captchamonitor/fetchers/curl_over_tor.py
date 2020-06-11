@@ -13,13 +13,9 @@ logger = logging.getLogger(__name__)
 headers = {}
 
 
-def fetch_via_curl_over_tor(url, tor_socks_host, tor_socks_port, additional_headers=None, exit_node=None, **kwargs):
+def fetch_via_curl_over_tor(url, tor_socks_host, tor_socks_port, tor_control_port, additional_headers=None, exit_node=None, **kwargs):
 
-    tor_process = tor_launcher.launch_tor_with_config(tor_socks_port, exit_node)
-
-    # Wait until Tor starts
-    while(not tor_launcher.is_tor_running(tor_socks_port)):
-        pass
+    tor_process = tor_launcher.launch_tor_with_config(tor_socks_host, tor_socks_port, tor_control_port, exit_node)
 
     results = {}
     temp = []

@@ -13,13 +13,9 @@ import captchamonitor.utils.tor_launcher as tor_launcher
 logger = logging.getLogger(__name__)
 
 
-def fetch_via_chromium_over_tor(url, tor_socks_host, tor_socks_port, additional_headers=None, exit_node=None, **kwargs):
+def fetch_via_chromium_over_tor(url, tor_socks_host, tor_socks_port, tor_control_port, additional_headers=None, exit_node=None, **kwargs):
 
-    tor_process = tor_launcher.launch_tor_with_config(tor_socks_port, exit_node)
-
-    # Wait until Tor starts
-    while(not tor_launcher.is_tor_running(tor_socks_port)):
-        pass
+    tor_process = tor_launcher.launch_tor_with_config(tor_socks_host, tor_socks_port, tor_control_port, exit_node)
 
     results = {}
 
@@ -28,9 +24,9 @@ def fetch_via_chromium_over_tor(url, tor_socks_host, tor_socks_port, additional_
     #   to a load page that requires a lot of requests. It is in seconds.
     seleniumwire_options = {
         'proxy': {
-            'http': 'socks5h://' + tor_socks_host + ':' + tor_socks_port,
-            'https': 'socks5h://' + tor_socks_host + ':' + tor_socks_port,
-            'connection_timeout': 10
+            'http': 'socks5h://%s:%s' % (tor_socks_host, tor_socks_port),
+            'https': 'socks5h://%s:%s' % (tor_socks_host, tor_socks_port),
+            'connection_timeout': 30
         }
     }
 

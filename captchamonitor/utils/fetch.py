@@ -7,7 +7,8 @@ logger = logging.getLogger(__name__)
 def fetch_via_method(data):
     tbb_path = os.environ['CM_TBB_PATH']
     tor_socks_host = os.environ['CM_TOR_HOST']
-    tor_socks_port = os.environ['CM_TOR_PORT']
+    tor_socks_port = os.environ['CM_TOR_SOCKS_PORT']
+    tor_control_port = int(os.environ['CM_TOR_CONTROL_PORT'])
 
     method = data['method']
     url = data['url']
@@ -25,6 +26,7 @@ def fetch_via_method(data):
                                        tbb_path=tbb_path,
                                        tor_socks_host=tor_socks_host,
                                        tor_socks_port=tor_socks_port,
+                                       tor_control_port=tor_control_port,
                                        security_level=tbb_security_level,
                                        exit_node=exit_node)
 
@@ -33,6 +35,7 @@ def fetch_via_method(data):
                                             additional_headers=additional_headers,
                                             tor_socks_host=tor_socks_host,
                                             tor_socks_port=tor_socks_port,
+                                            tor_control_port=tor_control_port,
                                             exit_node=exit_node)
 
     elif(method == 'chromium_over_tor'):
@@ -40,6 +43,7 @@ def fetch_via_method(data):
                                              additional_headers=additional_headers,
                                              tor_socks_host=tor_socks_host,
                                              tor_socks_port=tor_socks_port,
+                                             tor_control_port=tor_control_port,
                                              exit_node=exit_node)
 
     elif(method == 'requests_over_tor'):
@@ -47,6 +51,7 @@ def fetch_via_method(data):
                                              additional_headers=additional_headers,
                                              tor_socks_host=tor_socks_host,
                                              tor_socks_port=tor_socks_port,
+                                             tor_control_port=tor_control_port,
                                              exit_node=exit_node)
 
     elif(method == 'curl_over_tor'):
@@ -54,6 +59,7 @@ def fetch_via_method(data):
                                          additional_headers=additional_headers,
                                          tor_socks_host=tor_socks_host,
                                          tor_socks_port=tor_socks_port,
+                                         tor_control_port=tor_control_port,
                                          exit_node=exit_node)
 
     elif(method == 'requests'):

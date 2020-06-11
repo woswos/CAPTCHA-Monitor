@@ -28,7 +28,8 @@ for exit in tor_bulk_exit_list.iter_lines():
 captcha_sign = 'Cloudflare'
 tbb_path = os.environ['CM_TBB_PATH']
 tor_socks_host = os.environ['CM_TOR_HOST']
-tor_socks_port = os.environ['CM_TOR_PORT']
+tor_socks_port = os.environ['CM_TOR_SOCKS_PORT']
+tor_control_port = int(os.environ['CM_TOR_CONTROL_PORT'])
 
 
 @pytest.mark.parametrize('method', methods_over_tor)
@@ -39,6 +40,7 @@ def test_tor_and_exit_node_connection(method):
                   tbb_path=tbb_path,
                   tor_socks_host=tor_socks_host,
                   tor_socks_port=tor_socks_port,
+                  tor_control_port=tor_control_port,
                   exit_node=exit_node)
 
     # Check if the specified exit node is connected
@@ -56,7 +58,8 @@ def test_additional_headers(method):
                   additional_headers=headers,
                   tbb_path=tbb_path,
                   tor_socks_host=tor_socks_host,
-                  tor_socks_port=tor_socks_port)
+                  tor_socks_port=tor_socks_port,
+                  tor_control_port=tor_control_port)
 
     # Check if the custom header was sent to the server
     test_1 = ('pytest' in data['html_data'])
