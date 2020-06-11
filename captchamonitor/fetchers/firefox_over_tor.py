@@ -8,14 +8,13 @@ import json
 from urltools import compare
 from seleniumwire import webdriver
 from selenium.webdriver.firefox.options import Options
-import captchamonitor.utils.tor_launcher as tor_launcher
 
 logger = logging.getLogger(__name__)
 
 
-def fetch_via_firefox_over_tor(url, tor_socks_host, tor_socks_port, tor_control_port, additional_headers=None, exit_node=None, **kwargs):
-
-    tor_process = tor_launcher.launch_tor_with_config(tor_socks_host, tor_socks_port, tor_control_port, exit_node)
+def fetch_via_firefox_over_tor(tor_config, url, additional_headers=None, **kwargs):
+    tor_socks_host = tor_config['tor_socks_host']
+    tor_socks_port = tor_config['tor_socks_port']
 
     results = {}
 
@@ -63,7 +62,5 @@ def fetch_via_firefox_over_tor(url, tor_socks_host, tor_socks_port, tor_control_
     logger.debug('I\'m done fetching %s', url)
 
     driver.quit()
-
-    tor_launcher.kill(tor_process)
 
     return results

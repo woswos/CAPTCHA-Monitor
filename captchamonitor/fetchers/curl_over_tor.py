@@ -6,16 +6,15 @@ import logging
 import pycurl
 from io import BytesIO
 import json
-import captchamonitor.utils.tor_launcher as tor_launcher
 
 logger = logging.getLogger(__name__)
 
 headers = {}
 
 
-def fetch_via_curl_over_tor(url, tor_socks_host, tor_socks_port, tor_control_port, additional_headers=None, exit_node=None, **kwargs):
-
-    tor_process = tor_launcher.launch_tor_with_config(tor_socks_host, tor_socks_port, tor_control_port, exit_node)
+def fetch_via_curl_over_tor(tor_config, url, additional_headers=None, **kwargs):
+    tor_socks_host = tor_config['tor_socks_host']
+    tor_socks_port = tor_config['tor_socks_port']
 
     results = {}
     temp = []
@@ -71,8 +70,6 @@ def fetch_via_curl_over_tor(url, tor_socks_host, tor_socks_port, tor_control_por
     logger.debug('I\'m done fetching %s', url)
 
     curl.close()
-
-    tor_launcher.kill(tor_process)
 
     return results
 

@@ -1,6 +1,7 @@
 import logging
 import os
 from captchamonitor import fetchers
+import captchamonitor.utils.tor_launcher as tor_launcher
 logger = logging.getLogger(__name__)
 
 
@@ -20,47 +21,33 @@ def fetch_via_method(data):
     results = {}
     logger.info('Fetching "%s" via "%s"', url, method)
 
+    tor_process = tor_launcher.launch_tor_with_config(
+        tor_socks_host, tor_socks_port, tor_control_port, exit_node)
+
+    tor_config = {'tor_socks_host': tor_socks_host,
+                  'tor_socks_port': tor_socks_port,
+                  'tor_control_port': tor_control_port,
+                  'exit_node': exit_node
+                  }
+
     if(method == 'tor_browser'):
-        results = fetchers.tor_browser(url=url,
-                                       additional_headers=additional_headers,
-                                       tbb_path=tbb_path,
-                                       tor_socks_host=tor_socks_host,
-                                       tor_socks_port=tor_socks_port,
-                                       tor_control_port=tor_control_port,
-                                       security_level=tbb_security_level,
-                                       exit_node=exit_node)
+        results = fetchers.tor_browser(tor_config,
+                                       tbb_path,
+                                       url,
+                                       additional_headers,
+                                       tbb_security_level)
 
     elif(method == 'firefox_over_tor'):
-        results = fetchers.firefox_over_tor(url=url,
-                                            additional_headers=additional_headers,
-                                            tor_socks_host=tor_socks_host,
-                                            tor_socks_port=tor_socks_port,
-                                            tor_control_port=tor_control_port,
-                                            exit_node=exit_node)
+        results = fetchers.firefox_over_tor(tor_config, url, additional_headers)
 
     elif(method == 'chromium_over_tor'):
-        results = fetchers.chromium_over_tor(url=url,
-                                             additional_headers=additional_headers,
-                                             tor_socks_host=tor_socks_host,
-                                             tor_socks_port=tor_socks_port,
-                                             tor_control_port=tor_control_port,
-                                             exit_node=exit_node)
+        results = fetchers.chromium_over_tor(tor_config, url, additional_headers)
 
     elif(method == 'requests_over_tor'):
-        results = fetchers.requests_over_tor(url=url,
-                                             additional_headers=additional_headers,
-                                             tor_socks_host=tor_socks_host,
-                                             tor_socks_port=tor_socks_port,
-                                             tor_control_port=tor_control_port,
-                                             exit_node=exit_node)
+        results = fetchers.requests_over_tor(tor_config, url, additional_headers)
 
     elif(method == 'curl_over_tor'):
-        results = fetchers.curl_over_tor(url=url,
-                                         additional_headers=additional_headers,
-                                         tor_socks_host=tor_socks_host,
-                                         tor_socks_port=tor_socks_port,
-                                         tor_control_port=tor_control_port,
-                                         exit_node=exit_node)
+        results = fetchers.curl_over_tor(tor_config, url, additional_headers)
 
     elif(method == 'requests'):
         results = fetchers.requests(url, additional_headers)
@@ -77,5 +64,7 @@ def fetch_via_method(data):
     else:
         logger.info('"%s" is not available, please check the method name"', method)
         return None
+
+    tor_launcher.kill(tor_process)
 
     return results

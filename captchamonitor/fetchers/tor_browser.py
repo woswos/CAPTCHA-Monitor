@@ -10,16 +10,15 @@ from seleniumwire import webdriver
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 from selenium.webdriver.firefox.options import Options
-import captchamonitor.utils.tor_launcher as tor_launcher
 
 logger = logging.getLogger(__name__)
 
 
-def fetch_via_tor_browser(url, tbb_path, tor_socks_host, tor_socks_port, tor_control_port, additional_headers=None, security_level='medium', exit_node=None, **kwargs):
-
-    security_levels = {'high':1, 'medium':2, 'low':4}
-
-    tor_process = tor_launcher.launch_tor_with_config(tor_socks_host, tor_socks_port, tor_control_port, exit_node)
+def fetch_via_tor_browser(tor_config, tbb_path, url, additional_headers=None, security_level='medium', **kwargs):
+    tor_socks_host = tor_config['tor_socks_host']
+    tor_socks_port = tor_config['tor_socks_port']
+    
+    security_levels = {'high': 1, 'medium': 2, 'low': 4}
 
     results = {}
 
@@ -90,7 +89,5 @@ def fetch_via_tor_browser(url, tbb_path, tor_socks_host, tor_socks_port, tor_con
     logger.debug('I\'m done fetching %s', url)
 
     driver.quit()
-
-    tor_launcher.kill(tor_process)
 
     return results

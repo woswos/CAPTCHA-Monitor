@@ -10,9 +10,9 @@ import captchamonitor.utils.tor_launcher as tor_launcher
 logger = logging.getLogger(__name__)
 
 
-def fetch_via_requests_over_tor(url, tor_socks_host, tor_socks_port, tor_control_port, additional_headers=None, exit_node=None, **kwargs):
-
-    tor_process = tor_launcher.launch_tor_with_config(tor_socks_host, tor_socks_port, tor_control_port, exit_node)
+def fetch_via_requests_over_tor(tor_config, url, additional_headers=None, **kwargs):
+    tor_socks_host = tor_config['tor_socks_host']
+    tor_socks_port = tor_config['tor_socks_port']
 
     if additional_headers:
         additional_headers = json.loads(additional_headers)
@@ -37,7 +37,5 @@ def fetch_via_requests_over_tor(url, tor_socks_host, tor_socks_port, tor_control
     results['response_headers'] = json.dumps(dict(data.headers))
 
     logger.debug('I\'m done fetching %s', url)
-
-    tor_launcher.kill(tor_process)
 
     return results
