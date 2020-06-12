@@ -1,5 +1,6 @@
 import logging
 import os
+import pwd
 from captchamonitor import fetchers
 import captchamonitor.utils.tor_launcher as tor_launcher
 logger = logging.getLogger(__name__)
@@ -21,14 +22,17 @@ def fetch_via_method(data):
     results = {}
     logger.info('Fetching "%s" via "%s"', url, method)
 
-    tor_process = tor_launcher.launch_tor_with_config(
-        tor_socks_host, tor_socks_port, tor_control_port, exit_node)
-
     tor_config = {'tor_socks_host': tor_socks_host,
                   'tor_socks_port': tor_socks_port,
                   'tor_control_port': tor_control_port,
-                  'exit_node': exit_node
+                  'exit_node': exit_node,
+                  'tor_dir': '/tmp/captchamonitor_tor_datadir_%s' % pwd.getpwuid(os.getuid())[0]
                   }
+
+    if 'tor' in method:
+        tor_process = tor_launcher.launch_tor_with_config(tor_config)
+        stem_controller = tor_launcher.StemController(tor_config)
+        stem_controller.start()
 
     if(method == 'tor_browser'):
         results = fetchers.tor_browser(tor_config,
@@ -65,6 +69,8 @@ def fetch_via_method(data):
         logger.info('"%s" is not available, please check the method name"', method)
         return None
 
-    tor_launcher.kill(tor_process)
+    if 'tor' in method:
+        stem_controller.join()
+        tor_launcher.kill(tor_process)
 
     return results
