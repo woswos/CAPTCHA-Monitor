@@ -1,14 +1,6 @@
 import pytest
-import logging
 from captchamonitor import fetchers
 import captchamonitor.utils.tor_launcher as tor_launcher
-
-logger_format = '%(asctime)s %(module)s [%(levelname)s] %(message)s'
-logging.basicConfig(format=logger_format)
-logger = logging.getLogger('captchamonitor')
-logger.setLevel(logging.DEBUG)
-logger = logging.getLogger('stem')
-logger.setLevel(logging.INFO)
 
 methods_over_tor = [fetchers.firefox_over_tor,
                     fetchers.tor_browser,
