@@ -326,7 +326,7 @@ class main():
                     logger.info('No job found in the queue, exitting...')
                     break
 
-                time.sleep(1)
+                time.sleep(0.1)
 
         except KeyboardInterrupt:
             logger.info('Stopping, bye!')
