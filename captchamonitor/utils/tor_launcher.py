@@ -35,7 +35,7 @@ class TorLauncher():
 
     def print_bootstrap_lines(self, line):
         if "Bootstrapped " in line:
-            logger.debug(line)
+            logger.info(line)
 
     def launch_tor_process(self):
         """
@@ -64,7 +64,7 @@ class TorLauncher():
                 init_msg_handler=self.print_bootstrap_lines,
                 completion_percent=75,
                 take_ownership=True)
-            logger.debug('Launched Tor at port %s:%s' % (self.socks_host, self.socks_port))
+            logger.info('Launched Tor at port %s:%s' % (self.socks_host, self.socks_port))
 
         except Exception as err:
             logger.error('stem.process.launch_tor_with_config() says: %s' % err)
