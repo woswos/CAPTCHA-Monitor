@@ -25,7 +25,8 @@ class TorLauncher():
         self.socks_host = os.environ['CM_TOR_HOST']
         self.socks_port = os.environ['CM_TOR_SOCKS_PORT']
         self.control_port = int(os.environ['CM_TOR_CONTROL_PORT'])
-        self.tor_dir = os.path.join(str(Path.home()), '.tor')
+        self.tor_dir = os.environ['CM_TOR_DIR_PATH']
+        # self.tor_dir = os.path.join(str(Path.home()), '.tor')
         # 'tor_dir': '/tmp/captchamonitor_tor_datadir_%s' % pwd.getpwuid(os.getuid())[0]
 
     def start(self):

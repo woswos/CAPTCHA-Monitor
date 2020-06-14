@@ -12,7 +12,8 @@ env_vars = {'CM_TBB_PATH': 'The path to Tor Browser bundle',
             'CM_TOR_HOST': 'The IP address of the Tor server',
             'CM_TOR_SOCKS_PORT': 'The port number of the Tor server',
             'CM_TOR_CONTROL_PORT': 'The control port number of the Tor server',
-            'CM_DB_FILE_PATH': 'The path to the database file'}
+            'CM_DB_FILE_PATH': 'The path to the database file',
+            'CM_TOR_DIR_PATH': 'The path to the Tor directory (usually ~/.tor)'}
 
 for env_var in env_vars:
     if env_var not in os.environ:

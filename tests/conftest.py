@@ -12,11 +12,10 @@ logger = logging.getLogger('log')
 logger.setLevel(logging.INFO)
 
 
-
-@pytest.fixture(scope="session", autouse=True)
-def run_and_stop_tors():
-    # Just to make sure that the descriptors are already downloaded
-    tor = tor_launcher.TorLauncher()
-    tor.start()
-    tor.new_circuit()
-    tor.stop()
+# @pytest.fixture(scope="session", autouse=True)
+# def run_and_stop_tors():
+#     # Just to make sure that the descriptors are already downloaded
+#     tor = tor_launcher.TorLauncher()
+#     tor.start()
+#     tor.new_circuit()
+#     tor.stop()
