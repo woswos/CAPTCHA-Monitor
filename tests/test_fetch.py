@@ -28,7 +28,7 @@ job = {'method': '',
        'tbb_security_level': 'medium'}
 
 
-@pytest.fixture(autouse=True, scope="session")
+@pytest.fixture(autouse=True, scope="module")
 def parametrization_scope():
     """
     This will be run before and after the tests to start and stop Tor
@@ -36,7 +36,7 @@ def parametrization_scope():
     print("Starting Tor for the tests")
     tor = tor_launcher.TorLauncher()
     tor.start()
-    tor.new_circuit(exit_node)
+    tor.new_circuit()
 
     # Executing parametrizations
     yield

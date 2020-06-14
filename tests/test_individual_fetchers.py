@@ -24,7 +24,7 @@ for exit in tor.get_exit_relays().keys():
     break
 
 
-@pytest.fixture(autouse=True, scope="session")
+@pytest.fixture(autouse=True, scope="module")
 def parametrization_scope():
     """
     This will be run before and after the tests to start and stop Tor
