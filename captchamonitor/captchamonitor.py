@@ -88,6 +88,9 @@ class main():
                                     help="""specify the Tor Browser security level (if using Tor Browser)""",
                                     metavar="LEVEL",
                                     default='medium')
+        add_job_parser.add_argument('-x', '--all_exit_nodes',
+                                    help="""use this argument if you want to add this current job for all exit nodes""",
+                                    action='store_true')
 
         #######
         # RUN #
@@ -174,15 +177,47 @@ class main():
         """
         from captchamonitor.utils.queue import Queue
 
-        data = {'method': args.method,
-                'url': args.url,
-                'captcha_sign': args.captcha_sign,
-                'additional_headers': args.additional_headers,
-                'exit_node': args.exit_node,
-                'tbb_security_level': args.tbb_security_level}
-
         queue = Queue()
-        queue.add_job(data)
+
+        if args.all_exit_nodes:
+            import captchamonitor.utils.tor_launcher as tor_launcher
+            import time
+
+            wait_time = 3
+            logger.info(
+                'I\'m going to replicate the specified job for all exit nodes. Use CTRL+C if you want to cancel.')
+            logger.info('I\'ll wait for %d seconds before starting, just in case' % wait_time)
+
+            for i in range(wait_time, 0, -1):
+                logger.info('%s' % i)
+                time.sleep(1)
+
+            try:
+                # Just all exit nodes
+                tor = tor_launcher.TorLauncher()
+                for exit in tor.get_exit_relays().keys():
+                    data = {'method': args.method,
+                            'url': args.url,
+                            'captcha_sign': args.captcha_sign,
+                            'additional_headers': args.additional_headers,
+                            'exit_node': exit,
+                            'tbb_security_level': args.tbb_security_level}
+                    queue.add_job(data)
+
+                logger.info('DONE!')
+
+            except KeyboardInterrupt:
+                logger.info('Stopping, bye!')
+
+        else:
+            data = {'method': args.method,
+                    'url': args.url,
+                    'captcha_sign': args.captcha_sign,
+                    'additional_headers': args.additional_headers,
+                    'exit_node': args.exit_node,
+                    'tbb_security_level': args.tbb_security_level}
+
+            queue.add_job(data)
 
         sys.exit()
 
@@ -199,7 +234,7 @@ class main():
         # Silence the stem logger
         from stem.util.log import get_logger
         stem_logger = get_logger()
-        logger.setLevel(logging.INFO)
+        stem_logger.propagate = False
 
         def randomString(size=10, chars=string.ascii_uppercase + string.digits):
             return ''.join(random.choice(chars) for _ in range(size))
@@ -211,82 +246,93 @@ class main():
         # Generate a worker id
         worker_id = randomString(64)
 
+        # Do setup
+        db = SQLite()
+        queue = Queue()
+
+        # Start Tor
+        tor = tor_launcher.TorLauncher()
+        tor.start()
+
+        # TODO: make this less confusing
         try:
             if loop:
                 logger.info('Started running CAPTCHA Monitor in the continous mode')
             else:
                 logger.info('Started running CAPTCHA Monitor')
 
-            db = SQLite()
-            queue = Queue()
-
-            tor = tor_launcher.TorLauncher()
-            tor.start()
-
             # The main loop for getting a new job and processing it
             while True:
+
+                # Get the details of the first available job
                 job_details = queue.get_job(worker_id)
 
                 # Process the job if there is one in the queue
                 if job_details is not None:
-
                     job_id = job_details['id']
                     success = False
+                    exit_node_connection_success = False
 
                     try:
-                        if 'tor' in job_details['method']:
-                            # Choose a specific exit node if specified
+                        if (('tor' in job_details['method']) or (job_details['exit_node'] is not None)):
                             tor.new_circuit(job_details['exit_node'])
                             logger.info('Using %s as the exit node' % job_details['exit_node'])
 
+                        # This will be run if circuit was created successfully or no exit node was provided
+                        exit_node_connection_success = True
+
                     except Exception as err:
-                        logger.info('Cloud not connect to the specified exit node')
+                        logger.info('Cloud not connect to the specified exit node: %s' % err)
 
-                    finally:
-                        # Retry fetching the same job up to the specified amount
-                        for number_of_retries in range(retry_budget):
-                            # Fetch the URL using the method specified
-                            fetched_data = fetch_via_method(job_details)
+                    # Retry fetching the same job up to the specified amount
+                    for number_of_retries in range(retry_budget):
+                        # Don't even try fetching if not connected to the exit node
+                        # if 'tor' in job_details['method'] and not exit_node_connection_success:
+                        #    break
 
-                            # Stop retry loop if a meaningful result was returned
-                            if fetched_data is not None:
-                                success = True
-                                break
+                        # Fetch the URL using the method specified
+                        fetched_data = fetch_via_method(job_details)
 
-                        # Process the results if the fetch was successful
-                        if success:
-                            # Detect any CAPTCHAs
-                            fetched_data['is_captcha_found'] = detect(job_details['captcha_sign'],
-                                                                      fetched_data['html_data'])
+                        # Stop retry loop if a meaningful result was returned
+                        if fetched_data is not None:
+                            success = True
+                            break
 
-                            # Delete columns that we don't want in the results table
-                            del job_details['id']
-                            del job_details['additional_headers']
-                            del job_details['claimed_by']
+                    # Process the results if the fetch was successful
+                    if success:
+                        # Detect any CAPTCHAs
+                        fetched_data['is_captcha_found'] = detect(job_details['captcha_sign'],
+                                                                  fetched_data['html_data'])
 
-                            # Combine the fetched data and job details
-                            results = {**job_details, **fetched_data}
+                        # Delete columns that we don't want in the results table
+                        del job_details['id']
+                        del job_details['additional_headers']
+                        del job_details['claimed_by']
 
-                            # Insert into the database
-                            db.insert_result(results)
+                        # Combine the fetched data and job details
+                        results = {**job_details, **fetched_data}
 
-                        else:
-                            logger.info('Job %s failed %s time(s), giving up...',
-                                        job_id, retry_budget)
+                        # Insert into the database
+                        db.insert_result(results)
+
+                    else:
+                        logger.info('Job %s failed %s time(s), giving up...',
+                                    job_id, retry_budget)
 
                     # Remove completed job from queue
                     queue.remove_job(job_id)
 
                 elif not loop:
-                    tor.stop()
                     logger.info('No job found in the queue, exitting...')
-                    sys.exit()
+                    break
 
                 time.sleep(1)
 
         except KeyboardInterrupt:
-            tor.stop()
             logger.info('Stopping, bye!')
+
+        finally:
+            tor.stop()
             sys.exit()
 
     def export(self, args):
@@ -302,7 +348,8 @@ class main():
         except KeyboardInterrupt:
             logger.info('Stopping, bye!')
 
-        sys.exit()
+        finally:
+            sys.exit()
 
     def cloudflare_change(self, args):
         from captchamonitor.utils.cloudflare import Cloudflare
