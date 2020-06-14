@@ -12,9 +12,10 @@ from selenium.webdriver.firefox.options import Options
 logger = logging.getLogger(__name__)
 
 
-def fetch_via_firefox_over_tor(tor_config, url, additional_headers=None, **kwargs):
-    tor_socks_host = tor_config['tor_socks_host']
-    tor_socks_port = tor_config['tor_socks_port']
+def fetch_via_firefox_over_tor(url, additional_headers=None, **kwargs):
+
+    tor_socks_host = os.environ['CM_TOR_HOST']
+    tor_socks_port = os.environ['CM_TOR_SOCKS_PORT']
 
     results = {}
 

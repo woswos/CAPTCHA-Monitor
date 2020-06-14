@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 def fetch_via_requests(url, additional_headers=None, **kwargs):
+
     if additional_headers:
         additional_headers = json.loads(additional_headers)
     results = {}

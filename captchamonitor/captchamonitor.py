@@ -218,7 +218,7 @@ class main():
 
                 # Process the job if there is one in the queue
                 if job_details is not None:
-                    
+
                     job_id = job_details['id']
                     success = False
 

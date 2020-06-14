@@ -14,10 +14,12 @@ from selenium.webdriver.firefox.options import Options
 logger = logging.getLogger(__name__)
 
 
-def fetch_via_tor_browser(tor_config, tbb_path, url, additional_headers=None, security_level='medium', **kwargs):
-    tor_socks_host = tor_config['tor_socks_host']
-    tor_socks_port = tor_config['tor_socks_port']
-    
+def fetch_via_tor_browser(url, additional_headers=None, security_level='medium', **kwargs):
+
+    tbb_path = os.environ['CM_TBB_PATH']
+    tor_socks_host = os.environ['CM_TOR_HOST']
+    tor_socks_port = os.environ['CM_TOR_SOCKS_PORT']
+
     security_levels = {'high': 1, 'medium': 2, 'low': 4}
 
     results = {}

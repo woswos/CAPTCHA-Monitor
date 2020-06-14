@@ -1,16 +1,6 @@
 import pytest
-import sys
-import os
-import requests
-import random
-import string
 from captchamonitor.utils.fetch import fetch_via_method
-
-
-def randomString(stringLength=10):
-    letters = string.ascii_lowercase
-    return ''.join(random.choice(letters) for i in range(stringLength))
-
+import captchamonitor.utils.tor_launcher as tor_launcher
 
 methods = ['firefox',
            'firefox_over_tor',
@@ -23,11 +13,12 @@ methods = ['firefox',
            'curl_over_tor'
            ]
 
-# Get the list of latest exit nodes and choose the first one in the list
-tor_bulk_exit_list = requests.get('https://check.torproject.org/torbulkexitlist')
-for exit in tor_bulk_exit_list.iter_lines():
-    exit_node = exit.decode("utf-8")
+# Just get a single exit node for testing purposes
+tor = tor_launcher.TorLauncher()
+for exit in tor.get_exit_relays().keys():
+    exit_node = exit
     break
+
 
 job = {'method': '',
        'url': 'https://check.torproject.org',
@@ -35,6 +26,23 @@ job = {'method': '',
        'additional_headers': '',
        'exit_node': exit_node,
        'tbb_security_level': 'medium'}
+
+
+@pytest.fixture(autouse=True, scope="session")
+def parametrization_scope():
+    """
+    This will be run before and after the tests to start and stop Tor
+    """
+    print("Starting Tor for the tests")
+    tor = tor_launcher.TorLauncher()
+    tor.start()
+    tor.new_circuit(exit_node)
+
+    # Executing parametrizations
+    yield
+
+    print("Stopping Tor")
+    tor.stop()
 
 
 @pytest.mark.parametrize('method', methods)
