@@ -15,22 +15,24 @@ ENV CHROMEDRIVER_RELEASE_URL=https://chromedriver.storage.googleapis.com/${CHROM
 
 ENV CM_TBB_PATH="/root/tor-browser_en-US"
 ENV CM_TOR_HOST="127.0.0.1"
-ENV CM_TOR_PORT="9050"
-ENV CM_DB_FILE_PATH="/root/db/captcha-monitor.db"
+ENV CM_TOR_SOCKS_PORT="9050"
+ENV CM_TOR_CONTROL_PORT="9051"
+ENV CM_DB_FILE_PATH="/root/captchamonitor_data/captcha-monitor.db"
+ENV CM_TOR_DIR_PATH="/root/.tor"
 
 ENV CHROME_BIN=/usr/local/bin/chromium-browser
 ENV CHROME_PATH=/usr/local/lib/chromium/
 
 # Install dependencies
 RUN apt-get update \
-    && apt-get install -y python3-pip python3-dev git libcurl4-openssl-dev libssl-dev tor unzip wget firefox chromium-browser=83.0.4103.61-0ubuntu0.18.04.1 \
-    && cd /usr/local/bin \
-    && ln -s /usr/bin/python3 python
+    && apt-get install -y python3-pip python3-dev git libcurl4-openssl-dev libssl-dev tor unzip wget firefox chromium-browser=83.0.4103.61-0ubuntu0.18.04.1
 
 WORKDIR /root/
 
 # Install captchamonitor, geckodriver, and chromedriver
-RUN wget ${TB_RELEASE_URL} \
+RUN mkdir captchamonitor_data \
+    mkdir .tor \
+    && wget ${TB_RELEASE_URL} \
     && tar -xJf ${TB_RELEASE_FILE} \
     && rm -v ${TB_RELEASE_FILE}* \
     && wget ${GECKO_RELEASE_URL} \
@@ -40,7 +42,7 @@ RUN wget ${TB_RELEASE_URL} \
     && unzip ${CHROMEDRIVER_RELEASE_FILE} -d /usr/bin \
     && rm -v ${CHROMEDRIVER_RELEASE_FILE}* \
     && git clone https://github.com/woswos/CAPTCHA-Monitor \
-    && cd /root/CAPTCHA-Monitor \
+    && cd CAPTCHA-Monitor \
     && git checkout dev \
     && pip3 install -e .
 
@@ -49,10 +51,8 @@ RUN apt-get purge -y wget unzip \
     && apt-get autoremove \
     && apt-get clean
 
-WORKDIR /root/CAPTCHA-Monitor
-
 # Uncomment for running the tests
 #RUN pip3 install pytest
 #CMD ["pytest", "-v", "-l", "-x"]
 
-CMD ["captchamonitor","run"]
+CMD ["captchamonitor", "run", "-l"]
