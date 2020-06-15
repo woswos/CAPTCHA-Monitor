@@ -245,7 +245,10 @@ class main():
         timeout_value = int(args.timeout)
 
         # Generate a worker id
-        worker_id = randomString(64)
+        if 'CM_WORKER_ID' in os.environ:
+            worker_id = os.environ['CM_WORKER_ID']
+        else:
+            worker_id = randomString(32)
 
         # Do setup
         db = SQLite()
