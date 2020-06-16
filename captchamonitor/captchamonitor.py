@@ -267,7 +267,8 @@ class main():
                            }
 
                 workers.append(multiprocessing.Process(target=self.worker,
-                                                       args=[loop, env_var, retry_budget]))
+                                                       args=[loop, env_var, retry_budget],
+                                                       name='cm_worker_%s' % w_id))
 
             # Start workers
             for w in workers:
@@ -284,7 +285,7 @@ class main():
             logger.info('Stopping CAPTCHA Monitor...')
             # Force join process to shutdown
             for w in workers:
-                w.join()
+                w.join(10)
 
         finally:
             sys.exit()
