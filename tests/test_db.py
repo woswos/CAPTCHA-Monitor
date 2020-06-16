@@ -56,10 +56,10 @@ def test_db_creation(fresh_db):
 
 
 def test_db_insert_job(fresh_db):
-    fresh_db.insert_job(job_1)
+    fresh_db.insert_job_into_table(fresh_db.queue_table_name, job_1)
 
     # Check if the value was inserted
-    sql_query = 'SELECT * FROM queue'
+    sql_query = 'SELECT * FROM %s' % fresh_db.queue_table_name
     conn = sqlite3.connect(db_file)
     cur = conn.cursor()
     cur.execute(sql_query)
@@ -78,7 +78,7 @@ def test_db_get_uncompleted_job_with_no_job(fresh_db):
 
 
 def test_db_get_uncompleted_job_with_job(fresh_db):
-    fresh_db.insert_job(job_1)
+    fresh_db.insert_job_into_table(fresh_db.queue_table_name, job_1)
 
     worker_id = randomString(32)
     fresh_db.claim_first_uncompleted_job(worker_id)
@@ -88,8 +88,8 @@ def test_db_get_uncompleted_job_with_job(fresh_db):
 
 
 def test_db_get_uncompleted_job_with_multiple_jobs(fresh_db):
-    fresh_db.insert_job(job_1)
-    fresh_db.insert_job(job_2)
+    fresh_db.insert_job_into_table(fresh_db.queue_table_name, job_1)
+    fresh_db.insert_job_into_table(fresh_db.queue_table_name, job_2)
 
     # Should give priority to first inserted job
     worker_id = randomString(32)
@@ -100,7 +100,7 @@ def test_db_get_uncompleted_job_with_multiple_jobs(fresh_db):
 
 
 def test_db_remove_job(fresh_db):
-    fresh_db.insert_job(job_1)
+    fresh_db.insert_job_into_table(fresh_db.queue_table_name, job_1)
 
     # Get the job
     worker_id = randomString(32)
@@ -111,7 +111,7 @@ def test_db_remove_job(fresh_db):
     fresh_db.remove_job(job['id'])
 
     # Check if the job was deleted
-    sql_query = 'SELECT * FROM queue'
+    sql_query = 'SELECT * FROM %s' % fresh_db.queue_table_name
     conn = sqlite3.connect(db_file)
     cur = conn.cursor()
     cur.execute(sql_query)
@@ -122,8 +122,8 @@ def test_db_remove_job(fresh_db):
 
 
 def test_db_remove_job_with_multiple_jobs_in_the_queue(fresh_db):
-    fresh_db.insert_job(job_1)
-    fresh_db.insert_job(job_2)
+    fresh_db.insert_job_into_table(fresh_db.queue_table_name, job_1)
+    fresh_db.insert_job_into_table(fresh_db.queue_table_name, job_2)
 
     # Get the job
     worker_id = randomString(32)
@@ -134,7 +134,7 @@ def test_db_remove_job_with_multiple_jobs_in_the_queue(fresh_db):
     fresh_db.remove_job(job['id'])
 
     # Check if the job was deleted
-    sql_query = 'SELECT * FROM queue'
+    sql_query = 'SELECT * FROM %s' % fresh_db.queue_table_name
     conn = sqlite3.connect(db_file)
     cur = conn.cursor()
     cur.execute(sql_query)
@@ -146,10 +146,10 @@ def test_db_remove_job_with_multiple_jobs_in_the_queue(fresh_db):
 
 
 def test_db_insert_result(fresh_db):
-    fresh_db.insert_result(result_1)
+    fresh_db.insert_job_into_table(fresh_db.results_table_name, result_1)
 
     # Check if the value was inserted
-    sql_query = 'SELECT * FROM results'
+    sql_query = 'SELECT * FROM %s' % fresh_db.results_table_name
     conn = sqlite3.connect(db_file)
     cur = conn.cursor()
     cur.execute(sql_query)
@@ -158,3 +158,17 @@ def test_db_insert_result(fresh_db):
     conn.commit()
 
     assert result['url'] == result_1['url']
+
+def test_db_insert_failed(fresh_db):
+    fresh_db.insert_job_into_table(fresh_db.failed_table_name, job_1)
+
+    # Check if the value was inserted
+    sql_query = 'SELECT * FROM %s' % fresh_db.failed_table_name
+    conn = sqlite3.connect(db_file)
+    cur = conn.cursor()
+    cur.execute(sql_query)
+    result = cur.fetchall()
+    result = dict(zip([c[0] for c in cur.description], result[0]))
+    conn.commit()
+
+    assert result['url'] == job_1['url']

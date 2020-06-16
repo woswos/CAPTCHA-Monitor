@@ -1,6 +1,8 @@
 import pytest
 from captchamonitor import fetchers
 import captchamonitor.utils.tor_launcher as tor_launcher
+import port_for
+import os
 
 methods_over_tor = [fetchers.firefox_over_tor,
                     fetchers.tor_browser,
@@ -30,6 +32,10 @@ def parametrization_scope():
     This will be run before and after the tests to start and stop Tor
     """
     print("Starting Tor for the tests")
+
+    os.environ['CM_TOR_SOCKS_PORT'] = str(port_for.select_random())
+    os.environ['CM_TOR_CONTROL_PORT'] = str(port_for.select_random())
+
     tor = tor_launcher.TorLauncher()
     tor.start()
     tor.new_circuit(exit_node)
@@ -55,7 +61,7 @@ def test_tor_and_exit_node_connection(method):
 
 @pytest.mark.parametrize('method', methods_all)
 def test_additional_headers(method):
-    url = 'http://www.xhaus.com/headers'
+    url = 'http://myhttpheader.com/'
     headers = '{"x-test": "pytest"}'
 
     data = method(url=url, additional_headers=headers)

@@ -10,10 +10,8 @@ from stem.descriptor import parse_file
 import stem.descriptor.remote
 import logging
 import os
-import pwd
 import threading
 import random
-from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -21,13 +19,10 @@ logger = logging.getLogger(__name__)
 class TorLauncher():
     def __init__(self):
         # Take what you need out of the config dictionary
-        tbb_path = os.environ['CM_TBB_PATH']
         self.socks_host = os.environ['CM_TOR_HOST']
         self.socks_port = os.environ['CM_TOR_SOCKS_PORT']
         self.control_port = int(os.environ['CM_TOR_CONTROL_PORT'])
         self.tor_dir = os.environ['CM_TOR_DIR_PATH']
-        # self.tor_dir = os.path.join(str(Path.home()), '.tor')
-        # 'tor_dir': '/tmp/captchamonitor_tor_datadir_%s' % pwd.getpwuid(os.getuid())[0]
 
     def start(self):
         self.tor_process = self.launch_tor_process()
@@ -37,7 +32,7 @@ class TorLauncher():
 
     def print_bootstrap_lines(self, line):
         if "Bootstrapped " in line:
-            logger.info(line)
+            logger.debug(line)
 
     def launch_tor_process(self):
         """
@@ -179,8 +174,12 @@ class StemController(threading.Thread):
         """
         Stop the thread and wait for it to end
         """
-        self._stop_event.set()
-        threading.Thread.join(self, timeout)
+        try:
+            self._stop_event.set()
+            threading.Thread.join(self, timeout)
+
+        except Exception as err:
+            logger.error('stem_controller() says: %s' % err)
 
     def get_exit_relays(self):
         """

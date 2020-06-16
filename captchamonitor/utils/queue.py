@@ -23,10 +23,26 @@ class Queue:
 
     def add_job(self, data):
         db = SQLite()
-        db.insert_job(data)
-        logger.info('Added new job for fetching "%s" via "%s" to database', data['url'], data['method'])
+        db.insert_job_into_table(db.queue_table_name, data)
+        logger.info('Added new job for fetching "%s" via "%s" to database',
+                    data['url'], data['method'])
+
+    def insert_result(self, data):
+        db = SQLite()
+        db.insert_job_into_table(db.results_table_name, data)
+        logger.info('Inserted the results of %s into the database', data['url'])
 
     def remove_job(self, job_id):
         db = SQLite()
         db.remove_job(job_id)
         logger.info('Removed the job with id "%s" from queue', job_id)
+
+    def move_failed_job(self, job_id):
+        db = SQLite()
+
+        data = db.get_job_with_id(job_id)
+        del data['claimed_by']
+        db.insert_job_into_table(db.failed_table_name, data)
+
+        db.remove_job(job_id)
+        logger.info('Moved the job with id "%s" to failed jobs', job_id)

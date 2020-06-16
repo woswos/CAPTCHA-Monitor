@@ -80,3 +80,14 @@ def test_queue_remove_job_with_multiple_job(fresh_queue):
     fresh_queue.remove_job(job['id'])
 
     assert job['url'] == job_2['url']
+
+def test_queue_move_failed_job(fresh_queue):
+    worker_id = randomString(32)
+
+    fresh_queue.add_job(job_1)
+
+    # Remove the job internally
+    job = fresh_queue.get_job(worker_id)
+    fresh_queue.move_failed_job(job['id'])
+
+    assert fresh_queue.get_job(worker_id) == None

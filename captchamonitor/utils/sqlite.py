@@ -36,6 +36,16 @@ class SQLite:
                 'additional_headers': 'TEXT',
                 'exit_node': 'TEXT',
                 'tbb_security_level': 'TEXT',
+            },
+            'failed':
+            {
+                'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+                'method': 'TEXT',
+                'url': 'TEXT',
+                'captcha_sign': 'TEXT',
+                'additional_headers': 'TEXT',
+                'exit_node': 'TEXT',
+                'tbb_security_level': 'TEXT',
             }
         }
 
@@ -43,6 +53,7 @@ class SQLite:
         self.tables = tables
         self.queue_table_name = 'queue'
         self.results_table_name = 'results'
+        self.failed_table_name = 'failed'
 
     def check_if_db_exists(self):
         """
@@ -80,12 +91,12 @@ class SQLite:
         conn.commit()
         conn.close()
 
-    def insert_job(self, data):
+    def insert_job_into_table(self, table, data):
         """
-        Inserts a new job into the database
+        Inserts given job into the given table
         """
 
-        table_name = self.queue_table_name
+        table_name = table
         db_file = self.db_file
 
         # Set database connection
@@ -187,6 +198,45 @@ class SQLite:
 
         return result
 
+    def get_job_with_id(self, job_id):
+        """
+        Gets the details of the job with a given id
+        Returns none if no job was claimed or there are no jobs in the queue
+        """
+
+        table_name = self.queue_table_name
+        db_file = self.db_file
+
+        # Set database connection
+        conn = sqlite3.connect(db_file)
+
+        # Prepare the SQL query
+        sql_query = 'SELECT * FROM %s WHERE id = "%s"' % (table_name, job_id)
+
+        logger.debug(sql_query)
+
+        cur = conn.cursor()
+
+        # Try to connect to the database
+        try:
+            cur.execute(sql_query)
+            conn.commit()
+
+        except Exception as err:
+            logger.critical('sqlite3.execute() at get_job_with_id() says: %s' % err)
+
+        result = cur.fetchall()
+
+        conn.close()
+
+        # Try to place returned data into a dictionary otherwise no data was returned
+        try:
+            result = dict(zip([c[0] for c in cur.description], result[0]))
+        except:
+            result = None
+
+        return result
+
     def remove_job(self, job_id):
         """
         Removes the job with given id
@@ -214,44 +264,3 @@ class SQLite:
             logger.critical('sqlite3.execute() at remove_job() says: %s' % err)
 
         conn.close()
-
-    def insert_result(self, data):
-        """
-        Inserts the result of a job into the database
-        """
-
-        table_name = self.results_table_name
-        db_file = self.db_file
-
-        # Set database connection
-        conn = sqlite3.connect(db_file)
-
-        data_fields = ''
-        data_q_marks = ''
-        data_values = []
-        for field in data:
-            data_fields += '%s,' % field
-            data_q_marks += '?,'
-            data_values.append(data[field])
-
-        sql_query = 'INSERT INTO %s (%s) VALUES (%s)' % (table_name,
-                                                         data_fields[:-1],
-                                                         data_q_marks[:-1]
-                                                         )
-
-        logger.debug(sql_query)
-        logger.debug(data_values)
-
-        cur = conn.cursor()
-
-        # Try to connect to the database
-        try:
-            cur.execute(sql_query, data_values)
-            conn.commit()
-
-        except Exception as err:
-            logger.critical('sqlite3.connect.cursor.execute() at insert_result() says: %s' % err)
-
-        conn.close()
-
-        logger.info('Inserted the results of %s into the database', data['url'])
