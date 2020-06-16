@@ -10,10 +10,11 @@ logger.setLevel(logging.INFO)
 
 env_vars = {'CM_TBB_PATH': 'The path to Tor Browser bundle',
             'CM_TOR_HOST': 'The IP address of the Tor server',
-            'CM_TOR_SOCKS_PORT': 'The port number of the Tor server',
-            'CM_TOR_CONTROL_PORT': 'The control port number of the Tor server',
+            # 'CM_TOR_SOCKS_PORT': 'The port number of the Tor server',
+            # 'CM_TOR_CONTROL_PORT': 'The control port number of the Tor server',
             'CM_DB_FILE_PATH': 'The path to the database file',
-            'CM_TOR_DIR_PATH': 'The path to the Tor directory (usually ~/.tor)'}
+            # 'CM_TOR_DIR_PATH': 'The path to the Tor directory (usually ~/.tor)'
+            }
 
 for env_var in env_vars:
     if env_var not in os.environ:
@@ -103,11 +104,17 @@ class main():
 
         run_parser.set_defaults(func=self.run, formatter_class=formatter_class)
 
-        run_parser.add_argument('-r', '--retry',
+        run_parser.add_argument('-w', '--worker',
                                 help="""specify the number of retries for failed jobs""",
                                 metavar='N',
                                 type=int,
-                                default=3)
+                                default=1)
+
+        run_parser.add_argument('-r', '--retry',
+                                help="""specify the number of workers to run in parallel""",
+                                metavar='N',
+                                type=int,
+                                default=1)
 
         run_parser.add_argument('-t', '--timeout',
                                 help="""specify the number of seconds to allow each job to run""",
@@ -223,48 +230,89 @@ class main():
         sys.exit()
 
     def run(self, args):
-        from captchamonitor.utils.queue import Queue
-        from captchamonitor.utils.fetch import fetch_via_method
-        from captchamonitor.utils.captcha import detect
-        from captchamonitor.utils.sqlite import SQLite
-        import captchamonitor.utils.tor_launcher as tor_launcher
-        import time
-        import random
-        import string
+        import multiprocessing
+        from pathlib import Path
+        import port_for
 
         # Silence the stem logger
         from stem.util.log import get_logger
         stem_logger = get_logger()
         stem_logger.propagate = False
 
-        def randomString(size=10, chars=string.ascii_uppercase + string.digits):
-            return ''.join(random.choice(chars) for _ in range(size))
-
         loop = args.loop
+        worker_count = args.worker
         retry_budget = args.retry
         timeout_value = int(args.timeout)
 
-        # Generate a worker id
-        if 'CM_WORKER_ID' in os.environ:
-            worker_id = os.environ['CM_WORKER_ID']
-        else:
-            worker_id = randomString(32)
+        try:
+            if loop:
+                logger.info('Started running in the continous mode with %s worker(s)' %
+                            worker_count)
+            else:
+                logger.info('Started running with %s worker(s)' % worker_count)
+
+            # Create the base path for the Tor directory
+            worker_tor_base_dir = os.path.join(str(Path.home()), '.cm_tor')
+            if not os.path.exists(worker_tor_base_dir):
+                os.mkdir(worker_tor_base_dir)
+
+            # Spawn workers
+            workers = []
+            for w_id in range(worker_count):
+                env_var = {'CM_WORKER_ID': w_id,
+                           'CM_TOR_HOST': '127.0.0.1',
+                           # 'CM_TOR_SOCKS_PORT': port_for.select_random(),
+                           # 'CM_TOR_CONTROL_PORT': port_for.select_random(),
+                           'CM_TOR_DIR_PATH': os.path.join(worker_tor_base_dir, str(w_id))
+                           }
+
+                workers.append(multiprocessing.Process(target=self.worker,
+                                                       args=[loop, env_var, retry_budget]))
+
+            # Start workers
+            for w in workers:
+                w.start()
+
+            # Join them once they are done
+            for w in workers:
+                w.join()
+
+        except Exception as err:
+            logging.error(err)
+
+        except (KeyboardInterrupt, SystemExit):
+            logger.info('Stopping CAPTCHA Monitor...')
+            # Force join process to shutdown
+            for w in workers:
+                w.join()
+
+        finally:
+            sys.exit()
+
+    def worker(self, loop, env_var, retry_budget):
+        from captchamonitor.utils.captcha import detect
+        from captchamonitor.utils.queue import Queue
+        from captchamonitor.utils.fetch import fetch_via_method
+        import captchamonitor.utils.tor_launcher as tor_launcher
+        import time
+        import port_for
+
+        # Set environment variables specific to indidual worker
+        os.environ['CM_TOR_HOST'] = str(env_var['CM_TOR_HOST'])
+        os.environ['CM_TOR_SOCKS_PORT'] = str(port_for.select_random())
+        os.environ['CM_TOR_CONTROL_PORT'] = str(port_for.select_random())
+        os.environ['CM_TOR_DIR_PATH'] = str(env_var['CM_TOR_DIR_PATH'])
+        os.environ['CM_WORKER_ID'] = str(env_var['CM_WORKER_ID'])
+
+        worker_id = os.environ['CM_WORKER_ID']
 
         # Do setup
-        db = SQLite()
         queue = Queue()
 
-        # Start Tor
         tor = tor_launcher.TorLauncher()
         tor.start()
 
-        # TODO: make this less confusing
         try:
-            if loop:
-                logger.info('Started running CAPTCHA Monitor in the continous mode')
-            else:
-                logger.info('Started running CAPTCHA Monitor')
-
             # The main loop for getting a new job and processing it
             while True:
 
@@ -275,25 +323,21 @@ class main():
                 if job_details is not None:
                     job_id = job_details['id']
                     success = False
-                    exit_node_connection_success = False
+
+                    if job_details['exit_node']:
+                        exit_node = job_details['exit_node']
+                        logger.info('Using %s as the exit node' % job_details['exit_node'])
+                    else:
+                        exit_node = None
 
                     try:
-                        if (('tor' in job_details['method']) or (job_details['exit_node'] is not None)):
-                            tor.new_circuit(job_details['exit_node'])
-                            logger.info('Using %s as the exit node' % job_details['exit_node'])
-
-                        # This will be run if circuit was created successfully or no exit node was provided
-                        exit_node_connection_success = True
+                        tor.new_circuit(exit_node)
 
                     except Exception as err:
                         logger.info('Cloud not connect to the specified exit node: %s' % err)
 
                     # Retry fetching the same job up to the specified amount
                     for number_of_retries in range(retry_budget):
-                        # Don't even try fetching if not connected to the exit node
-                        # if 'tor' in job_details['method'] and not exit_node_connection_success:
-                        #    break
-
                         # Fetch the URL using the method specified
                         fetched_data = fetch_via_method(job_details)
 
@@ -303,7 +347,8 @@ class main():
                             break
 
                     # Process the results if the fetch was successful
-                    if success:
+                    error_msg = 'Invalid responses from another server/proxy'
+                    if success and (not error_msg in fetched_data['html_data']):
                         # Detect any CAPTCHAs
                         fetched_data['is_captcha_found'] = detect(job_details['captcha_sign'],
                                                                   fetched_data['html_data'])
@@ -317,27 +362,32 @@ class main():
                         results = {**job_details, **fetched_data}
 
                         # Insert into the database
-                        db.insert_result(results)
+                        queue.insert_result(results)
+
+                        # Remove completed job from queue
+                        queue.remove_job(job_id)
 
                     else:
                         logger.info('Job %s failed %s time(s), giving up...',
                                     job_id, retry_budget)
+                        queue.move_failed_job(job_id)
 
-                    # Remove completed job from queue
-                    queue.remove_job(job_id)
-
-                elif not loop:
+                if not loop:
                     logger.info('No job found in the queue, exitting...')
                     break
 
+                # Wait a little before the next iteration
                 time.sleep(0.1)
 
-        except KeyboardInterrupt:
-            logger.info('Stopping, bye!')
+        except Exception as err:
+            logging.error(err)
+
+        except (KeyboardInterrupt, SystemExit):
+            logger.info('Stopping worker %s' % worker_id)
 
         finally:
+            # Get ready for stopping
             tor.stop()
-            sys.exit()
 
     def export(self, args):
         from captchamonitor.utils.db_export import export
