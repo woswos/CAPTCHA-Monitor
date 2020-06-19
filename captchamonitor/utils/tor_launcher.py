@@ -51,7 +51,6 @@ class TorLauncher():
             'FetchHidServDescriptors': '0',
             'MaxCircuitDirtiness': '10',
             'UseMicroDescriptors': '0'
-            # 'FetchServerDescriptors': '0'
         }
 
         try:
@@ -126,8 +125,11 @@ class StemController(threading.Thread):
             address=self.tor_socks_host, port=int(self.tor_control_port))
         self.controller.authenticate()
 
-        # No need to download descriptors anymore
-        self.controller.set_conf("FetchServerDescriptors", "0")
+        # <strike> No need to download descriptors anymore </strike>
+        # Not downloading the descriptors causes problems in the long run
+        #   and this software is intended to be running continously. So,
+        #   we should not disable this.
+        #self.controller.set_conf("FetchServerDescriptors", "0")
 
         self.circ_id = None
 
