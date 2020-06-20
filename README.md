@@ -1,5 +1,5 @@
 <!-- Unfortunately GitHub markdown doesn't suppor resizing and centering svg images-->
-<p align="center"><img src="logo.svg" alt="CAPTCHA Monitor Logo" width="50%"></p>
+<div align="center"><p align="center"><img src="logo.svg" alt="CAPTCHA Monitor Logo" width="50%"></p></div>
 
 Check if a website returns a Cloudflare CAPTCHA using the Tor Browser and other mainstream web browsers/tools. By default, this tool searches for *"Cloudflare"* text within the fetched page, but it is possible to customize the CAPTCHA sign, which this tool searches for.
 
