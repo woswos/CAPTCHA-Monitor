@@ -257,7 +257,7 @@ class main():
                 os.mkdir(worker_tor_base_dir)
 
             # Spawn workers
-            workers = []
+            p = multiprocessing.Pool(worker_count)
             for w_id in range(worker_count):
                 env_var = {'CM_WORKER_ID': w_id,
                            'CM_TOR_HOST': '127.0.0.1',
@@ -266,17 +266,10 @@ class main():
                            'CM_TOR_DIR_PATH': os.path.join(worker_tor_base_dir, str(w_id))
                            }
 
-                workers.append(multiprocessing.Process(target=self.worker,
-                                                       args=[loop, env_var, retry_budget],
-                                                       name='cm_worker_%s' % w_id))
+                p.apply_async(self.worker, args=(loop, env_var, retry_budget))
 
-            # Start workers
-            for w in workers:
-                w.start()
-
-            # Join them once they are done
-            for w in workers:
-                w.join()
+            p.close()
+            p.join()
 
         except Exception as err:
             logging.error(err)
@@ -284,8 +277,8 @@ class main():
         except (KeyboardInterrupt, SystemExit):
             logger.info('Stopping CAPTCHA Monitor...')
             # Force join process to shutdown
-            for w in workers:
-                w.join(10)
+            p.close()
+            p.join()
 
         finally:
             sys.exit()
@@ -306,89 +299,92 @@ class main():
         os.environ['CM_WORKER_ID'] = str(env_var['CM_WORKER_ID'])
 
         worker_id = os.environ['CM_WORKER_ID']
+        logger.info('Worker #%s started' % worker_id)
 
-        # Do setup
-        queue = Queue()
+        # The loop for running the worker unless closed explicitly
+        while True:
+            try:
+                # Do setup
+                queue = Queue()
 
-        tor = tor_launcher.TorLauncher()
-        tor.start()
+                tor = tor_launcher.TorLauncher()
+                tor.start()
 
-        try:
-            # The main loop for getting a new job and processing it
-            while True:
+                # The main loop for getting a new job and processing it
+                while True:
 
-                # Get the details of the first available job
-                job_details = queue.get_job(worker_id)
+                    # Get the details of the first available job
+                    job_details = queue.get_job(worker_id)
 
-                # Process the job if there is one in the queue
-                if job_details is not None:
-                    job_id = job_details['id']
-                    success = False
+                    # Process the job if there is one in the queue
+                    if job_details is not None:
+                        job_id = job_details['id']
+                        success = False
 
-                    if job_details['exit_node']:
-                        exit_node = job_details['exit_node']
-                        logger.info('Using %s as the exit node' % job_details['exit_node'])
-                    else:
-                        exit_node = None
+                        if job_details['exit_node']:
+                            exit_node = job_details['exit_node']
+                            logger.info('Using %s as the exit node' % job_details['exit_node'])
+                        else:
+                            exit_node = None
 
-                    try:
-                        tor.new_circuit(exit_node)
+                        try:
+                            tor.new_circuit(exit_node)
 
-                    except Exception as err:
-                        logger.info('Cloud not connect to the specified exit node: %s' % err)
+                        except Exception as err:
+                            logger.info('Cloud not connect to the specified exit node: %s' % err)
 
-                    # Retry fetching the same job up to the specified amount
-                    for number_of_retries in range(retry_budget):
-                        # Fetch the URL using the method specified
-                        fetched_data = fetch_via_method(job_details)
+                        # Retry fetching the same job up to the specified amount
+                        for number_of_retries in range(retry_budget):
+                            # Fetch the URL using the method specified
+                            fetched_data = fetch_via_method(job_details)
 
-                        # Stop retry loop if a meaningful result was returned
-                        if fetched_data is not None:
-                            success = True
-                            break
+                            # Stop retry loop if a meaningful result was returned
+                            if fetched_data is not None:
+                                success = True
+                                break
 
-                    # Process the results if the fetch was successful
-                    error_msg = 'Invalid responses from another server/proxy'
-                    if success and (not error_msg in fetched_data['html_data']):
-                        # Detect any CAPTCHAs
-                        fetched_data['is_captcha_found'] = detect(job_details['captcha_sign'],
-                                                                  fetched_data['html_data'])
+                        # Process the results if the fetch was successful
+                        error_msg = 'Invalid responses from another server/proxy'
+                        if success and (not error_msg in fetched_data['html_data']):
+                            # Detect any CAPTCHAs
+                            fetched_data['is_captcha_found'] = detect(job_details['captcha_sign'],
+                                                                      fetched_data['html_data'])
 
-                        # Delete columns that we don't want in the results table
-                        del job_details['id']
-                        del job_details['additional_headers']
-                        del job_details['claimed_by']
+                            # Delete columns that we don't want in the results table
+                            del job_details['id']
+                            del job_details['additional_headers']
+                            del job_details['claimed_by']
 
-                        # Combine the fetched data and job details
-                        results = {**job_details, **fetched_data}
+                            # Combine the fetched data and job details
+                            results = {**job_details, **fetched_data}
 
-                        # Insert into the database
-                        queue.insert_result(results)
+                            # Insert into the database
+                            queue.insert_result(results)
 
-                        # Remove completed job from queue
-                        queue.remove_job(job_id)
+                            # Remove completed job from queue
+                            queue.remove_job(job_id)
 
-                    else:
-                        logger.info('Job %s failed %s time(s), giving up...',
-                                    job_id, retry_budget)
-                        queue.move_failed_job(job_id)
+                        else:
+                            logger.info('Job %s failed %s time(s), giving up...',
+                                        job_id, retry_budget)
+                            queue.move_failed_job(job_id)
 
-                if not loop:
-                    logger.info('No job found in the queue, exitting...')
-                    break
+                    if not loop:
+                        logger.info('No job found in the queue, exitting...')
+                        break
 
-                # Wait a little before the next iteration
-                time.sleep(0.1)
+                    # Wait a little before the next iteration
+                    time.sleep(0.1)
 
-        except Exception as err:
-            logging.error(err)
+            except Exception as err:
+                logging.error(err)
 
-        except (KeyboardInterrupt, SystemExit):
-            logger.info('Stopping worker %s' % worker_id)
+            except (KeyboardInterrupt, SystemExit):
+                logger.info('Stopping worker %s' % worker_id)
 
-        finally:
-            # Get ready for stopping
-            tor.stop()
+            finally:
+                # Get ready for stopping
+                tor.stop()
 
     def export(self, args):
         from captchamonitor.utils.db_export import export
