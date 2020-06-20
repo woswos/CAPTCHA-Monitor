@@ -299,10 +299,15 @@ class main():
         os.environ['CM_WORKER_ID'] = str(env_var['CM_WORKER_ID'])
 
         worker_id = os.environ['CM_WORKER_ID']
-        logger.info('Worker #%s started' % worker_id)
+        logger.info('Worker #%s has started' % worker_id)
+        first_run = True
 
         # The loop for running the worker unless closed explicitly
         while True:
+            if not first_run:
+                logger.info('Worker #%s has restarted' % worker_id)
+            first_run = False
+            
             try:
                 # Do setup
                 queue = Queue()
