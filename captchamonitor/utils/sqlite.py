@@ -130,6 +130,38 @@ class SQLite:
 
         conn.close()
 
+    def count_table_entries(self, table):
+        """
+        Counts the number of entries in a given table
+        """
+
+        table_name = table
+        db_file = self.db_file
+
+        # Set database connection
+        conn = sqlite3.connect(db_file)
+
+        # Prepare the SQL query
+        sql_query = 'SELECT count(id) FROM %s' % table_name
+
+        logger.debug(sql_query)
+
+        cur = conn.cursor()
+
+        # Try to connect to the database
+        try:
+            cur.execute(sql_query)
+            conn.commit()
+
+        except Exception as err:
+            logger.critical('sqlite3.execute() at count_table_entries() says: %s' % err)
+
+        result = cur.fetchone()[0]
+
+        conn.close()
+
+        return result
+
     def claim_first_uncompleted_job(self, worker_id):
         """
         Claims the first uncompleted job in the queue

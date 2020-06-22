@@ -39,6 +39,9 @@ RUN_HELP = 'Run jobs in the queue'
 EXPORT_DESC = 'Export the database tables to JSON files into a specified directory'
 EXPORT_HELP = 'Export the database tables to JSON files'
 
+STATS_DESC = 'Shows the stats of the remaining and completed jobs'
+STATS_HELP = 'Shows the stats of the remaining and completed jobs'
+
 CLOUDFLARE_DESC = 'Change Cloudflare security levels'
 CLOUDFLARE_HELP = 'Change Cloudflare security levels'
 
@@ -140,6 +143,16 @@ class main():
                                    help="""use this argument to process jobs in a loop""",
                                    required='True',
                                    metavar="PATH")
+
+        #########
+        # STATS #
+        #########
+        stats_parser = sub_parser.add_parser('stats',
+                                             description=STATS_DESC,
+                                             help=STATS_HELP,
+                                             formatter_class=formatter_class)
+
+        stats_parser.set_defaults(func=self.stats, formatter_class=formatter_class)
 
         ##############
         # CLOUDFLARE #
@@ -293,8 +306,6 @@ class main():
 
         # Set environment variables specific to indidual worker
         os.environ['CM_TOR_HOST'] = str(env_var['CM_TOR_HOST'])
-        os.environ['CM_TOR_SOCKS_PORT'] = str(port_for.select_random())
-        os.environ['CM_TOR_CONTROL_PORT'] = str(port_for.select_random())
         os.environ['CM_TOR_DIR_PATH'] = str(env_var['CM_TOR_DIR_PATH'])
         os.environ['CM_WORKER_ID'] = str(env_var['CM_WORKER_ID'])
 
@@ -304,13 +315,19 @@ class main():
 
         # The loop for running the worker unless closed explicitly
         while True:
+
             if not first_run:
                 logger.info('Worker #%s has restarted' % worker_id)
             first_run = False
-            
+
             try:
                 # Do setup
                 queue = Queue()
+
+                # Determine the unused ports right before lauching Tor
+                #   to decrease the chance of any collisions
+                os.environ['CM_TOR_SOCKS_PORT'] = str(port_for.select_random())
+                os.environ['CM_TOR_CONTROL_PORT'] = str(port_for.select_random())
 
                 tor = tor_launcher.TorLauncher()
                 tor.start()
@@ -376,10 +393,15 @@ class main():
 
                     if not loop:
                         logger.info('No job found in the queue, exitting...')
+                        # Break out of the inner loop
                         break
 
                     # Wait a little before the next iteration
                     time.sleep(0.1)
+
+                if not loop:
+                    # Break out of the outer loop
+                    break
 
             except Exception as err:
                 logging.error(err)
@@ -390,6 +412,8 @@ class main():
             finally:
                 # Get ready for stopping
                 tor.stop()
+                # Break out of the outer loop
+                break
 
     def export(self, args):
         from captchamonitor.utils.db_export import export
@@ -406,6 +430,22 @@ class main():
 
         finally:
             sys.exit()
+
+    def stats(self, args):
+        from captchamonitor.utils.queue import Queue
+        import time
+
+        queue = Queue()
+        remaining_jobs = queue.count_remaining_jobs()
+        # Using a conservative 14 seconds per job average
+        estimated_hours = remaining_jobs * 14
+        logger.info('There are:')
+        logger.info('> %s job(s) in the queue', remaining_jobs)
+        logger.info('> %s completed job(s)', queue.count_completed_jobs())
+        logger.info('> %s failed job(s)', queue.count_failed_jobs())
+        logger.info('> It would approximately take %s to complete the job(s) *time format is hh:mm:ss*',
+                    time.strftime('%H:%M:%S', time.gmtime(estimated_hours)))
+        sys.exit()
 
     def cloudflare_change(self, args):
         from captchamonitor.utils.cloudflare import Cloudflare
