@@ -9,7 +9,7 @@ logger = logging.getLogger('captchamonitor')
 logger.setLevel(logging.INFO)
 
 env_vars = {'CM_TBB_PATH': 'The path to Tor Browser bundle',
-            'CM_TOR_HOST': 'The IP address of the Tor server',
+            # 'CM_TOR_HOST': 'The IP address of the Tor server',
             # 'CM_TOR_SOCKS_PORT': 'The port number of the Tor server',
             # 'CM_TOR_CONTROL_PORT': 'The control port number of the Tor server',
             'CM_DB_FILE_PATH': 'The path to the database file',
