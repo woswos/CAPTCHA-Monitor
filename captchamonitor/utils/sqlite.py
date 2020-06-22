@@ -2,8 +2,6 @@ import os
 import sqlite3
 import logging
 
-logger = logging.getLogger(__name__)
-
 
 class SQLite:
     def __init__(self):
@@ -49,7 +47,13 @@ class SQLite:
             }
         }
 
-        self.db_file = os.environ['CM_DB_FILE_PATH']
+        self.logger = logging.getLogger(__name__)
+
+        try:
+            self.db_file = os.environ['CM_DB_FILE_PATH']
+        except Exception as err:
+            self.logger.error('CM_DB_FILE_PATH environment variable is not set: %s', err)
+
         self.tables = tables
         self.queue_table_name = 'queue'
         self.results_table_name = 'results'
@@ -64,10 +68,10 @@ class SQLite:
 
         # Return if the database already exists
         if os.path.isfile(db_file) and os.access(db_file, os.R_OK):
-            logger.debug('The SQLite database already exists, skipping the creation')
+            self.logger.debug('The SQLite database already exists, skipping the creation')
             return
 
-        logger.info('The SQLite database does not exist, creating it now')
+        self.logger.info('The SQLite database does not exist, creating it now')
 
         open(db_file, 'w').close()
 
@@ -115,8 +119,8 @@ class SQLite:
                                                          data_q_marks[:-1]
                                                          )
 
-        logger.debug(sql_query)
-        logger.debug(data_values)
+        self.logger.debug(sql_query)
+        self.logger.debug(data_values)
 
         cur = conn.cursor()
 
@@ -126,7 +130,7 @@ class SQLite:
             conn.commit()
 
         except Exception as err:
-            logger.critical('sqlite3.execute() at insert_job() says: %s' % err)
+            self.logger.critical('sqlite3.execute() at insert_job() says: %s' % err)
 
         conn.close()
 
@@ -144,7 +148,7 @@ class SQLite:
         # Prepare the SQL query
         sql_query = 'SELECT count(id) FROM %s' % table_name
 
-        logger.debug(sql_query)
+        self.logger.debug(sql_query)
 
         cur = conn.cursor()
 
@@ -154,7 +158,7 @@ class SQLite:
             conn.commit()
 
         except Exception as err:
-            logger.critical('sqlite3.execute() at count_table_entries() says: %s' % err)
+            self.logger.critical('sqlite3.execute() at count_table_entries() says: %s' % err)
 
         result = cur.fetchone()[0]
 
@@ -177,7 +181,7 @@ class SQLite:
                     WHERE id = (SELECT min(id) FROM %s WHERE claimed_by = "None")''' % (
                     table_name, worker_id, table_name)
 
-        logger.debug(sql_query)
+        self.logger.debug(sql_query)
 
         cur = conn.cursor()
 
@@ -187,7 +191,8 @@ class SQLite:
             conn.commit()
 
         except Exception as err:
-            logger.critical('sqlite3.execute() at claim_first_uncompleted_job() says: %s' % err)
+            self.logger.critical(
+                'sqlite3.execute() at claim_first_uncompleted_job() says: %s' % err)
 
         conn.close()
 
@@ -206,7 +211,7 @@ class SQLite:
         # Prepare the SQL query
         sql_query = 'SELECT * FROM %s WHERE claimed_by = "%s"' % (table_name, worker_id)
 
-        logger.debug(sql_query)
+        self.logger.debug(sql_query)
 
         cur = conn.cursor()
 
@@ -216,7 +221,7 @@ class SQLite:
             conn.commit()
 
         except Exception as err:
-            logger.critical('sqlite3.execute() at get_claimed_job() says: %s' % err)
+            self.logger.critical('sqlite3.execute() at get_claimed_job() says: %s' % err)
 
         result = cur.fetchall()
 
@@ -245,7 +250,7 @@ class SQLite:
         # Prepare the SQL query
         sql_query = 'SELECT * FROM %s WHERE id = "%s"' % (table_name, job_id)
 
-        logger.debug(sql_query)
+        self.logger.debug(sql_query)
 
         cur = conn.cursor()
 
@@ -255,7 +260,7 @@ class SQLite:
             conn.commit()
 
         except Exception as err:
-            logger.critical('sqlite3.execute() at get_job_with_id() says: %s' % err)
+            self.logger.critical('sqlite3.execute() at get_job_with_id() says: %s' % err)
 
         result = cur.fetchall()
 
@@ -283,7 +288,7 @@ class SQLite:
         # Prepare the SQL query
         sql_query = 'DELETE from %s WHERE id = "%s"' % (table_name, job_id)
 
-        logger.debug(sql_query)
+        self.logger.debug(sql_query)
 
         cur = conn.cursor()
 
@@ -293,6 +298,6 @@ class SQLite:
             conn.commit()
 
         except Exception as err:
-            logger.critical('sqlite3.execute() at remove_job() says: %s' % err)
+            self.logger.critical('sqlite3.execute() at remove_job() says: %s' % err)
 
         conn.close()

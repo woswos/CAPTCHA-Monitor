@@ -2,8 +2,6 @@ import sqlite3
 import logging
 import os
 
-logger = logging.getLogger(__name__)
-
 
 def dict_factory(cursor, row):
     d = {}
@@ -18,8 +16,13 @@ def export(path):
 
     Original code taken from https://github.com/Austyns/sqlite-to-json-python
     '''
+    logger = logging.getLogger(__name__)
 
-    db_file = os.environ['CM_DB_FILE_PATH']
+    try:
+        db_file = os.environ['CM_DB_FILE_PATH']
+    except Exception as err:
+        logger.warning('CM_DB_FILE_PATH environment variable is not set: %s', err)
+
     db_export_location = path
 
     if not os.path.exists(db_export_location):

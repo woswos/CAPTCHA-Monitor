@@ -9,10 +9,10 @@ from urltools import compare
 from seleniumwire import webdriver
 from selenium.webdriver.firefox.options import Options
 
-logger = logging.getLogger(__name__)
-
 
 def fetch_via_firefox(url, additional_headers=None, **kwargs):
+    logger = logging.getLogger(__name__)
+
     results = {}
 
     # Choose the headless mode

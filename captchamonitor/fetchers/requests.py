@@ -6,10 +6,9 @@ import logging
 import requests
 import json
 
-logger = logging.getLogger(__name__)
-
 
 def fetch_via_requests(url, additional_headers=None, **kwargs):
+    logger = logging.getLogger(__name__)
 
     if additional_headers:
         additional_headers = json.loads(additional_headers)

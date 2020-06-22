@@ -8,13 +8,15 @@ import json
 import captchamonitor.utils.tor_launcher as tor_launcher
 import os
 
-logger = logging.getLogger(__name__)
-
 
 def fetch_via_requests_over_tor(url, additional_headers=None, **kwargs):
+    logger = logging.getLogger(__name__)
 
-    tor_socks_host = os.environ['CM_TOR_HOST']
-    tor_socks_port = os.environ['CM_TOR_SOCKS_PORT']
+    try:
+        tor_socks_host = os.environ['CM_TOR_HOST']
+        tor_socks_port = os.environ['CM_TOR_SOCKS_PORT']
+    except Exception as err:
+        logger.error('Some of the environment variables are missing: %s', err)
 
     if additional_headers:
         additional_headers = json.loads(additional_headers)

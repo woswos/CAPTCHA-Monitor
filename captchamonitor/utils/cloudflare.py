@@ -3,8 +3,6 @@ import pycurl
 from io import BytesIO
 import json
 
-logger = logging.getLogger(__name__)
-
 
 class Cloudflare:
     def __init__(self, cloudflare_email, cloudflare_api_token):
@@ -12,6 +10,8 @@ class Cloudflare:
         self.credentials = ['x-auth-email: {0}'.format(cloudflare_email),
                             'Authorization: Bearer {0}'.format(cloudflare_api_token),
                             'Content-Type: application/json']
+
+        self.logger = logging.getLogger(__name__)
 
     def set_zone_security_level(self, zone_id, security_level):
 
@@ -39,7 +39,7 @@ class Cloudflare:
             curl.perform()
 
         except Exception as err:
-            logger.error('pycurl.perform() says: %s' % err)
+            self.logger.error('pycurl.perform() says: %s' % err)
             return -1
 
         response = b_obj.getvalue().decode('utf8')
@@ -48,12 +48,12 @@ class Cloudflare:
         # Check if the response was successful
         if str(curl.getinfo(pycurl.RESPONSE_CODE)) != '200':
             curl.close()
-            logger.error('api call failed')
+            self.logger.error('api call failed')
             return -1
 
         curl.close()
 
-        logger.error('successfully changed the security level to %s' % security_level)
+        self.logger.info('successfully changed the security level to %s' % security_level)
 
     def get_zone_ids(self):
 
@@ -74,7 +74,7 @@ class Cloudflare:
             curl.perform()
 
         except Exception as err:
-            logger.error('pycurl.perform() says: %s' % err)
+            self.logger.error('pycurl.perform() says: %s' % err)
             return -1
 
         response = b_obj.getvalue().decode('utf8')
@@ -83,7 +83,7 @@ class Cloudflare:
         # Check if the response was successful
         if str(curl.getinfo(pycurl.RESPONSE_CODE)) != '200':
             curl.close()
-            logger.error('api call failed')
+            self.logger.error('api call failed')
             return -1
 
         curl.close()

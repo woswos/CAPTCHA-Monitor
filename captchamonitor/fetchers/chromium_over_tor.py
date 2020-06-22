@@ -9,13 +9,15 @@ from urltools import compare
 from seleniumwire import webdriver
 from selenium.webdriver.chrome.options import Options
 
-logger = logging.getLogger(__name__)
-
 
 def fetch_via_chromium_over_tor(url, additional_headers=None, **kwargs):
+    logger = logging.getLogger(__name__)
 
-    tor_socks_host = os.environ['CM_TOR_HOST']
-    tor_socks_port = os.environ['CM_TOR_SOCKS_PORT']
+    try:
+        tor_socks_host = os.environ['CM_TOR_HOST']
+        tor_socks_port = os.environ['CM_TOR_SOCKS_PORT']
+    except Exception as err:
+        logger.error('Some of the environment variables are missing: %s', err)
 
     results = {}
 

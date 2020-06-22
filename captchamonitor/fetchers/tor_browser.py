@@ -11,14 +11,16 @@ from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 from selenium.webdriver.firefox.options import Options
 
-logger = logging.getLogger(__name__)
-
 
 def fetch_via_tor_browser(url, additional_headers=None, security_level='medium', **kwargs):
+    logger = logging.getLogger(__name__)
 
-    tbb_path = os.environ['CM_TBB_PATH']
-    tor_socks_host = os.environ['CM_TOR_HOST']
-    tor_socks_port = os.environ['CM_TOR_SOCKS_PORT']
+    try:
+        tbb_path = os.environ['CM_TBB_PATH']
+        tor_socks_host = os.environ['CM_TOR_HOST']
+        tor_socks_port = os.environ['CM_TOR_SOCKS_PORT']
+    except Exception as err:
+        logger.error('Some of the environment variables are missing: %s', err)
 
     security_levels = {'high': 1, 'medium': 2, 'low': 4}
 

@@ -7,12 +7,13 @@ import pycurl
 from io import BytesIO
 import json
 
-logger = logging.getLogger(__name__)
 
 headers = {}
 
 
 def fetch_via_curl(url, additional_headers=None, **kwargs):
+    logger = logging.getLogger(__name__)
+
     results = {}
     temp = []
     default_curl_request_headers = {"host": url, "user-agent": "curl/7.58.0", "accept": "*/*"}

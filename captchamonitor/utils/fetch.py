@@ -3,10 +3,11 @@ import os
 import pwd
 from captchamonitor import fetchers
 import captchamonitor.utils.tor_launcher as tor_launcher
-logger = logging.getLogger(__name__)
 
 
 def fetch_via_method(data):
+    logger = logging.getLogger(__name__)
+
     method = data['method']
     url = data['url']
     captcha_sign = data['captcha_sign']
@@ -15,7 +16,7 @@ def fetch_via_method(data):
     tbb_security_level = data['tbb_security_level']
 
     results = {}
-    logger.info('Fetching "%s" via "%s"', url, method)
+    logger.debug('Fetching "%s" via "%s"', url, method)
 
     if(method == 'tor_browser'):
         results = fetchers.tor_browser(url,
@@ -47,7 +48,7 @@ def fetch_via_method(data):
         results = fetchers.curl(url, additional_headers)
 
     else:
-        logger.info('"%s" is not available, please check the method name"', method)
+        logger.warning('"%s" is not available, please check the method name"', method)
         return None
 
     return results

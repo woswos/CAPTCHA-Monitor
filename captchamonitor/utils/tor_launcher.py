@@ -13,16 +13,21 @@ import os
 import threading
 import random
 
-logger = logging.getLogger(__name__)
+
 
 
 class TorLauncher():
     def __init__(self):
-        # Take what you need out of the config dictionary
-        self.socks_host = os.environ['CM_TOR_HOST']
-        self.socks_port = os.environ['CM_TOR_SOCKS_PORT']
-        self.control_port = int(os.environ['CM_TOR_CONTROL_PORT'])
-        self.tor_dir = os.environ['CM_TOR_DIR_PATH']
+        self.logger = logging.getLogger(__name__)
+
+        try:
+            # Take what you need out of the config dictionary
+            self.socks_host = os.environ['CM_TOR_HOST']
+            self.socks_port = os.environ['CM_TOR_SOCKS_PORT']
+            self.control_port = int(os.environ['CM_TOR_CONTROL_PORT'])
+            self.tor_dir = os.environ['CM_TOR_DIR_PATH']
+        except Exception as err:
+            self.logger.error('Some of the environment variables are missing: %s', err)
 
     def start(self):
         self.tor_process = self.launch_tor_process()
@@ -32,7 +37,7 @@ class TorLauncher():
 
     def print_bootstrap_lines(self, line):
         if "Bootstrapped " in line:
-            logger.debug(line)
+            self.logger.debug(line)
 
     def launch_tor_process(self):
         """
@@ -60,10 +65,10 @@ class TorLauncher():
                 init_msg_handler=self.print_bootstrap_lines,
                 completion_percent=75,
                 take_ownership=True)
-            logger.info('Launched Tor at port %s:%s' % (self.socks_host, self.socks_port))
+            self.logger.debug('Launched Tor at port %s:%s' % (self.socks_host, self.socks_port))
 
         except Exception as err:
-            logger.error('stem.process.launch_tor_with_config() says: %s' % err)
+            self.logger.error('stem.process.launch_tor_with_config() says: %s' % err)
             return False
 
         return tor_process
@@ -90,14 +95,14 @@ class TorLauncher():
 
     def stop(self):
         # Gracefully stop the stem controller thread
-        logger.debug('Stopping the stem controller')
+        self.logger.debug('Stopping the stem controller')
         self.stem_controller.join()
 
         try:
-            logger.debug('Killing the Tor process')
+            self.logger.debug('Killing the Tor process')
             self.tor_process.kill()
         except Exception as err:
-            logger.error('tor_process.kill() says: %s' % err)
+            self.logger.error('tor_process.kill() says: %s' % err)
         return True
 
 
@@ -111,6 +116,7 @@ class StemController(threading.Thread):
         """
         constructor, setting initial variables
         """
+        self.logger = logging.getLogger(__name__ + '_stem_controller')
         self._stop_event = threading.Event()
         self._sleep_period = 0.01
         threading.Thread.__init__(self, name='StemController')
@@ -149,10 +155,10 @@ class StemController(threading.Thread):
         self.controller.remove_event_listener(self.attach_stream)
 
         # Close open circuits before killing the thread
-        logger.debug('Closing the circuits')
+        self.logger.debug('Closing the circuits')
         for circuit in self.controller.get_circuits():
             self.controller.close_circuit(circuit.id)
-            logger.debug('Closed circuit %s' % str(circuit.id))
+            self.logger.debug('Closed circuit %s' % str(circuit.id))
 
         self.controller.close()
 
@@ -164,13 +170,13 @@ class StemController(threading.Thread):
         # Wait until the user creates a circuit
         if self.circ_id:
             if(stream.status == 'NEW'):
-                logger.debug('Attaching stream (%s) to circuit %s' %
+                self.logger.debug('Attaching stream (%s) to circuit %s' %
                              (stream.target_address, self.circ_id))
 
                 try:
                     self.controller.attach_stream(stream.id, self.circ_id)
                 except Exception as err:
-                    logger.debug('Could not attach stream: %s', err)
+                    self.logger.debug('Could not attach stream: %s', err)
 
     def join(self, timeout=None):
         """
@@ -181,7 +187,7 @@ class StemController(threading.Thread):
             threading.Thread.join(self, timeout)
 
         except Exception as err:
-            logger.error('stem_controller() says: %s' % err)
+            self.logger.error('stem_controller() says: %s' % err)
 
     def get_exit_relays(self):
         """
@@ -229,7 +235,7 @@ class StemController(threading.Thread):
             if self.circ_id and self.last_circuit_was_successful:
                 self.controller.close_circuit(self.circ_id)
         except Exception as err:
-            logger.debug('Could not close the previous circuit: %s', err)
+            self.logger.debug('Could not close the previous circuit: %s', err)
 
         try:
             # Establish the new circuit
@@ -237,7 +243,7 @@ class StemController(threading.Thread):
             self.last_circuit_was_successful = True
         except Exception as err:
             self.last_circuit_was_successful = False
-            logger.debug('Could not create the requested circuit: %s', err)
+            self.logger.debug('Could not create the requested circuit: %s', err)
             return False
 
         return True

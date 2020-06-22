@@ -2,10 +2,17 @@ import logging
 import argparse
 import sys
 import os
+import time
+from threading import Timer
+
+
+# Capture program start time
+start_time = time.time()
+last_remaining_jobs = 0
 
 logger_format = '%(asctime)s %(module)s [%(levelname)s] %(message)s'
 logging.basicConfig(format=logger_format)
-logger = logging.getLogger('captchamonitor')
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 env_vars = {'CM_TBB_PATH': 'The path to Tor Browser bundle',
@@ -48,6 +55,43 @@ CLOUDFLARE_HELP = 'Change Cloudflare security levels'
 
 def formatter_class(prog):
     return argparse.HelpFormatter(prog, max_help_position=52)
+
+
+def heartbeat_message():
+    from captchamonitor.utils.queue import Queue
+    global last_remaining_jobs
+
+    queue = Queue()
+
+    if last_remaining_jobs != 0:
+        remaining_jobs = queue.count_remaining_jobs()
+
+        seconds = time.time() - start_time
+        seconds_in_day = 60 * 60 * 24
+        seconds_in_hour = 60 * 60
+        seconds_in_minute = 60
+
+        days = seconds // seconds_in_day
+        hours = (seconds - (days * seconds_in_day)) // seconds_in_hour
+        minutes = (seconds - (days * seconds_in_day) -
+                   (hours * seconds_in_hour)) // seconds_in_minute
+
+        logger.info('Heartbeat: It has been %s days, %s hours, %s minutes ' % (
+                    int(days), int(hours), int(minutes)))
+        logger.info('> There are %s job(s) in the queue.' % remaining_jobs)
+        logger.info('> I processed %s job(s) since the last heartbeat' % (
+                    last_remaining_jobs - remaining_jobs))
+        last_remaining_jobs = remaining_jobs
+
+    else:
+        last_remaining_jobs = queue.count_remaining_jobs()
+
+
+class RepeatingTimer(Timer):
+    def run(self):
+        while not self.finished.is_set():
+            self.function(*self.args, **self.kwargs)
+            self.finished.wait(self.interval)
 
 
 class main():
@@ -124,6 +168,12 @@ class main():
                                 metavar='N',
                                 type=int,
                                 default=60)
+
+        run_parser.add_argument('-b', '--heartbeat',
+                                help="""specify the interval in minutes to print the heartbeat message""",
+                                metavar='N',
+                                type=int,
+                                default=30)
 
         run_parser.add_argument('-l', '--loop',
                                 help="""use this argument to process jobs in a loop""",
@@ -213,6 +263,8 @@ class main():
                 logger.info('%s' % i)
                 time.sleep(1)
 
+            logger.info('Started adding the jobs, might take a while')
+
             try:
                 # Just all exit nodes
                 tor = tor_launcher.TorLauncher()
@@ -225,7 +277,7 @@ class main():
                             'tbb_security_level': args.tbb_security_level}
                     queue.add_job(data)
 
-                logger.info('DONE!')
+                logger.info('Done!')
 
             except KeyboardInterrupt:
                 logger.info('Stopping, bye!')
@@ -252,10 +304,16 @@ class main():
         stem_logger = get_logger()
         stem_logger.propagate = False
 
+        # Get the args
         loop = args.loop
         worker_count = args.worker
         retry_budget = args.retry
         timeout_value = int(args.timeout)
+        heartbeat_interval = int(args.heartbeat)
+
+        # Start the heartbeat message timer (convert minutes to seconds)
+        heartbeat = RepeatingTimer(heartbeat_interval * 60, heartbeat_message)
+        heartbeat.start()
 
         try:
             if loop:
@@ -289,6 +347,10 @@ class main():
 
         except (KeyboardInterrupt, SystemExit):
             logger.info('Stopping CAPTCHA Monitor...')
+
+            # Stop the heart beat
+            heartbeat.cancel()
+
             # Force join process to shutdown
             p.close()
             p.join()
@@ -310,6 +372,7 @@ class main():
         os.environ['CM_WORKER_ID'] = str(env_var['CM_WORKER_ID'])
 
         worker_id = os.environ['CM_WORKER_ID']
+
         logger.info('Worker #%s has started' % worker_id)
         first_run = True
 
@@ -345,7 +408,7 @@ class main():
 
                         if job_details['exit_node']:
                             exit_node = job_details['exit_node']
-                            logger.info('Using %s as the exit node' % job_details['exit_node'])
+                            logger.debug('Using %s as the exit node' % job_details['exit_node'])
                         else:
                             exit_node = None
 
@@ -437,8 +500,8 @@ class main():
 
         queue = Queue()
         remaining_jobs = queue.count_remaining_jobs()
-        # Using a conservative 14 seconds per job average
-        estimated_hours = remaining_jobs * 14
+        # Using a conservative 16 seconds per job average
+        estimated_hours = remaining_jobs * 16
         logger.info('There are:')
         logger.info('> %s job(s) in the queue', remaining_jobs)
         logger.info('> %s completed job(s)', queue.count_completed_jobs())
