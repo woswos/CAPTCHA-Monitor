@@ -179,6 +179,10 @@ class main():
                                 help="""use this argument to process jobs in a loop""",
                                 action='store_true')
 
+        run_parser.add_argument('-c', '--clean',
+                                help="""do a clean start by removing the existing Tor directory""",
+                                action='store_true')
+
         ##########
         # EXPORT #
         ##########
@@ -298,6 +302,7 @@ class main():
         import multiprocessing
         from pathlib import Path
         import port_for
+        import shutil
 
         # Silence the stem logger
         from stem.util.log import get_logger
@@ -306,6 +311,7 @@ class main():
 
         # Get the args
         loop = args.loop
+        clean = args.clean
         worker_count = args.worker
         retry_budget = args.retry
         timeout_value = int(args.timeout)
@@ -326,6 +332,12 @@ class main():
             worker_tor_base_dir = os.path.join(str(Path.home()), '.cm_tor')
             if not os.path.exists(worker_tor_base_dir):
                 os.mkdir(worker_tor_base_dir)
+
+            elif clean:
+                # if exits, delete the existing one and recreate it
+                shutil.rmtree(worker_tor_base_dir)
+                os.mkdir(worker_tor_base_dir)
+                logger.info('Cleaned the existing Tor directory')
 
             # Spawn workers
             p = multiprocessing.Pool(worker_count)
