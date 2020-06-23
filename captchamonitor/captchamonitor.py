@@ -5,14 +5,15 @@ import os
 import time
 from threading import Timer
 
-
 # Capture program start time
 start_time = time.time()
 last_remaining_jobs = 0
 
 logger_format = '%(asctime)s %(module)s [%(levelname)s] %(message)s'
 logging.basicConfig(format=logger_format)
-logger = logging.getLogger(__name__)
+
+# get the root logger for this module
+logger = logging.getLogger('captchamonitor')
 logger.setLevel(logging.INFO)
 
 env_vars = {'CM_TBB_PATH': 'The path to Tor Browser bundle',
@@ -115,30 +116,40 @@ class main():
                                     metavar='URL',
                                     required='True',
                                     default='')
+
         add_job_parser.add_argument('-m', '--method',
                                     help="""the webrowser/tool to fetch the provided URL""",
                                     metavar='NAME',
                                     required='True',
                                     default='')
+
         add_job_parser.add_argument('-c', '--captcha_sign',
                                     help="""the text that will be searched for""",
                                     metavar='TEXT',
                                     required='True',
                                     default='')
+
         add_job_parser.add_argument('-a', '--additional_headers',
                                     help="""specify additional headers for the job""",
                                     metavar='HEADER',
                                     default='')
+
         add_job_parser.add_argument('-e', '--exit_node',
                                     help="""specify the Tor exit node (if fetching over Tor)""",
                                     metavar='IP',
                                     default='')
+
         add_job_parser.add_argument('-s', '--tbb_security_level',
                                     help="""specify the Tor Browser security level (if using Tor Browser)""",
                                     metavar="LEVEL",
                                     default='medium')
+
         add_job_parser.add_argument('-x', '--all_exit_nodes',
                                     help="""use this argument if you want to add this current job for all exit nodes""",
+                                    action='store_true')
+
+        add_job_parser.add_argument('-v', '--verbose',
+                                    help="""show all log messages""",
                                     action='store_true')
 
         #######
@@ -183,6 +194,10 @@ class main():
                                 help="""do a clean start by removing the existing Tor directory""",
                                 action='store_true')
 
+        run_parser.add_argument('-v', '--verbose',
+                                help="""show all log messages""",
+                                action='store_true')
+
         ##########
         # EXPORT #
         ##########
@@ -198,6 +213,10 @@ class main():
                                    required='True',
                                    metavar="PATH")
 
+        export_parser.add_argument('-v', '--verbose',
+                                   help="""show all log messages""",
+                                   action='store_true')
+
         #########
         # STATS #
         #########
@@ -207,6 +226,10 @@ class main():
                                              formatter_class=formatter_class)
 
         stats_parser.set_defaults(func=self.stats, formatter_class=formatter_class)
+
+        stats_parser.add_argument('-v', '--verbose',
+                                  help="""show all log messages""",
+                                  action='store_true')
 
         ##############
         # CLOUDFLARE #
@@ -238,6 +261,10 @@ class main():
                                        required='True',
                                        metavar="NAME")
 
+        cloudflare_parser.add_argument('-v', '--verbose',
+                                       help="""show all log messages""",
+                                       action='store_true')
+
         # Get args and call the command handler for the chosen mode
         if len(sys.argv) == 1:
             main_parser.print_help()
@@ -251,6 +278,9 @@ class main():
         Add a new job to the queue
         """
         from captchamonitor.utils.queue import Queue
+
+        if args.verbose:
+            logging.getLogger('captchamonitor').setLevel(logging.DEBUG)
 
         queue = Queue()
 
@@ -316,6 +346,9 @@ class main():
         retry_budget = args.retry
         timeout_value = int(args.timeout)
         heartbeat_interval = int(args.heartbeat)
+
+        if args.verbose:
+            logging.getLogger('captchamonitor').setLevel(logging.DEBUG)
 
         # Start the heartbeat message timer (convert minutes to seconds)
         heartbeat = RepeatingTimer(heartbeat_interval * 60, heartbeat_message)
@@ -495,6 +528,9 @@ class main():
 
         export_location = args.path
 
+        if args.verbose:
+            logging.getLogger('captchamonitor').setLevel(logging.DEBUG)
+
         try:
             logger.info('Exporting to %s', export_location)
             export(export_location)
@@ -510,6 +546,9 @@ class main():
         from captchamonitor.utils.queue import Queue
         import time
 
+        if args.verbose:
+            logging.getLogger('captchamonitor').setLevel(logging.DEBUG)
+
         queue = Queue()
         remaining_jobs = queue.count_remaining_jobs()
         # Using a conservative 16 seconds per job average
@@ -524,6 +563,9 @@ class main():
 
     def cloudflare_change(self, args):
         from captchamonitor.utils.cloudflare import Cloudflare
+
+        if args.verbose:
+            logging.getLogger('captchamonitor').setLevel(logging.DEBUG)
 
         email = args.email
         api_token = args.token
