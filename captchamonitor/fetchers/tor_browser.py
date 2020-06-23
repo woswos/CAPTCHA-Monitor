@@ -44,6 +44,11 @@ def fetch_via_tor_browser(url, additional_headers=None, security_level='medium',
     profile.set_preference("extensions.torbutton.local_tor_check", False)
     profile.set_preference("extensions.torbutton.use_nontor_proxy", True)
 
+    profile.set_preference('app.update.enabled', False)
+    
+    # Required to enable JS
+    profile.set_preference("browser.startup.homepage_override.mstone", "68.8.0");
+
     # Set the security level
     profile.set_preference("extensions.torbutton.security_slider", security_levels[security_level])
 
