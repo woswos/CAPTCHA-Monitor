@@ -14,8 +14,6 @@ import threading
 import random
 
 
-
-
 class TorLauncher():
     def __init__(self):
         self.logger = logging.getLogger(__name__)
@@ -171,7 +169,7 @@ class StemController(threading.Thread):
         if self.circ_id:
             if(stream.status == 'NEW'):
                 self.logger.debug('Attaching stream (%s) to circuit %s' %
-                             (stream.target_address, self.circ_id))
+                                  (stream.target_address, self.circ_id))
 
                 try:
                     self.controller.attach_stream(stream.id, self.circ_id)
