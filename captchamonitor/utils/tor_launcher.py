@@ -180,12 +180,13 @@ class StemController(threading.Thread):
                             self.controller.attach_stream(stream.id, self.circ_id)
                         break
                     except Exception as err:
-                        if str(err).startswith('Unknown circuit '):
-                            self.logger.debug('Trying to recreate circuit %s' % self.circ_id)
-                            self.refresh_circuit()
-                        else:
-                            self.logger.debug('Could not attach stream: %s', err)
-                            break
+                        # if str(err).startswith('Unknown circuit '):
+                        #     self.logger.debug('Trying to recreate circuit %s' % self.circ_id)
+                        #     self.refresh_circuit()
+                        # else:
+                        #     self.logger.debug('Could not attach stream: %s', err)
+                        #     break
+                        self.logger.debug('Could not attach stream: %s', err)
 
 
     def join(self, timeout=None):
