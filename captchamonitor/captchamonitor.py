@@ -415,6 +415,7 @@ class main():
         os.environ['CM_TOR_HOST'] = str(env_var['CM_TOR_HOST'])
         os.environ['CM_TOR_DIR_PATH'] = str(env_var['CM_TOR_DIR_PATH'])
         os.environ['CM_WORKER_ID'] = str(env_var['CM_WORKER_ID'])
+        os.environ['CM_DOWNLOAD_FOLDER'] = str(env_var['CM_TOR_DIR_PATH'])
 
         worker_id = os.environ['CM_WORKER_ID']
 

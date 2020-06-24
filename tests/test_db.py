@@ -32,9 +32,7 @@ result_1 = {'method': randomString(),
             'captcha_sign': randomString(),
             'is_captcha_found': 0,
             'html_data': randomString(),
-            'all_headers': randomString(),
-            'request_headers': randomString(),
-            'response_headers': randomString(),
+            'requests': randomString(),
             'exit_node': None,
             'tbb_security_level': None}
 
