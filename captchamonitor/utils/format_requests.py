@@ -8,7 +8,7 @@ def tb(requests_data):
     for request in requests_data['data']:
         temp = {}
         for key, value in request.items():
-            if value is not '':
+            if value != '':
                 temp[key] = parse_headers(value)
 
         # Skip the internal request to the browser extension
