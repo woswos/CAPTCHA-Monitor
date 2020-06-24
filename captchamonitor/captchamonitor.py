@@ -163,13 +163,13 @@ class main():
         run_parser.set_defaults(func=self.run, formatter_class=formatter_class)
 
         run_parser.add_argument('-w', '--worker',
-                                help="""specify the number of retries for failed jobs""",
+                                help="""specify the number of workers to run in parallel""",
                                 metavar='N',
                                 type=int,
                                 default=1)
 
         run_parser.add_argument('-r', '--retry',
-                                help="""specify the number of workers to run in parallel""",
+                                help="""specify the number of retries for failed jobs""",
                                 metavar='N',
                                 type=int,
                                 default=1)
@@ -388,7 +388,6 @@ class main():
 
                 p.apply_async(self.worker, args=(loop, env_var, retry_budget))
 
-
             p.close()
             p.join()
 
@@ -464,14 +463,16 @@ class main():
                         else:
                             exit_node = None
 
-                        try:
-                            tor.new_circuit(exit_node)
-
-                        except Exception as err:
-                            logger.info('Cloud not connect to the specified exit node: %s' % err)
-
                         # Retry fetching the same job up to the specified amount
                         for number_of_retries in range(retry_budget):
+                            try:
+                                tor.new_circuit(exit_node)
+
+                            except Exception as err:
+                                logger.info(
+                                    'Cloud not connect to the specified exit node: %s' % err)
+                                break
+
                             # Fetch the URL using the method specified
                             fetched_data = fetch_via_method(job_details)
 
@@ -519,7 +520,7 @@ class main():
                     break
 
             except Exception as err:
-                logging.error(err)
+                logging.error(err, exc_info=True)
 
             except (KeyboardInterrupt, SystemExit):
                 logger.info('Stopping worker %s' % worker_id)
