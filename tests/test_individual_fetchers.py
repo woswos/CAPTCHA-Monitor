@@ -3,9 +3,10 @@ from captchamonitor import fetchers
 import captchamonitor.utils.tor_launcher as tor_launcher
 import port_for
 import os
+from pathlib import Path
 
-methods_over_tor = [fetchers.firefox_over_tor,
-                    fetchers.tor_browser,
+methods_over_tor = [fetchers.tor_browser,
+                    fetchers.firefox_over_tor,
                     fetchers.chromium_over_tor,
                     fetchers.requests_over_tor,
                     fetchers.curl_over_tor
@@ -35,6 +36,7 @@ def parametrization_scope():
 
     os.environ['CM_TOR_SOCKS_PORT'] = str(port_for.select_random())
     os.environ['CM_TOR_CONTROL_PORT'] = str(port_for.select_random())
+    os.environ['CM_DOWNLOAD_FOLDER'] = str(Path.home())
 
     tor = tor_launcher.TorLauncher()
     tor.start()

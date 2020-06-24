@@ -5,12 +5,13 @@ Fetch a given URL using seleniumwire and Tor Browser
 import os
 import logging
 import json
+import time
 from urltools import compare
-from seleniumwire import webdriver
+from selenium import webdriver
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 from selenium.webdriver.firefox.options import Options
-
+import captchamonitor.utils.clean_requests as clean_requests
 
 def fetch_via_tor_browser(url, additional_headers=None, security_level='medium', **kwargs):
     logger = logging.getLogger(__name__)
@@ -19,16 +20,18 @@ def fetch_via_tor_browser(url, additional_headers=None, security_level='medium',
         tbb_path = os.environ['CM_TBB_PATH']
         tor_socks_host = os.environ['CM_TOR_HOST']
         tor_socks_port = os.environ['CM_TOR_SOCKS_PORT']
+        download_folder = os.environ['CM_DOWNLOAD_FOLDER']
     except Exception as err:
         logger.error('Some of the environment variables are missing: %s', err)
 
     security_levels = {'high': 1, 'medium': 2, 'low': 4}
 
     results = {}
+    http_header_live_file = os.path.join(download_folder, 'captcha_monitor_website_data.json')
 
-    # Disable Tor Launcher to prevent it connecting the Tor Browser to Tor directly
-    os.environ['TOR_SKIP_LAUNCH'] = '1'
-    os.environ['TOR_TRANSPROXY'] = '1'
+    # Delete the previous HTTP-Header-Live export
+    if os.path.exists(http_header_live_file):
+        os.remove(http_header_live_file)
 
     # Set the Tor Browser binary and profile
     tb_binary = os.path.join(tbb_path, 'Browser/firefox')
@@ -36,32 +39,40 @@ def fetch_via_tor_browser(url, additional_headers=None, security_level='medium',
     binary = FirefoxBinary(os.path.join(tbb_path, 'Browser/firefox'))
     profile = FirefoxProfile(tb_profile)
 
-    # We need to disable HTTP Strict Transport Security (HSTS) in order to have
-    #   seleniumwire between the browser and Tor. Otherwise, we will not be able
-    #   to capture the requests and responses using seleniumwire.
-    profile.set_preference("security.cert_pinning.enforcement_level", 0)
-    profile.set_preference("network.stricttransportsecurity.preloadlist", False)
-    profile.set_preference("extensions.torbutton.local_tor_check", False)
-    profile.set_preference("extensions.torbutton.use_nontor_proxy", True)
-
-    profile.set_preference('app.update.enabled', False)
-    
-    # Required to enable JS
-    profile.set_preference("browser.startup.homepage_override.mstone", "68.8.0");
-
     # Set the security level
     profile.set_preference("extensions.torbutton.security_slider", security_levels[security_level])
 
-    # Configure seleniumwire to upstream traffic to Tor running on port 9050
-    #   You might want to increase/decrease the timeout if you are trying
-    #   to a load page that requires a lot of requests. It is in seconds.
-    seleniumwire_options = {
-        'proxy': {
-            'http': 'socks5h://%s:%s' % (tor_socks_host, tor_socks_port),
-            'https': 'socks5h://%s:%s' % (tor_socks_host, tor_socks_port),
-            'connection_timeout': 30
-        }
-    }
+    # Stop Tor Browser's internal Tor
+    profile.set_preference('extensions.torlauncher.start_tor', False)
+    profile.set_preference('extensions.torlauncher.prompt_at_startup', False)
+    profile.set_preference('extensions.torbutton.inserted_button', True)
+    profile.set_preference('extensions.torbutton.launch_warning', False)
+
+    # Set the details for the external Tor
+    profile.set_preference('extensions.torbutton.settings_method', 'custom')
+    profile.set_preference('extensions.torbutton.custom.socks_host', tor_socks_host)
+    profile.set_preference('extensions.torbutton.custom.socks_port', int(tor_socks_port))
+    profile.set_preference('extensions.torbutton.socks_port', int(tor_socks_port))
+    profile.set_preference('network.proxy.socks_port', int(tor_socks_port))
+
+    # Stop updates
+    profile.set_preference('app.update.enabled', False)
+    profile.set_preference('extensions.torbutton.versioncheck_enabled', False)
+
+    # Set the download folder and disable pop up windows
+    profile.set_preference("browser.download.folderList", 2)
+    profile.set_preference("browser.download.useDownloadDir", True)
+    profile.set_preference("browser.download.dir", download_folder)
+    profile.set_preference("browser.download.defaultFolder", download_folder)
+
+    # Required to run our custom HTTP-Header-Live extension
+    profile.set_preference("xpinstall.signatures.required", False)
+    profile.set_preference("xpinstall.whitelist.required", False)
+    profile.set_preference("app.update.lastUpdateTime.xpi-signature-verification", 0)
+    profile.set_preference("extensions.autoDisableScopes", 10)
+    profile.set_preference("extensions.enabledScopes", 15)
+    profile.set_preference("extensions.blocklist.enabled", False)
+    profile.set_preference("extensions.blocklist.pingCountVersion", 0)
 
     # Choose the headless mode
     options = Options()
@@ -69,11 +80,7 @@ def fetch_via_tor_browser(url, additional_headers=None, security_level='medium',
 
     driver = webdriver.Firefox(firefox_profile=profile,
                                firefox_binary=binary,
-                               options=options,
-                               seleniumwire_options=seleniumwire_options)
-
-    if additional_headers:
-        driver.header_overrides = json.loads(additional_headers)
+                               options=options)
 
     # Try sending a request to the server and get server's response
     try:
@@ -83,17 +90,27 @@ def fetch_via_tor_browser(url, additional_headers=None, security_level='medium',
         logger.error('webdriver.Firefox.get() says: %s' % err)
         return None
 
+    # Wait for HTTP-Header-Live extension to finish
+    timeout = 30
+    requests_data = None
+    logger.debug('Waiting for HTTP-Header-Live extension')
+    for counter in range(timeout):
+        try:
+            with open(http_header_live_file) as file:
+                requests_data = json.load(file)
+                break
+
+        except OSError:
+            time.sleep(1)
+
+    if requests_data is None:
+        # Don't return anything since we couldn't capture the headers
+        logger.error('Couldn\'t capture the headers from %s' % http_header_live_file)
+        return None
+
     # Record the results
     results['html_data'] = driver.page_source
-    results['all_headers'] = str(driver.requests)
-
-    for request in driver.requests:
-        if(compare(request.path, url)):
-            results['request_headers'] = json.dumps(dict(request.headers))
-            if(request.response):
-                results['response_headers'] = json.dumps(dict(request.response.headers))
-            else:
-                results['response_headers'] = " "
+    results['requests'] = clean_requests.clean_requests(requests_data)
 
     logger.debug('I\'m done fetching %s', url)
 
