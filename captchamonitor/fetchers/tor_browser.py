@@ -11,7 +11,8 @@ from selenium import webdriver
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 from selenium.webdriver.firefox.options import Options
-import captchamonitor.utils.clean_requests as clean_requests
+import captchamonitor.utils.format_requests as format_requests
+
 
 def fetch_via_tor_browser(url, additional_headers=None, security_level='medium', **kwargs):
     logger = logging.getLogger(__name__)
@@ -91,7 +92,7 @@ def fetch_via_tor_browser(url, additional_headers=None, security_level='medium',
         return None
 
     # Wait for HTTP-Header-Live extension to finish
-    timeout = 30
+    timeout = 20
     requests_data = None
     logger.debug('Waiting for HTTP-Header-Live extension')
     for counter in range(timeout):
@@ -110,7 +111,7 @@ def fetch_via_tor_browser(url, additional_headers=None, security_level='medium',
 
     # Record the results
     results['html_data'] = driver.page_source
-    results['requests'] = clean_requests.clean_requests(requests_data)
+    results['requests'] = format_requests.tb(requests_data)
 
     logger.debug('I\'m done fetching %s', url)
 

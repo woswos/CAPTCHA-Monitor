@@ -8,6 +8,7 @@ import json
 from urltools import compare
 from seleniumwire import webdriver
 from selenium.webdriver.firefox.options import Options
+import captchamonitor.utils.format_requests as format_requests
 
 
 def fetch_via_firefox_over_tor(url, additional_headers=None, **kwargs):
@@ -52,15 +53,7 @@ def fetch_via_firefox_over_tor(url, additional_headers=None, **kwargs):
 
     # Record the results
     results['html_data'] = driver.page_source
-    results['all_headers'] = str(driver.requests)
-
-    for request in driver.requests:
-        if(compare(request.path, url)):
-            results['request_headers'] = json.dumps(dict(request.headers))
-            if(request.response):
-                results['response_headers'] = json.dumps(dict(request.response.headers))
-            else:
-                results['response_headers'] = " "
+    results['requests'] = format_requests.seleniumwire(driver.requests)
 
     logger.debug('I\'m done fetching %s', url)
 

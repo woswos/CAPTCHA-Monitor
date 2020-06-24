@@ -168,13 +168,25 @@ class StemController(threading.Thread):
         # Wait until the user creates a circuit
         if self.circ_id:
             if(stream.status == 'NEW'):
-                self.logger.debug('Attaching stream (%s) to circuit %s' %
-                                  (stream.target_address, self.circ_id))
+                for i in range(3):
+                    try:
+                        if '.onion' in str(stream.target_address):
+                            self.logger.debug(
+                                'Attaching onion services is not supported currently')
+                            #self.controller.attach_stream(stream.id, '0')
+                        else:
+                            self.logger.debug('Attaching stream (%s) to circuit %s' %
+                                              (stream.target_address, self.circ_id))
+                            self.controller.attach_stream(stream.id, self.circ_id)
+                        break
+                    except Exception as err:
+                        if str(err).startswith('Unknown circuit '):
+                            self.logger.debug('Trying to recreate circuit %s' % self.circ_id)
+                            self.refresh_circuit()
+                        else:
+                            self.logger.debug('Could not attach stream: %s', err)
+                            break
 
-                try:
-                    self.controller.attach_stream(stream.id, self.circ_id)
-                except Exception as err:
-                    self.logger.debug('Could not attach stream: %s', err)
 
     def join(self, timeout=None):
         """
@@ -206,11 +218,16 @@ class StemController(threading.Thread):
 
         return relays
 
+    def refresh_circuit(self):
+        self.new_circuit(self.exit_node_ip)
+
     def new_circuit(self, exit_node_ip=None):
         """
         Creates a new circuit using the given exit node. If a node exit was not
             provided, it chooses one randomly. Returns the circuit id.
         """
+        self.exit_node_ip = exit_node_ip
+
         relays = self.get_exit_relays()
 
         # If no exit node was specified
@@ -239,6 +256,7 @@ class StemController(threading.Thread):
             # Establish the new circuit
             self.circ_id = self.controller.new_circuit(path=path, await_build=True)
             self.last_circuit_was_successful = True
+            self.logger.debug('Created the requested circuit %s' % self.circ_id)
         except Exception as err:
             self.last_circuit_was_successful = False
             self.logger.debug('Could not create the requested circuit: %s', err)

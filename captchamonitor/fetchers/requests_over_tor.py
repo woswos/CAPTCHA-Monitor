@@ -5,8 +5,9 @@ Fetch a given URL using requests library and Tor
 import logging
 import requests
 import json
-import captchamonitor.utils.tor_launcher as tor_launcher
 import os
+import captchamonitor.utils.tor_launcher as tor_launcher
+import captchamonitor.utils.format_requests as format_requests
 
 
 def fetch_via_requests_over_tor(url, additional_headers=None, **kwargs):
@@ -35,10 +36,10 @@ def fetch_via_requests_over_tor(url, additional_headers=None, **kwargs):
         logger.error('request.get() says: %s' % err)
         return None
 
-    results['request_headers'] = json.dumps(dict(data.request.headers))
     results['html_data'] = str(data.text)
-    results['all_headers'] = str(data.status_code)
-    results['response_headers'] = json.dumps(dict(data.headers))
+    results['requests'] = format_requests.requests(dict(data.request.headers),
+                                                   dict(data.headers),
+                                                   str(data.status_code))
 
     logger.debug('I\'m done fetching %s', url)
 

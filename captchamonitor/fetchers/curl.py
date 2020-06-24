@@ -6,9 +6,10 @@ import logging
 import pycurl
 from io import BytesIO
 import json
-
+import captchamonitor.utils.format_requests as format_requests
 
 headers = {}
+status_line = ''
 
 
 def fetch_via_curl(url, additional_headers=None, **kwargs):
@@ -56,10 +57,10 @@ def fetch_via_curl(url, additional_headers=None, **kwargs):
 
     data = b_obj.getvalue().decode('utf8')
 
-    results['request_headers'] = json.dumps(default_curl_request_headers)
     results['html_data'] = str(data)
-    results['all_headers'] = str(curl.getinfo(pycurl.RESPONSE_CODE))
-    results['response_headers'] = str(headers)
+    results['requests'] = format_requests.curl(default_curl_request_headers,
+                                               headers,
+                                               status_line)
 
     logger.debug('I\'m done fetching %s', url)
 
@@ -69,10 +70,14 @@ def fetch_via_curl(url, additional_headers=None, **kwargs):
 
 
 def parse_headers(header):
+    global status_line
     header = header.decode('iso-8859-1')
 
     # Ignore all lines without a colon
+    # The very first line is the status line, save it
     if ':' not in header:
+        if (header is not None) and (header != '\r\n'):
+            status_line = header
         return
 
     # Break the header line into header name and value

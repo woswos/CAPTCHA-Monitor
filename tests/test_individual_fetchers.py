@@ -4,6 +4,7 @@ import captchamonitor.utils.tor_launcher as tor_launcher
 import port_for
 import os
 from pathlib import Path
+import json
 
 methods_over_tor = [fetchers.tor_browser,
                     fetchers.firefox_over_tor,
@@ -53,10 +54,14 @@ def parametrization_scope():
 def test_tor_and_exit_node_connection(method):
     url = 'https://check.torproject.org/'
 
-    data = method(url)
+    # Retry up to 3 times
+    for i in range(3):
+        data = method(url)
 
-    # Check if the specified exit node is connected
-    test = (exit_node in data['html_data'])
+        if data is not None:
+            # Check if the specified exit node is connected
+            test = (exit_node in data['html_data'])
+            break
 
     assert test == True
 
@@ -66,12 +71,18 @@ def test_additional_headers(method):
     url = 'http://myhttpheader.com/'
     headers = '{"x-test": "pytest"}'
 
-    data = method(url=url, additional_headers=headers)
+    # Retry up to 3 times
+    for i in range(3):
+        data = method(url=url, additional_headers=headers)
 
-    # Check if the custom header was sent to the server
-    test_1 = ('pytest' in data['html_data'])
+        if data is not None:
+            # Check if the custom header was sent to the server
+            test_1 = ('pytest' in data['html_data'])
 
-    # Check if the custom header was included in the requests headers
-    test_2 = ('pytest' in data['request_headers'])
+            # Check if the custom header was included in the requests headers
+            test_2 = ('pytest' in str(json.loads(data['requests'])['data'][0]['request_headers']))
+
+            if(test_1 and test_2) == True:
+                break
 
     assert (test_1 and test_2) == True
