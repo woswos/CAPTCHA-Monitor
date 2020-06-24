@@ -278,6 +278,10 @@ class main():
         Add a new job to the queue
         """
         from captchamonitor.utils.queue import Queue
+        from pathlib import Path
+        import os
+
+        os.environ['CM_TOR_DIR_PATH'] = str(os.path.join(str(Path.home()), '.cm_tor', '0'))
 
         if args.verbose:
             logging.getLogger('captchamonitor').setLevel(logging.DEBUG)
@@ -350,11 +354,11 @@ class main():
         if args.verbose:
             logging.getLogger('captchamonitor').setLevel(logging.DEBUG)
 
-        # Start the heartbeat message timer (convert minutes to seconds)
-        heartbeat = RepeatingTimer(heartbeat_interval * 60, heartbeat_message)
-        heartbeat.start()
-
         try:
+            # Start the heartbeat message timer (convert minutes to seconds)
+            heartbeat = RepeatingTimer(heartbeat_interval * 60, heartbeat_message)
+            heartbeat.start()
+
             if loop:
                 logger.info('Started running in the continous mode with %s worker(s)' %
                             worker_count)
@@ -384,6 +388,7 @@ class main():
 
                 p.apply_async(self.worker, args=(loop, env_var, retry_budget))
 
+
             p.close()
             p.join()
 
@@ -392,15 +397,16 @@ class main():
 
         except (KeyboardInterrupt, SystemExit):
             logger.info('Stopping CAPTCHA Monitor...')
-
-            # Stop the heart beat
-            heartbeat.cancel()
-
             # Force join process to shutdown
             p.close()
             p.join()
 
         finally:
+            logger.debug('Stopping the heartbeat...')
+            # Stop the heart beat
+            heartbeat.cancel()
+
+            logger.debug('Completely exitting...')
             sys.exit()
 
     def worker(self, loop, env_var, retry_budget):
