@@ -39,7 +39,8 @@ def fetch_via_requests_over_tor(url, additional_headers=None, **kwargs):
     results['html_data'] = str(data.text)
     results['requests'] = format_requests.requests(dict(data.request.headers),
                                                    dict(data.headers),
-                                                   str(data.status_code))
+                                                   str(data.status_code),
+                                                   url)
 
     logger.debug('I\'m done fetching %s', url)
 

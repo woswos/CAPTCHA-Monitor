@@ -34,22 +34,24 @@ def seleniumwire(requests_data):
     return json.dumps(dict(cleaned))
 
 
-def curl(request_headers, response_headers, status_line):
+def curl(request_headers, response_headers, status_line, url):
     cleaned = {'data': []}
     temp = {}
     temp['request_headers'] = request_headers
     temp['response_headers'] = response_headers
     temp['status_line'] = parse_headers('GET: ' + str(status_line))
+    temp['url'] = url
     cleaned['data'].append(temp)
     return json.dumps(cleaned)
 
 
-def requests(request_headers, response_headers, status_code):
+def requests(request_headers, response_headers, status_code, url):
     cleaned = {'data': []}
     temp = {}
     temp['request_headers'] = request_headers
     temp['response_headers'] = response_headers
     temp['status_line'] = parse_headers('GET: ' + str(status_code))
+    temp['url'] = url
     cleaned['data'].append(temp)
     return json.dumps(cleaned)
 

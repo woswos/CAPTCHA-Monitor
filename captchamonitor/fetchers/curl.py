@@ -60,7 +60,8 @@ def fetch_via_curl(url, additional_headers=None, **kwargs):
     results['html_data'] = str(data)
     results['requests'] = format_requests.curl(default_curl_request_headers,
                                                headers,
-                                               status_line)
+                                               status_line,
+                                               url)
 
     logger.debug('I\'m done fetching %s', url)
 
