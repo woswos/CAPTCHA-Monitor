@@ -1,6 +1,8 @@
 import pytest
 from captchamonitor.utils.fetch import fetch_via_method
 import captchamonitor.utils.tor_launcher as tor_launcher
+from pathlib import Path
+import os
 
 methods = ['firefox',
            'firefox_over_tor',
@@ -13,6 +15,7 @@ methods = ['firefox',
            'curl_over_tor'
            ]
 
+os.environ['CM_TOR_DIR_PATH'] = str(os.path.join(str(Path.home()), '.cm_tor', '0'))
 # Just get a single exit node for testing purposes
 tor = tor_launcher.TorLauncher()
 for exit in tor.get_exit_relays().keys():
@@ -25,7 +28,8 @@ job = {'method': '',
        'captcha_sign': '',
        'additional_headers': '',
        'exit_node': exit_node,
-       'tbb_security_level': 'medium'}
+       'tbb_security_level': 'medium',
+       'browser_version': ''}
 
 
 @pytest.fixture(autouse=True, scope="module")

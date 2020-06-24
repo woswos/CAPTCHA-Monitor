@@ -18,14 +18,16 @@ job_1 = {'method': randomString(),
          'captcha_sign': randomString(),
          'additional_headers': randomString(),
          'exit_node': randomString(),
-         'tbb_security_level': randomString()}
+         'tbb_security_level': randomString(),
+         'browser_version': randomString()}
 
 job_2 = {'method': randomString(),
          'url': randomString(),
          'captcha_sign': randomString(),
          'additional_headers': randomString(),
          'exit_node': randomString(),
-         'tbb_security_level': randomString()}
+         'tbb_security_level': randomString(),
+         'browser_version': randomString()}
 
 result_1 = {'method': randomString(),
             'url': randomString(),
@@ -34,7 +36,8 @@ result_1 = {'method': randomString(),
             'html_data': randomString(),
             'requests': randomString(),
             'exit_node': None,
-            'tbb_security_level': None}
+            'tbb_security_level': None,
+            'browser_version': None}
 
 
 @pytest.fixture
@@ -156,6 +159,7 @@ def test_db_insert_result(fresh_db):
     conn.commit()
 
     assert result['url'] == result_1['url']
+
 
 def test_db_insert_failed(fresh_db):
     fresh_db.insert_job_into_table(fresh_db.failed_table_name, job_1)

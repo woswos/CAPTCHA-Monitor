@@ -18,7 +18,7 @@ def fetch_via_tor_browser(url, additional_headers=None, security_level='medium',
     logger = logging.getLogger(__name__)
 
     try:
-        tbb_path = os.environ['CM_TBB_PATH']
+        tbb_path = os.environ['CM_BROWSER_PATH']
         tor_socks_host = os.environ['CM_TOR_HOST']
         tor_socks_port = os.environ['CM_TOR_SOCKS_PORT']
         download_folder = os.environ['CM_DOWNLOAD_FOLDER']

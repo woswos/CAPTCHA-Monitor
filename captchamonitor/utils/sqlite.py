@@ -21,6 +21,7 @@ class SQLite:
                 'requests': 'TEXT',
                 'exit_node': 'TEXT',
                 'tbb_security_level': 'TEXT',
+                'browser_version': 'TEXT',
             },
             'queue':
             {
@@ -32,6 +33,7 @@ class SQLite:
                 'additional_headers': 'TEXT',
                 'exit_node': 'TEXT',
                 'tbb_security_level': 'TEXT',
+                'browser_version': 'TEXT',
             },
             'failed':
             {
@@ -42,6 +44,7 @@ class SQLite:
                 'additional_headers': 'TEXT',
                 'exit_node': 'TEXT',
                 'tbb_security_level': 'TEXT',
+                'browser_version': 'TEXT',
             }
         }
 

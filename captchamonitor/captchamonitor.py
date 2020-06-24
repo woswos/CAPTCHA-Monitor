@@ -16,7 +16,8 @@ logging.basicConfig(format=logger_format)
 logger = logging.getLogger('captchamonitor')
 logger.setLevel(logging.INFO)
 
-env_vars = {'CM_TBB_PATH': 'The path to Tor Browser bundle',
+env_vars = {'CM_BROWSER_VERSIONS_PATH': 'The path to folder that stores browser versions',
+            # 'CM_TBB_PATH': 'The path to Tor Browser bundle',
             # 'CM_TOR_HOST': 'The IP address of the Tor server',
             # 'CM_TOR_SOCKS_PORT': 'The port number of the Tor server',
             # 'CM_TOR_CONTROL_PORT': 'The control port number of the Tor server',
@@ -140,9 +141,14 @@ class main():
                                     default='')
 
         add_job_parser.add_argument('-s', '--tbb_security_level',
-                                    help="""specify the Tor Browser security level (if using Tor Browser)""",
+                                    help="""specify the Tor Browser security level, if using Tor Browser""",
                                     metavar="LEVEL",
                                     default='medium')
+
+        add_job_parser.add_argument('-b', '--browser_version',
+                                    help="""specify the version of the browser, if using a browser (leave empty to use the latest version)""",
+                                    metavar="VERSION",
+                                    default='')
 
         add_job_parser.add_argument('-x', '--all_exit_nodes',
                                     help="""use this argument if you want to add this current job for all exit nodes""",
@@ -312,7 +318,8 @@ class main():
                             'captcha_sign': args.captcha_sign,
                             'additional_headers': args.additional_headers,
                             'exit_node': exit,
-                            'tbb_security_level': args.tbb_security_level}
+                            'tbb_security_level': args.tbb_security_level,
+                            'browser_version': args.browser_version}
                     queue.add_job(data)
 
                 logger.info('Done!')
@@ -326,7 +333,8 @@ class main():
                     'captcha_sign': args.captcha_sign,
                     'additional_headers': args.additional_headers,
                     'exit_node': args.exit_node,
-                    'tbb_security_level': args.tbb_security_level}
+                    'tbb_security_level': args.tbb_security_level,
+                    'browser_version': args.browser_version}
 
             queue.add_job(data)
 

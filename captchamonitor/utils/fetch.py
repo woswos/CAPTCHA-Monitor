@@ -14,10 +14,33 @@ def fetch_via_method(data):
     additional_headers = data['additional_headers']
     exit_node = data['exit_node']
     tbb_security_level = data['tbb_security_level']
+    browser_version = data['browser_version']
+
+    method_path = os.path.join(os.environ['CM_BROWSER_VERSIONS_PATH'], method)
+
+    # if ('firefox' in method) or ('chrome' in method) or ('tor_browser' in method):
+    if ('tor_browser' in method):
+        # Find the latest version available if not specified
+        if (browser_version == ''):
+            browser_version = get_latest_version(method_path)
+            logger.debug('The latest version available for "%s" is "%s"' %
+                         (method, browser_version))
+
+        browser_path = os.path.join(method_path, browser_version)
+
+        if not os.path.exists(browser_path):
+            logger.warning('The specified browser version %s for %s does not exist' %
+                           (browser_version, method))
+            return None
+
+        os.environ['CM_BROWSER_PATH'] = browser_path
+
+        logger.debug('Fetching "%s" via "%s" - "v%s"' % (url, method, browser_version))
+
+    else:
+        logger.debug('Fetching "%s" via "%s"' % (url, method))
 
     results = {}
-    logger.debug('Fetching "%s" via "%s"', url, method)
-
     if(method == 'tor_browser'):
         results = fetchers.tor_browser(url,
                                        additional_headers,
@@ -51,4 +74,22 @@ def fetch_via_method(data):
         logger.warning('"%s" is not available, please check the method name"', method)
         return None
 
+    # Add the browser version if it wasn't specified
+    results['browser_version'] = browser_version
+
     return results
+
+
+def get_latest_version(path):
+    import os
+    import re
+
+    def atoi(text):
+        return int(text) if text.isdigit() else text
+
+    def natural_keys(text):
+        return [atoi(c) for c in re.split(r'(\d+)', text)]
+
+    versions = next(os.walk(path))[1]
+    versions.sort(key=natural_keys)
+    return versions[-1]
