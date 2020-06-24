@@ -74,8 +74,9 @@ def fetch_via_method(data):
         logger.warning('"%s" is not available, please check the method name"', method)
         return None
 
-    # Add the browser version if it wasn't specified
-    results['browser_version'] = browser_version
+    if results is not None:
+        # Add the browser version if it wasn't specified
+        results['browser_version'] = browser_version
 
     return results
 
