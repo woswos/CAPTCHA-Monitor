@@ -19,6 +19,7 @@ def fetch_via_tor_browser(url, additional_headers=None, security_level='medium',
 
     try:
         tbb_path = os.environ['CM_BROWSER_PATH']
+        http_header_live = os.environ['CM_HTTP_HEADER_LIVE_FILE']
         tor_socks_host = os.environ['CM_TOR_HOST']
         tor_socks_port = os.environ['CM_TOR_SOCKS_PORT']
         download_folder = os.environ['CM_DOWNLOAD_FOLDER']
@@ -82,6 +83,9 @@ def fetch_via_tor_browser(url, additional_headers=None, security_level='medium',
     driver = webdriver.Firefox(firefox_profile=profile,
                                firefox_binary=binary,
                                options=options)
+
+    # Install the HTTP-Header-Live extension
+    driver.install_addon(http_header_live, temporary=True)
 
     # Try sending a request to the server and get server's response
     try:
