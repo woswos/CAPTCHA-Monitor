@@ -12,8 +12,9 @@ def tb(requests_data):
                 temp[key] = parse_headers(value)
 
         # Skip the internal request to the browser extension
-        if '255.255.255.255' not in str(temp['url']):
-            cleaned['data'].append(temp)
+        if 'url' in temp:
+            if '255.255.255.255' not in str(temp['url']):
+                cleaned['data'].append(temp)
     return json.dumps(cleaned)
 
 
