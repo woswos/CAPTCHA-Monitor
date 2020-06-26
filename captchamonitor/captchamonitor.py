@@ -475,7 +475,8 @@ class main():
                         # Retry fetching the same job up to the specified amount
                         for number_of_retries in range(retry_budget):
                             try:
-                                tor.new_circuit(exit_node)
+                                # Create the circuit and get the exact exit node used
+                                job_details['exit_node'] = tor.new_circuit(exit_node)
 
                             except Exception as err:
                                 logger.info(

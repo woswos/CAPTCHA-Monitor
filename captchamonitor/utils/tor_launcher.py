@@ -188,7 +188,6 @@ class StemController(threading.Thread):
                         #     break
                         self.logger.debug('Could not attach stream: %s', err)
 
-
     def join(self, timeout=None):
         """
         Stop the thread and wait for it to end
@@ -225,7 +224,7 @@ class StemController(threading.Thread):
     def new_circuit(self, exit_node_ip=None, timeout=10):
         """
         Creates a new circuit using the given exit node. If a node exit was not
-            provided, it chooses one randomly. Returns the circuit id.
+            provided, it chooses one randomly. Returns the exit node ip.
         """
         self.exit_node_ip = exit_node_ip
 
@@ -261,6 +260,5 @@ class StemController(threading.Thread):
         except Exception as err:
             self.last_circuit_was_successful = False
             self.logger.debug('Could not create the requested circuit: %s', err)
-            return False
 
-        return True
+        return exit_node_ip
