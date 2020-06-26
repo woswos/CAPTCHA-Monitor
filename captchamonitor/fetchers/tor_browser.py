@@ -116,6 +116,10 @@ def fetch_via_tor_browser(url, additional_headers=None, security_level='medium',
         except OSError:
             time.sleep(1)
 
+        except Exception as err:
+            logger.error('Cannot parse the headers: %s' % err)
+            return None
+
     if requests_data is None:
         # Don't return anything since we couldn't capture the headers
         logger.error('Couldn\'t capture the headers from %s' % http_header_live_file)
