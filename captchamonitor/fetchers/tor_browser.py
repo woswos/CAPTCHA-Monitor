@@ -6,6 +6,7 @@ import os
 import logging
 import json
 import time
+import socket
 from urltools import compare
 from selenium import webdriver
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
@@ -14,7 +15,7 @@ from selenium.webdriver.firefox.options import Options
 import captchamonitor.utils.format_requests as format_requests
 
 
-def fetch_via_tor_browser(url, additional_headers=None, security_level='medium', **kwargs):
+def fetch_via_tor_browser(url, additional_headers=None, security_level='medium', timeout=30, **kwargs):
     logger = logging.getLogger(__name__)
 
     try:
@@ -79,6 +80,9 @@ def fetch_via_tor_browser(url, additional_headers=None, security_level='medium',
     # Choose the headless mode
     options = Options()
     options.headless = True
+
+    # Set the timeout for webdriver initialization
+    socket.setdefaulttimeout(timeout)
 
     try:
         driver = webdriver.Firefox(firefox_profile=profile,

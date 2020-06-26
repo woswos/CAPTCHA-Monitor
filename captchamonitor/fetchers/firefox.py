@@ -5,13 +5,14 @@ Fetch a given URL using seleniumwire and Firefox
 import logging
 import json
 import sys
+import socket
 from urltools import compare
 from seleniumwire import webdriver
 from selenium.webdriver.firefox.options import Options
 import captchamonitor.utils.format_requests as format_requests
 
 
-def fetch_via_firefox(url, additional_headers=None, **kwargs):
+def fetch_via_firefox(url, additional_headers=None, timeout=30, **kwargs):
     logger = logging.getLogger(__name__)
 
     results = {}
@@ -19,6 +20,9 @@ def fetch_via_firefox(url, additional_headers=None, **kwargs):
     # Choose the headless mode
     options = Options()
     options.headless = True
+
+    # Set the timeout for webdriver initialization
+    socket.setdefaulttimeout(timeout)
 
     try:
         driver = webdriver.Firefox(options=options)

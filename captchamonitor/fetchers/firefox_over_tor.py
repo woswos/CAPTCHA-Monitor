@@ -5,6 +5,7 @@ Fetch a given URL using seleniumwire, Firefox, and Tor
 import os
 import logging
 import json
+import socket
 from urltools import compare
 from seleniumwire import webdriver
 from selenium.webdriver.firefox.options import Options
@@ -37,6 +38,9 @@ def fetch_via_firefox_over_tor(url, additional_headers=None, **kwargs):
     options = Options()
     options.headless = True
 
+    # Set the timeout for webdriver initialization
+    socket.setdefaulttimeout(10)
+    
     try:
         driver = webdriver.Firefox(options=options,
                                    seleniumwire_options=seleniumwire_options)

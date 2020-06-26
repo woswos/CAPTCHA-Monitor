@@ -5,6 +5,7 @@ Fetch a given URL using seleniumwire and Chromium
 import logging
 import json
 import sys
+import socket
 from urltools import compare
 from seleniumwire import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -21,6 +22,9 @@ def fetch_via_chromium(url, additional_headers=None, **kwargs):
     options.headless = True
     options.add_argument("--no-sandbox")
     options.add_argument("--headless")
+
+    # Set the timeout for webdriver initialization
+    socket.setdefaulttimeout(10)
 
     try:
         driver = webdriver.Chrome(options=options)

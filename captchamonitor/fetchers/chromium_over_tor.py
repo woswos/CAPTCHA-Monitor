@@ -5,13 +5,14 @@ Fetch a given URL using seleniumwire, Chromium, and Tor
 import os
 import logging
 import json
+import socket
 from urltools import compare
 from seleniumwire import webdriver
 from selenium.webdriver.chrome.options import Options
 import captchamonitor.utils.format_requests as format_requests
 
 
-def fetch_via_chromium_over_tor(url, additional_headers=None, **kwargs):
+def fetch_via_chromium_over_tor(url, additional_headers=None, timeout=30, **kwargs):
     logger = logging.getLogger(__name__)
 
     try:
@@ -38,6 +39,9 @@ def fetch_via_chromium_over_tor(url, additional_headers=None, **kwargs):
     options.headless = True
     options.add_argument("--no-sandbox")
     options.add_argument("--headless")
+
+    # Set the timeout for webdriver initialization
+    socket.setdefaulttimeout(timeout)
 
     try:
         driver = webdriver.Chrome(options=options,
