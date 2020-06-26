@@ -5,7 +5,7 @@ from captchamonitor import fetchers
 import captchamonitor.utils.tor_launcher as tor_launcher
 
 
-def fetch_via_method(data):
+def fetch_via_method(data, timeout=30):
     logger = logging.getLogger(__name__)
 
     method = data['method']
@@ -43,17 +43,24 @@ def fetch_via_method(data):
     results = {}
     if(method == 'tor_browser'):
         results = fetchers.tor_browser(url,
-                                       additional_headers,
-                                       tbb_security_level)
+                                       additional_headers=additional_headers,
+                                       security_level=tbb_security_level,
+                                       timeout=timeout)
 
     elif(method == 'firefox_over_tor'):
-        results = fetchers.firefox_over_tor(url, additional_headers)
+        results = fetchers.firefox_over_tor(url,
+                                            additional_headers=additional_headers,
+                                            timeout=timeout)
 
     elif(method == 'chromium_over_tor'):
-        results = fetchers.chromium_over_tor(url, additional_headers)
+        results = fetchers.chromium_over_tor(url,
+                                             additional_headers=additional_headers,
+                                             timeout=timeout)
 
     elif(method == 'requests_over_tor'):
-        results = fetchers.requests_over_tor(url, additional_headers)
+        results = fetchers.requests_over_tor(url,
+                                             additional_headers=additional_headers,
+                                             timeout=timeout)
 
     elif(method == 'curl_over_tor'):
         results = fetchers.curl_over_tor(url, additional_headers)
@@ -62,10 +69,14 @@ def fetch_via_method(data):
         results = fetchers.requests(url, additional_headers)
 
     elif(method == 'firefox'):
-        results = fetchers.firefox(url, additional_headers)
+        results = fetchers.firefox(url,
+                                   additional_headers=additional_headers,
+                                   timeout=timeout)
 
     elif(method == 'chromium'):
-        results = fetchers.chromium(url, additional_headers)
+        results = fetchers.chromium(url,
+                                    additional_headers=additional_headers,
+                                    timeout=timeout)
 
     elif(method == 'curl'):
         results = fetchers.curl(url, additional_headers)

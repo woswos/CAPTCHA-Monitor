@@ -12,7 +12,7 @@ from selenium.webdriver.firefox.options import Options
 import captchamonitor.utils.format_requests as format_requests
 
 
-def fetch_via_firefox_over_tor(url, additional_headers=None, **kwargs):
+def fetch_via_firefox_over_tor(url, additional_headers=None, timeout=30, **kwargs):
     logger = logging.getLogger(__name__)
 
     try:
@@ -30,7 +30,7 @@ def fetch_via_firefox_over_tor(url, additional_headers=None, **kwargs):
         'proxy': {
             'http': 'socks5h://%s:%s' % (tor_socks_host, tor_socks_port),
             'https': 'socks5h://%s:%s' % (tor_socks_host, tor_socks_port),
-            'connection_timeout': 30
+            'connection_timeout': timeout
         }
     }
 
@@ -39,8 +39,8 @@ def fetch_via_firefox_over_tor(url, additional_headers=None, **kwargs):
     options.headless = True
 
     # Set the timeout for webdriver initialization
-    socket.setdefaulttimeout(10)
-    
+    socket.setdefaulttimeout(15)
+
     try:
         driver = webdriver.Firefox(options=options,
                                    seleniumwire_options=seleniumwire_options)
@@ -51,6 +51,9 @@ def fetch_via_firefox_over_tor(url, additional_headers=None, **kwargs):
 
     if additional_headers:
         driver.header_overrides = json.loads(additional_headers)
+
+    # Set driver page load timeout
+    driver.implicitly_wait(timeout)
 
     # Try sending a request to the server and get server's response
     try:

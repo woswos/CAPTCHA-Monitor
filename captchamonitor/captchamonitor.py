@@ -395,7 +395,7 @@ class main():
                            'CM_TOR_DIR_PATH': os.path.join(worker_tor_base_dir, str(w_id))
                            }
 
-                p.apply_async(self.worker, args=(loop, env_var, retry_budget))
+                p.apply_async(self.worker, args=(loop, env_var, retry_budget, timeout_value))
 
             p.close()
             p.join()
@@ -417,7 +417,7 @@ class main():
             logger.debug('Completely exitting...')
             sys.exit()
 
-    def worker(self, loop, env_var, retry_budget):
+    def worker(self, loop, env_var, retry_budget, timeout_value=30):
         from captchamonitor.utils.captcha import detect
         from captchamonitor.utils.queue import Queue
         from captchamonitor.utils.fetch import fetch_via_method
@@ -484,7 +484,7 @@ class main():
                                 break
 
                             # Fetch the URL using the method specified
-                            fetched_data = fetch_via_method(job_details)
+                            fetched_data = fetch_via_method(job_details, timeout_value)
 
                             # Stop retry loop if a meaningful result was returned
                             if fetched_data is not None:

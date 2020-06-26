@@ -30,7 +30,7 @@ def fetch_via_chromium_over_tor(url, additional_headers=None, timeout=30, **kwar
         'proxy': {
             'http': 'socks5h://%s:%s' % (tor_socks_host, tor_socks_port),
             'https': 'socks5h://%s:%s' % (tor_socks_host, tor_socks_port),
-            'connection_timeout': 30
+            'connection_timeout': timeout
         }
     }
 
@@ -41,7 +41,7 @@ def fetch_via_chromium_over_tor(url, additional_headers=None, timeout=30, **kwar
     options.add_argument("--headless")
 
     # Set the timeout for webdriver initialization
-    socket.setdefaulttimeout(timeout)
+    socket.setdefaulttimeout(15)
 
     try:
         driver = webdriver.Chrome(options=options,
@@ -53,6 +53,9 @@ def fetch_via_chromium_over_tor(url, additional_headers=None, timeout=30, **kwar
 
     if additional_headers:
         driver.header_overrides = json.loads(additional_headers)
+
+    # Set driver page load timeout
+    driver.implicitly_wait(timeout)
 
     # Try sending a request to the server and get server's response
     try:
