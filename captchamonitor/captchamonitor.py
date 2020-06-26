@@ -47,6 +47,9 @@ ADD_JOB_HELP = 'Add a new job to queue'
 RUN_DESC = 'Run jobs in the queue'
 RUN_HELP = 'Run jobs in the queue'
 
+MD5_DESC = 'Returns the MD5 hash of a given URL'
+MD5_HELP = 'Returns the MD5 hash of a given URL'
+
 EXPORT_DESC = 'Export the database tables to JSON files into a specified directory'
 EXPORT_HELP = 'Export the database tables to JSON files'
 
@@ -206,6 +209,26 @@ class main():
                                 action='store_true')
 
         run_parser.add_argument('-v', '--verbose',
+                                help="""show all log messages""",
+                                action='store_true')
+
+        ############
+        # FIND MD5 #
+        ############
+        md5_parser = sub_parser.add_parser('md5',
+                                           description=MD5_DESC,
+                                           help=MD5_HELP,
+                                           formatter_class=formatter_class)
+
+        md5_parser.set_defaults(func=self.md5, formatter_class=formatter_class)
+
+        md5_parser.add_argument('-u', '--url',
+                                help="""the website given URL will be hashed""",
+                                required='True',
+                                metavar='URL',
+                                default='')
+
+        md5_parser.add_argument('-v', '--verbose',
                                 help="""show all log messages""",
                                 action='store_true')
 
@@ -548,6 +571,46 @@ class main():
                 tor.stop()
                 # Break out of the outer loop
                 break
+
+    def md5(self, args):
+        import hashlib
+        from captchamonitor.utils.fetch import fetch_via_method
+
+        url = args.url
+
+        if args.verbose:
+            logging.getLogger('captchamonitor').setLevel(logging.DEBUG)
+
+        job = {'method': 'firefox',
+               'url': url,
+               'captcha_sign': '',
+               'additional_headers': '',
+               'exit_node': '',
+               'tbb_security_level': '',
+               'browser_version': ''}
+
+        try:
+            logger.info('Fetching %s' % url)
+            fetched_data_1 = fetch_via_method(job)
+            logger.debug('Fetching %s one more time to confirm' % url)
+            fetched_data_2 = fetch_via_method(job)
+            logger.debug('OK, this is the last one')
+            fetched_data_3 = fetch_via_method(job)
+
+            if (fetched_data_1['html_data'] == fetched_data_2['html_data']) and (fetched_data_2['html_data'] == fetched_data_3['html_data']):
+                hash = hashlib.md5(fetched_data_1['html_data'].encode("utf-8")).hexdigest()
+                logger.info('Hash of %s is: %s' % (url, hash))
+            else:
+                logger.info('Please try one more time')
+
+        except KeyboardInterrupt:
+            logger.info('Stopping, bye!')
+
+        except Exception as err:
+            logger.info('An error occurred: %s' % err)
+
+        finally:
+            sys.exit()
 
     def export(self, args):
         from captchamonitor.utils.db_export import export
