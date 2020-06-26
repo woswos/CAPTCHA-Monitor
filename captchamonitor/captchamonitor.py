@@ -4,6 +4,7 @@ import sys
 import os
 import time
 from threading import Timer
+from captchamonitor.utils.queue import Queue
 
 # Capture program start time
 start_time = time.time()
@@ -61,7 +62,6 @@ def formatter_class(prog):
 
 
 def heartbeat_message():
-    from captchamonitor.utils.queue import Queue
     global last_remaining_jobs
 
     queue = Queue()
@@ -148,6 +148,11 @@ class main():
         add_job_parser.add_argument('-b', '--browser_version',
                                     help="""specify the version of the browser, if using a browser (leave empty to use the latest version)""",
                                     metavar="VERSION",
+                                    default='')
+
+        add_job_parser.add_argument('-d', '--data_hash',
+                                    help="""hash of the original data (result of Python's hash() function) for checking data integrity""",
+                                    metavar="HASH",
                                     default='')
 
         add_job_parser.add_argument('-x', '--all_exit_nodes',
@@ -283,7 +288,6 @@ class main():
         """
         Add a new job to the queue
         """
-        from captchamonitor.utils.queue import Queue
         from pathlib import Path
         import os
 
@@ -319,7 +323,8 @@ class main():
                             'additional_headers': args.additional_headers,
                             'exit_node': exit,
                             'tbb_security_level': args.tbb_security_level,
-                            'browser_version': args.browser_version}
+                            'browser_version': args.browser_version,
+                            'expected_hash': args.data_hash}
                     queue.add_job(data)
 
                 logger.info('Done!')
@@ -334,7 +339,8 @@ class main():
                     'additional_headers': args.additional_headers,
                     'exit_node': args.exit_node,
                     'tbb_security_level': args.tbb_security_level,
-                    'browser_version': args.browser_version}
+                    'browser_version': args.browser_version,
+                    'expected_hash': args.data_hash}
 
             queue.add_job(data)
 
@@ -417,8 +423,8 @@ class main():
             sys.exit()
 
     def worker(self, loop, env_var, retry_budget, timeout_value=30):
-        from captchamonitor.utils.captcha import detect
-        from captchamonitor.utils.queue import Queue
+        from captchamonitor.utils.data_integrity import detect_captcha
+        from captchamonitor.utils.data_integrity import diff
         from captchamonitor.utils.fetch import fetch_via_method
         import captchamonitor.utils.tor_launcher as tor_launcher
         import time
@@ -467,7 +473,6 @@ class main():
 
                         if job_details['exit_node']:
                             exit_node = job_details['exit_node']
-                            logger.debug('Using %s as the exit node' % job_details['exit_node'])
                         else:
                             exit_node = None
 
@@ -476,6 +481,7 @@ class main():
                             try:
                                 # Create the circuit and get the exact exit node used
                                 job_details['exit_node'] = tor.new_circuit(exit_node)
+                                logger.debug('Using %s as the exit node' % job_details['exit_node'])
 
                             except Exception as err:
                                 logger.info(
@@ -494,8 +500,11 @@ class main():
                         error_msg = 'Invalid responses from another server/proxy'
                         if success and (not error_msg in fetched_data['html_data']):
                             # Detect any CAPTCHAs
-                            fetched_data['is_captcha_found'] = detect(job_details['captcha_sign'],
-                                                                      fetched_data['html_data'])
+                            fetched_data['is_captcha_found'] = detect_captcha(job_details['captcha_sign'],
+                                                                              fetched_data['html_data'])
+
+                            fetched_data['is_data_modified'] = diff(job_details['expected_hash'],
+                                                                    fetched_data['html_data'])
 
                             # Delete columns that we don't want in the results table
                             del job_details['id']
@@ -560,7 +569,6 @@ class main():
             sys.exit()
 
     def stats(self, args):
-        from captchamonitor.utils.queue import Queue
         import time
 
         if args.verbose:

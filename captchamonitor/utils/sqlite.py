@@ -17,11 +17,13 @@ class SQLite:
                 'url': 'TEXT',
                 'captcha_sign': 'TEXT',
                 'is_captcha_found': 'TEXT',
+                'is_data_modified': 'TEXT',
                 'html_data': 'TEXT',
                 'requests': 'TEXT',
                 'exit_node': 'TEXT',
                 'tbb_security_level': 'TEXT',
                 'browser_version': 'TEXT',
+                'expected_hash': 'TEXT'
             },
             'queue':
             {
@@ -34,6 +36,7 @@ class SQLite:
                 'exit_node': 'TEXT',
                 'tbb_security_level': 'TEXT',
                 'browser_version': 'TEXT',
+                'expected_hash': 'TEXT',
             },
             'failed':
             {
@@ -45,6 +48,7 @@ class SQLite:
                 'exit_node': 'TEXT',
                 'tbb_security_level': 'TEXT',
                 'browser_version': 'TEXT',
+                'expected_hash': 'TEXT',
             }
         }
 
