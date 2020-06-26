@@ -128,8 +128,7 @@ class main():
         add_job_parser.add_argument('-c', '--captcha_sign',
                                     help="""the text that will be searched for""",
                                     metavar='TEXT',
-                                    required='True',
-                                    default='')
+                                    default='Cloudflare |')
 
         add_job_parser.add_argument('-a', '--additional_headers',
                                     help="""specify additional headers for the job""",
