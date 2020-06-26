@@ -1,20 +1,30 @@
 import email
 import io
 import json
+import logging
 
 
-def tb(requests_data):
+def tb(requests_data, url):
+    logger = logging.getLogger(__name__)
     cleaned = {'data': []}
     for request in requests_data['data']:
         temp = {}
-        for key, value in request.items():
-            if value != '':
-                temp[key] = parse_headers(value)
 
         # Skip the internal request to the browser extension
-        if 'url' in temp:
-            if '255.255.255.255' not in str(temp['url']):
-                cleaned['data'].append(temp)
+        if '255.255.255.255' not in str(request['url']):
+            for key, value in request.items():
+                if value != '':
+                    temp[key] = parse_headers(value)
+
+                # For some reason the extension doesn't include the URL of the
+                #   original request. This puts the URL back.
+                if 'url' not in temp:
+                    temp['url'] = url
+
+            cleaned['data'].append(temp)
+
+    #logger.debug(json.dumps(cleaned, indent=4))
+
     return json.dumps(cleaned)
 
 
@@ -32,6 +42,7 @@ def seleniumwire(requests_data):
         if request.path is not None:
             temp['url'] = request.path
         cleaned['data'].append(temp)
+
     return json.dumps(dict(cleaned))
 
 
@@ -43,6 +54,7 @@ def curl(request_headers, response_headers, status_line, url):
     temp['status_line'] = parse_headers('GET: ' + str(status_line))
     temp['url'] = url
     cleaned['data'].append(temp)
+
     return json.dumps(cleaned)
 
 
@@ -54,6 +66,7 @@ def requests(request_headers, response_headers, status_code, url):
     temp['status_line'] = parse_headers('GET: ' + str(status_code))
     temp['url'] = url
     cleaned['data'].append(temp)
+
     return json.dumps(cleaned)
 
 
