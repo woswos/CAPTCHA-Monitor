@@ -151,7 +151,7 @@ class main():
                                     default='')
 
         add_job_parser.add_argument('-d', '--data_hash',
-                                    help="""hash of the original data (result of Python's hash() function) for checking data integrity""",
+                                    help="""md5 hash of the original data for checking data integrity""",
                                     metavar="HASH",
                                     default='')
 
@@ -189,7 +189,7 @@ class main():
                                 help="""specify the number of seconds to allow each job to run""",
                                 metavar='N',
                                 type=int,
-                                default=60)
+                                default=30)
 
         run_parser.add_argument('-b', '--heartbeat',
                                 help="""specify the interval in minutes to print the heartbeat message""",
@@ -423,8 +423,8 @@ class main():
             sys.exit()
 
     def worker(self, loop, env_var, retry_budget, timeout_value=30):
-        from captchamonitor.utils.data_integrity import detect_captcha
-        from captchamonitor.utils.data_integrity import diff
+        from captchamonitor.utils.detect import captcha
+        from captchamonitor.utils.detect import diff
         from captchamonitor.utils.fetch import fetch_via_method
         import captchamonitor.utils.tor_launcher as tor_launcher
         import time
@@ -500,8 +500,8 @@ class main():
                         error_msg = 'Invalid responses from another server/proxy'
                         if success and (not error_msg in fetched_data['html_data']):
                             # Detect any CAPTCHAs
-                            fetched_data['is_captcha_found'] = detect_captcha(job_details['captcha_sign'],
-                                                                              fetched_data['html_data'])
+                            fetched_data['is_captcha_found'] = captcha(job_details['captcha_sign'],
+                                                                       fetched_data['html_data'])
 
                             fetched_data['is_data_modified'] = diff(job_details['expected_hash'],
                                                                     fetched_data['html_data'])
