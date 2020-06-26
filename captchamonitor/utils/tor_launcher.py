@@ -71,11 +71,11 @@ class TorLauncher():
 
         return tor_process
 
-    def new_circuit(self, exit_node_ip=None):
+    def new_circuit(self, exit_node_ip=None, timeout=10):
         """
         Just a wrapper for StemController's new_circuit()
         """
-        return self.stem_controller.new_circuit(exit_node_ip)
+        return self.stem_controller.new_circuit(exit_node_ip, timeout)
 
     def get_exit_relays(self):
         # """
@@ -222,7 +222,7 @@ class StemController(threading.Thread):
     def refresh_circuit(self):
         self.new_circuit(self.exit_node_ip)
 
-    def new_circuit(self, exit_node_ip=None):
+    def new_circuit(self, exit_node_ip=None, timeout=10):
         """
         Creates a new circuit using the given exit node. If a node exit was not
             provided, it chooses one randomly. Returns the circuit id.
@@ -255,7 +255,7 @@ class StemController(threading.Thread):
 
         try:
             # Establish the new circuit
-            self.circ_id = self.controller.new_circuit(path=path, await_build=True)
+            self.circ_id = self.controller.new_circuit(path=path, await_build=True, timeout=timeout)
             self.last_circuit_was_successful = True
             self.logger.debug('Created the requested circuit %s' % self.circ_id)
         except Exception as err:
