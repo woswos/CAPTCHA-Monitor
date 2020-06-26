@@ -98,6 +98,7 @@ def fetch_via_tor_browser(url, additional_headers=None, security_level='medium',
 
     # Set driver page load timeout
     driver.implicitly_wait(timeout)
+    socket.setdefaulttimeout(timeout)
 
     # Try sending a request to the server and get server's response
     try:
@@ -130,7 +131,7 @@ def fetch_via_tor_browser(url, additional_headers=None, security_level='medium',
 
     # Record the results
     results['html_data'] = driver.page_source
-    results['requests'] = format_requests.tb(requests_data)
+    results['requests'] = format_requests.tb(requests_data, url)
 
     logger.debug('I\'m done fetching %s', url)
 

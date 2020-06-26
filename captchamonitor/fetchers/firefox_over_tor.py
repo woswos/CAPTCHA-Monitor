@@ -40,6 +40,7 @@ def fetch_via_firefox_over_tor(url, additional_headers=None, timeout=30, **kwarg
 
     # Set the timeout for webdriver initialization
     socket.setdefaulttimeout(15)
+    socket.setdefaulttimeout(timeout)
 
     try:
         driver = webdriver.Firefox(options=options,
