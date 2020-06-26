@@ -22,7 +22,12 @@ def fetch_via_chromium(url, additional_headers=None, **kwargs):
     options.add_argument("--no-sandbox")
     options.add_argument("--headless")
 
-    driver = webdriver.Chrome(options=options)
+    try:
+        driver = webdriver.Chrome(options=options)
+    except Exception as err:
+        logger.error('Couldn\'t initialize the browser, check if there is enough memory available: %s'
+                     % err)
+        return None
 
     if additional_headers:
         driver.header_overrides = json.loads(additional_headers)

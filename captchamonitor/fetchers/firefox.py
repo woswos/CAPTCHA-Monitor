@@ -19,7 +19,13 @@ def fetch_via_firefox(url, additional_headers=None, **kwargs):
     # Choose the headless mode
     options = Options()
     options.headless = True
-    driver = webdriver.Firefox(options=options)
+
+    try:
+        driver = webdriver.Firefox(options=options)
+    except Exception as err:
+        logger.error('Couldn\'t initialize the browser, check if there is enough memory available: %s'
+                     % err)
+        return None
 
     if additional_headers:
         driver.header_overrides = json.loads(additional_headers)

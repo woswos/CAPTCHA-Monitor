@@ -80,9 +80,14 @@ def fetch_via_tor_browser(url, additional_headers=None, security_level='medium',
     options = Options()
     options.headless = True
 
-    driver = webdriver.Firefox(firefox_profile=profile,
-                               firefox_binary=binary,
-                               options=options)
+    try:
+        driver = webdriver.Firefox(firefox_profile=profile,
+                                   firefox_binary=binary,
+                                   options=options)
+    except Exception as err:
+        logger.error('Couldn\'t initialize the browser, check if there is enough memory available: %s'
+                     % err)
+        return None
 
     # Install the HTTP-Header-Live extension
     driver.install_addon(http_header_live, temporary=True)
@@ -90,7 +95,6 @@ def fetch_via_tor_browser(url, additional_headers=None, security_level='medium',
     # Try sending a request to the server and get server's response
     try:
         driver.get(url)
-
     except Exception as err:
         logger.error('webdriver.Firefox.get() says: %s' % err)
         return None
