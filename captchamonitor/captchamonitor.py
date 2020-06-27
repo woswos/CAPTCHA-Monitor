@@ -131,7 +131,7 @@ class main():
         add_job_parser.add_argument('-c', '--captcha_sign',
                                     help="""the text that will be searched for""",
                                     metavar='TEXT',
-                                    default='Cloudflare |')
+                                    default='| Cloudflare')
 
         add_job_parser.add_argument('-a', '--additional_headers',
                                     help="""specify additional headers for the job""",
@@ -390,6 +390,9 @@ class main():
 
         if args.verbose:
             logging.getLogger('captchamonitor').setLevel(logging.DEBUG)
+        else:
+            logging.getLogger('connectionpool').setLevel(logging.ERROR)
+            logging.getLogger('urllib3').setLevel(logging.ERROR)
 
         try:
             # Start the heartbeat message timer (convert minutes to seconds)
