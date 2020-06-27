@@ -61,6 +61,7 @@ def fetch_via_firefox_over_tor(url, additional_headers=None, timeout=30, **kwarg
         driver.get(url)
 
     except Exception as err:
+        driver.quit()
         logger.error('webdriver.Firefox.get() says: %s' % err)
         return None
 

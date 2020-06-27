@@ -104,6 +104,7 @@ def fetch_via_tor_browser(url, additional_headers=None, security_level='medium',
     try:
         driver.get(url)
     except Exception as err:
+        driver.quit()
         logger.error('webdriver.Firefox.get() says: %s' % err)
         return None
 
@@ -121,10 +122,12 @@ def fetch_via_tor_browser(url, additional_headers=None, security_level='medium',
             time.sleep(1)
 
         except Exception as err:
+            driver.quit()
             logger.error('Cannot parse the headers: %s' % err)
             return None
 
     if requests_data is None:
+        driver.quit()
         # Don't return anything since we couldn't capture the headers
         logger.error('Couldn\'t capture the headers from %s' % http_header_live_file)
         return None
