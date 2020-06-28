@@ -23,7 +23,7 @@ class SQLite:
                 'exit_node': 'TEXT',
                 'tbb_security_level': 'TEXT',
                 'browser_version': 'TEXT',
-                'expected_hash': 'TEXT'
+                'expected_hash': 'TEXT',
             },
             'queue':
             {
@@ -49,6 +49,18 @@ class SQLite:
                 'tbb_security_level': 'TEXT',
                 'browser_version': 'TEXT',
                 'expected_hash': 'TEXT',
+            },
+            'relays':
+            {
+                'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+                'fpr': 'TEXT UNIQUE',
+                'ipv4': 'TEXT UNIQUE',
+                'supports_ipv6': 'TEXT',
+                'is_exit': 'TEXT',
+                'country': 'TEXT',
+                'last_status': 'TEXT',
+                'latest_test': 'TEXT',
+                'performed_tests': 'TEXT',
             }
         }
 
@@ -63,6 +75,7 @@ class SQLite:
         self.queue_table_name = 'queue'
         self.results_table_name = 'results'
         self.failed_table_name = 'failed'
+        self.relays_table_name = 'relays'
 
     def check_if_db_exists(self):
         """
@@ -100,7 +113,7 @@ class SQLite:
         conn.commit()
         conn.close()
 
-    def insert_job_into_table(self, table, data):
+    def insert_job_into_table(self, table, data, ignore_existing=False):
         """
         Inserts given job into the given table
         """
@@ -119,10 +132,15 @@ class SQLite:
             data_q_marks += '?,'
             data_values.append(data[field])
 
-        sql_query = 'INSERT INTO %s (%s) VALUES (%s)' % (table_name,
-                                                         data_fields[:-1],
-                                                         data_q_marks[:-1]
-                                                         )
+        sql_query = 'INTO %s (%s) VALUES (%s)' % (table_name,
+                                                  data_fields[:-1],
+                                                  data_q_marks[:-1]
+                                                  )
+
+        if ignore_existing:
+            sql_query = 'INSERT OR IGNORE ' + sql_query
+        else:
+            sql_query = 'INSERT ' + sql_query
 
         self.logger.debug(sql_query)
         self.logger.debug(data_values)
