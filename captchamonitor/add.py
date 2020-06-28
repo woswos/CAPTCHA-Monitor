@@ -7,7 +7,7 @@ from captchamonitor.utils.queue import Queue
 import captchamonitor.utils.tor_launcher as tor_launcher
 
 
-def add(args):
+def add(args, exit_on_finish=True):
     """
     Add a new job to the queue
     """
@@ -68,4 +68,5 @@ def add(args):
         queue.add_job(data)
         logger.info('Done!')
 
-    sys.exit()
+    if exit_on_finish:
+        sys.exit()
