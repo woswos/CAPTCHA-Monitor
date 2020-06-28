@@ -53,7 +53,7 @@ class TorLauncher():
             '__LeaveStreamsUnattached': '1',
             'FetchHidServDescriptors': '0',
             'MaxCircuitDirtiness': '10',
-            'UseMicroDescriptors': '0'
+            'UseMicroDescriptors': '1'
         }
 
         try:
@@ -211,9 +211,22 @@ class StemController(threading.Thread):
         #     if desc.exit_policy.is_exiting_allowed():
         #         relays[desc.address] = desc.fingerprint
 
-        # Get relay descriptors from the cached location
-        for desc in parse_file(os.path.join(self.tor_dir, 'cached-consensus')):
+        # # Get relay descriptors from the cached location
+        # for desc in parse_file(os.path.join(self.tor_dir, 'cached-microdesc-consensus')):
+        #     if desc.exit_policy.is_exiting_allowed():
+        #         relays[desc.address] = desc.fingerprint
+        #
+        # return relays
+
+        exit_digests = []
+        data_dir = self.controller.get_conf('DataDirectory')
+
+        for desc in self.controller.get_microdescriptors():
             if desc.exit_policy.is_exiting_allowed():
+                exit_digests.append(desc.digest(hash_type='SHA256', encoding='BASE64'))
+
+        for desc in parse_file(os.path.join(data_dir, 'cached-microdesc-consensus')):
+            if desc.microdescriptor_digest in exit_digests:
                 relays[desc.address] = desc.fingerprint
 
         return relays
