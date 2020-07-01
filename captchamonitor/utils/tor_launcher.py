@@ -12,6 +12,7 @@ import logging
 import os
 import threading
 import random
+from pathlib import Path
 
 
 class TorLauncher():
@@ -78,16 +79,45 @@ class TorLauncher():
         return self.stem_controller.new_circuit(exit_node_ip, timeout)
 
     def get_exit_relays(self):
-        # """
-        # Just a wrapper for StemController's get_exit_relays()
-        # """
-        # return self.stem_controller.get_exit_relays()
-
         relays = {}
         # Get relay descriptors from the cached location
         for desc in parse_file(os.path.join(self.tor_dir, 'cached-consensus')):
             if desc.exit_policy.is_exiting_allowed():
                 relays[desc.address] = desc.fingerprint
+
+        return relays
+
+    def get_consensus(self, use_local_dir=False):
+
+        relays = []
+        relays_with_ipv6_exit_policy = []
+
+        # Get the list of relays that allow IPv6 exiting
+        if use_local_dir:
+            descriptors_dest = parse_file(os.path.join(
+                str(Path.home()), '.tor', 'cached-descriptors'))
+        else:
+            descriptors_dest = stem.descriptor.remote.get_server_descriptors()
+
+        for desc in descriptors_dest:
+            if desc.exit_policy_v6.is_exiting_allowed():
+                relays_with_ipv6_exit_policy.append(desc.fingerprint)
+
+        # Get the most recent consensus
+        if use_local_dir:
+            consensus_dest = parse_file(os.path.join(str(Path.home()), '.tor', 'cached-consensus'))
+        else:
+            consensus_dest = stem.descriptor.remote.get_consensus()
+
+        for desc in consensus_dest:
+            relay = {'nickname': desc.nickname,
+                     'fingerprint': desc.fingerprint,
+                     'address': desc.address,
+                     'is_ipv4_exiting_allowed': str(int(desc.exit_policy.is_exiting_allowed())),
+                     'is_ipv6_exiting_allowed': str(int(desc.fingerprint in relays_with_ipv6_exit_policy)),
+                     'published': desc.published}
+
+            relays.append(relay)
 
         return relays
 
