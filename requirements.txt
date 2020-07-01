@@ -1,7 +1,7 @@
 selenium-wire
 urltools
 urllib3<1.25
-stem
+stem>=1.8.0
 pysocks
 pycurl
 requests
