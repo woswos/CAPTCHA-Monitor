@@ -3,7 +3,7 @@ import argparse
 import sys
 import os
 
-from captchamonitor import add, md5, export, stats, cloudflare, run
+from captchamonitor import compose, add, md5, export, stats, cloudflare, run
 
 logger_format = '%(asctime)s %(module)s [%(levelname)s] %(message)s'
 logging.basicConfig(format=logger_format)
@@ -125,6 +125,48 @@ class main():
                                     action='store_true')
 
         add_job_parser.add_argument('-v', '--verbose',
+                                    help="""show all log messages""",
+                                    action='store_true')
+
+        ###########
+        # COMPOSE #
+        ###########
+        compose_parser = sub_parser.add_parser('compose',
+                                               description=COMPOSE_DESC,
+                                               help=COMPOSE_HELP,
+                                               formatter_class=formatter_class)
+
+        compose_parser.set_defaults(func=compose, formatter_class=formatter_class)
+
+        compose_parser.add_argument('-m', '--match_relays_and_jobs',
+                                    help="""specify the interval in minutes to update the job information related to relays""",
+                                    metavar='N',
+                                    type=int,
+                                    default=15)
+
+        compose_parser.add_argument('-d', '--dispatch_jobs',
+                                    help="""specify the interval in minutes to dispatch a new batch of jobs""",
+                                    metavar='N',
+                                    type=int,
+                                    default=30)
+
+        compose_parser.add_argument('-b', '--batch_size',
+                                    help="""specify the jobs to dispatch in a single batch""",
+                                    metavar='N',
+                                    type=int,
+                                    default=100)
+
+        compose_parser.add_argument('-n', '--new_relays',
+                                    help="""specify the interval in minutes to update the relay list from consensus""",
+                                    metavar='N',
+                                    type=int,
+                                    default=60)
+
+        compose_parser.add_argument('-l', '--local_tor',
+                                    help="""use local Tor's directory for fetching consensus""",
+                                    action='store_true')
+
+        compose_parser.add_argument('-v', '--verbose',
                                     help="""show all log messages""",
                                     action='store_true')
 
