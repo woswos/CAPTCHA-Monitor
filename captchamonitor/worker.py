@@ -71,13 +71,17 @@ def worker(loop, env_var, retry_budget, timeout_value=30):
                                 'Cloud not connect to the specified exit node: %s' % err)
                             break
 
-                        # Fetch the URL using the method specified
-                        fetched_data = fetch_via_method(job_details, timeout_value)
+                        try:
+                            # Fetch the URL using the method specified
+                            fetched_data = fetch_via_method(job_details, timeout_value)
 
-                        # Stop retry loop if a meaningful result was returned
-                        if fetched_data is not None:
-                            success = True
-                            break
+                            # Stop retry loop if a meaningful result was returned
+                            if fetched_data is not None:
+                                success = True
+                                break
+
+                        except Exception as err:
+                            logger.info('Cloud not fetch the URL: %s' % err)
 
                     # Process the results if the fetch was successful
                     error_msg = 'Invalid responses from another server/proxy'
