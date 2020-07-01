@@ -22,7 +22,7 @@ def fetch_via_firefox(url, additional_headers=None, timeout=30, **kwargs):
     options.headless = True
 
     # Set the timeout for webdriver initialization
-    socket.setdefaulttimeout(15)
+    #socket.setdefaulttimeout(15)
 
     try:
         driver = webdriver.Firefox(options=options)
@@ -36,7 +36,7 @@ def fetch_via_firefox(url, additional_headers=None, timeout=30, **kwargs):
 
     # Set driver page load timeout
     driver.implicitly_wait(timeout)
-    socket.setdefaulttimeout(timeout)
+    #socket.setdefaulttimeout(timeout)
 
     # Try sending a request to the server and get server's response
     try:

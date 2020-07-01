@@ -82,7 +82,7 @@ def fetch_via_tor_browser(url, additional_headers=None, security_level='medium',
     options.headless = True
 
     # Set the timeout for webdriver initialization
-    socket.setdefaulttimeout(15)
+    #socket.setdefaulttimeout(15)
 
     try:
         driver = webdriver.Firefox(firefox_profile=profile,
@@ -98,7 +98,7 @@ def fetch_via_tor_browser(url, additional_headers=None, security_level='medium',
 
     # Set driver page load timeout
     driver.implicitly_wait(timeout)
-    socket.setdefaulttimeout(timeout)
+    #socket.setdefaulttimeout(timeout)
 
     # Try sending a request to the server and get server's response
     try:
