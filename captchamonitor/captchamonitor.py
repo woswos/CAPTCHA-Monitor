@@ -154,7 +154,7 @@ class main():
                                     help="""specify the jobs to dispatch in a single batch""",
                                     metavar='N',
                                     type=int,
-                                    default=100)
+                                    default=150)
 
         compose_parser.add_argument('-n', '--new_relays',
                                     help="""specify the interval in minutes to update the relay list from consensus""",
