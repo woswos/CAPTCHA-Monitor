@@ -53,13 +53,13 @@ class SQLite:
             'relays':
             {
                 'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
-                'fpr': 'TEXT UNIQUE',
-                'ipv4': 'TEXT UNIQUE',
-                'supports_ipv6': 'TEXT',
-                'is_exit': 'TEXT',
+                'last_updated': 'DATETIME DEFAULT CURRENT_TIMESTAMP',
+                'fingerprint': 'TEXT UNIQUE',
+                'address': 'TEXT UNIQUE',
+                'is_ipv4_exiting_allowed': 'TEXT',
+                'is_ipv6_exiting_allowed': 'TEXT',
                 'country': 'TEXT',
-                'last_status': 'TEXT',
-                'latest_test': 'TEXT',
+                'status': 'TEXT',
                 'performed_tests': 'TEXT',
             }
         }
@@ -157,6 +157,61 @@ class SQLite:
 
         conn.close()
 
+    def get_table_entries(self, table, columns=['*'], identifiers=''):
+        """
+        Gets the given entries in a given table
+        Gets all values if no columns are provided
+        Uses the indentifiers for WHERE clause
+        """
+
+        table_name = table
+        db_file = self.db_file
+
+        # Set database connection
+        conn = sqlite3.connect(db_file)
+
+        sql_base = 'SELECT'
+
+        for column in columns:
+            sql_base += ' %s,' % column
+
+        sql_table = ' FROM %s' % table_name
+
+        sql_where = ' WHERE'
+        for field in identifiers:
+            sql_where += ' %s="%s" AND' % (field, identifiers[field])
+
+        if identifiers != '':
+            sql_query = sql_base[:-1] + sql_table + sql_where[:-4]
+        else:
+            sql_query = sql_base[:-1] + sql_table
+
+        self.logger.debug(sql_query)
+
+        cur = conn.cursor()
+
+        # Try to connect to the database
+        try:
+            cur.execute(sql_query)
+            conn.commit()
+
+        except Exception as err:
+            self.logger.critical('sqlite3.execute() at get_table_entries() says: %s' % err)
+
+        result = cur.fetchall()
+
+        conn.close()
+
+        final = []
+        # Try to place returned data into a dictionary otherwise no data was returned
+        try:
+            for i in range(len(result)):
+                final.append(dict(zip([c[0] for c in cur.description], result[i])))
+        except:
+            final = None
+
+        return final
+
     def count_table_entries(self, table):
         """
         Counts the number of entries in a given table
@@ -188,6 +243,50 @@ class SQLite:
         conn.close()
 
         return result
+
+    def update_table_entry(self, table, data, identifiers):
+        """
+        Updates a specific table entry with given data using given identifiers
+        """
+
+        table_name = table
+        db_file = self.db_file
+
+        # Set database connection
+        conn = sqlite3.connect(db_file)
+
+        sql_table = 'UPDATE %s ' % table_name
+
+        sql_set = 'SET '
+        sql_set_values = []
+        for field in data:
+            sql_set += ' %s=?,' % field
+            sql_set_values.append(data[field])
+
+        sql_where = ' WHERE'
+        sql_where_values = []
+        for field in identifiers:
+            sql_where += ' %s=? AND' % field
+            sql_where_values.append(identifiers[field])
+
+        sql_query = sql_table + sql_set[:-1] + sql_where[:-4]
+        data_values = sql_set_values + sql_where_values
+
+        self.logger.debug(sql_query)
+        self.logger.debug(data_values)
+
+        cur = conn.cursor()
+
+        # Try to connect to the database
+        try:
+            cur.execute(sql_query, data_values)
+            conn.commit()
+
+        except Exception as err:
+            self.logger.critical(
+                'sqlite3.execute() at update_table_entry() says: %s' % err)
+
+        conn.close()
 
     def claim_first_uncompleted_job(self, worker_id):
         """
