@@ -1,5 +1,5 @@
 import pytest
-import captchamonitor.utils.captcha as captcha
+from captchamonitor.utils.detect import captcha
 
 
 @pytest.mark.parametrize("captcha_sign, data, expected", [
@@ -13,4 +13,4 @@ import captchamonitor.utils.captcha as captcha
 ])
 
 def test_captcha_detector(captcha_sign, data, expected):
-    assert captcha.detect(captcha_sign, data) == expected
+    assert captcha(captcha_sign, data) == expected
