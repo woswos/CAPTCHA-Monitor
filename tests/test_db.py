@@ -57,7 +57,7 @@ def test_db_creation(fresh_db):
 
 
 def test_db_insert_job(fresh_db):
-    fresh_db.insert_job_into_table(fresh_db.queue_table_name, job_1)
+    fresh_db.insert_entry_into_table(fresh_db.queue_table_name, job_1)
 
     # Check if the value was inserted
     sql_query = 'SELECT * FROM %s' % fresh_db.queue_table_name
@@ -74,42 +74,52 @@ def test_db_insert_job(fresh_db):
 def test_db_get_uncompleted_job_with_no_job(fresh_db):
     worker_id = randomString(32)
     fresh_db.claim_first_uncompleted_job(worker_id)
-    job = fresh_db.get_claimed_job(worker_id)
-    assert job == None
+
+    identifiers = {'claimed_by': worker_id}
+    job = fresh_db.get_table_entries(fresh_db.queue_table_name, identifiers=identifiers)
+
+    assert job == []
 
 
 def test_db_get_uncompleted_job_with_job(fresh_db):
-    fresh_db.insert_job_into_table(fresh_db.queue_table_name, job_1)
+    fresh_db.insert_entry_into_table(fresh_db.queue_table_name, job_1)
 
     worker_id = randomString(32)
     fresh_db.claim_first_uncompleted_job(worker_id)
-    job = fresh_db.get_claimed_job(worker_id)
 
-    assert job['url'] == job_1['url']
+    identifiers = {'claimed_by': worker_id}
+    job = fresh_db.get_table_entries(fresh_db.queue_table_name, identifiers=identifiers)
+    print(job)
+    assert job[0]['url'] == job_1['url']
 
 
 def test_db_get_uncompleted_job_with_multiple_jobs(fresh_db):
-    fresh_db.insert_job_into_table(fresh_db.queue_table_name, job_1)
-    fresh_db.insert_job_into_table(fresh_db.queue_table_name, job_2)
+    fresh_db.insert_entry_into_table(fresh_db.queue_table_name, job_1)
+    fresh_db.insert_entry_into_table(fresh_db.queue_table_name, job_2)
 
     # Should give priority to first inserted job
     worker_id = randomString(32)
     fresh_db.claim_first_uncompleted_job(worker_id)
-    job = fresh_db.get_claimed_job(worker_id)
 
-    assert job['url'] == job_1['url']
+    identifiers = {'claimed_by': worker_id}
+    job = fresh_db.get_table_entries(fresh_db.queue_table_name, identifiers=identifiers)
+
+    assert job[0]['url'] == job_1['url']
 
 
 def test_db_remove_job(fresh_db):
-    fresh_db.insert_job_into_table(fresh_db.queue_table_name, job_1)
+    fresh_db.insert_entry_into_table(fresh_db.queue_table_name, job_1)
 
     # Get the job
     worker_id = randomString(32)
     fresh_db.claim_first_uncompleted_job(worker_id)
-    job = fresh_db.get_claimed_job(worker_id)
+
+    identifiers = {'claimed_by': worker_id}
+    job = fresh_db.get_table_entries(fresh_db.queue_table_name, identifiers=identifiers)
 
     # Delete the job
-    fresh_db.remove_job(job['id'])
+    identifiers = {'id': job[0]['id']}
+    fresh_db.remove_table_entry(fresh_db.queue_table_name, identifiers=identifiers)
 
     # Check if the job was deleted
     sql_query = 'SELECT * FROM %s' % fresh_db.queue_table_name
@@ -123,16 +133,19 @@ def test_db_remove_job(fresh_db):
 
 
 def test_db_remove_job_with_multiple_jobs_in_the_queue(fresh_db):
-    fresh_db.insert_job_into_table(fresh_db.queue_table_name, job_1)
-    fresh_db.insert_job_into_table(fresh_db.queue_table_name, job_2)
+    fresh_db.insert_entry_into_table(fresh_db.queue_table_name, job_1)
+    fresh_db.insert_entry_into_table(fresh_db.queue_table_name, job_2)
 
     # Get the job
     worker_id = randomString(32)
     fresh_db.claim_first_uncompleted_job(worker_id)
-    job = fresh_db.get_claimed_job(worker_id)
+
+    identifiers = {'claimed_by': worker_id}
+    job = fresh_db.get_table_entries(fresh_db.queue_table_name, identifiers=identifiers)
 
     # Delete the first job
-    fresh_db.remove_job(job['id'])
+    identifiers = {'id': job[0]['id']}
+    fresh_db.remove_table_entry(fresh_db.queue_table_name, identifiers=identifiers)
 
     # Check if the job was deleted
     sql_query = 'SELECT * FROM %s' % fresh_db.queue_table_name
@@ -147,7 +160,7 @@ def test_db_remove_job_with_multiple_jobs_in_the_queue(fresh_db):
 
 
 def test_db_insert_result(fresh_db):
-    fresh_db.insert_job_into_table(fresh_db.results_table_name, result_1)
+    fresh_db.insert_entry_into_table(fresh_db.results_table_name, result_1)
 
     # Check if the value was inserted
     sql_query = 'SELECT * FROM %s' % fresh_db.results_table_name
@@ -162,7 +175,7 @@ def test_db_insert_result(fresh_db):
 
 
 def test_db_insert_failed(fresh_db):
-    fresh_db.insert_job_into_table(fresh_db.failed_table_name, job_1)
+    fresh_db.insert_entry_into_table(fresh_db.failed_table_name, job_1)
 
     # Check if the value was inserted
     sql_query = 'SELECT * FROM %s' % fresh_db.failed_table_name

@@ -51,6 +51,8 @@ def worker(loop, env_var, retry_budget, timeout_value=30):
 
                 # Process the job if there is one in the queue
                 if job_details is not None:
+                    job_details = job_details[0]
+
                     job_id = job_details['id']
                     success = False
 

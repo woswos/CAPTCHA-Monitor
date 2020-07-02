@@ -15,7 +15,7 @@ methods = ['firefox',
            'curl_over_tor'
            ]
 
-os.environ['CM_TOR_DIR_PATH'] = str(os.path.join(str(Path.home()), '.cm_tor', '0'))
+os.environ['CM_TOR_DIR_PATH'] = str(os.path.join(str(Path.home()), '.tor'))
 # Just get a single exit node for testing purposes
 tor = tor_launcher.TorLauncher()
 for exit in tor.get_exit_relays().keys():
