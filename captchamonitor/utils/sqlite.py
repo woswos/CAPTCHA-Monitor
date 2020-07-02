@@ -113,9 +113,9 @@ class SQLite:
         conn.commit()
         conn.close()
 
-    def insert_job_into_table(self, table, data, ignore_existing=False):
+    def insert_entry_into_table(self, table, data, ignore_existing=False):
         """
-        Inserts given job into the given table
+        Inserts a given entry into a given table
         """
 
         table_name = table
@@ -153,7 +153,7 @@ class SQLite:
             conn.commit()
 
         except Exception as err:
-            self.logger.critical('sqlite3.execute() at insert_job() says: %s' % err)
+            self.logger.critical('sqlite3.execute() at insert_entry_into_table() says: %s' % err)
 
         conn.close()
 
@@ -288,6 +288,44 @@ class SQLite:
 
         conn.close()
 
+    def remove_table_entry(self, table, identifiers):
+        """
+        Removes a specific table entry with given identifiers
+        """
+
+        table_name = table
+        db_file = self.db_file
+
+        # Set database connection
+        conn = sqlite3.connect(db_file)
+
+        sql_table = 'DELETE from %s ' % table_name
+
+        sql_where = ' WHERE'
+        sql_where_values = []
+        for field in identifiers:
+            sql_where += ' %s=? AND' % field
+            sql_where_values.append(identifiers[field])
+
+        sql_query = sql_table + sql_where[:-4]
+        data_values = sql_where_values
+
+        self.logger.debug(sql_query)
+        self.logger.debug(data_values)
+
+        cur = conn.cursor()
+
+        # Try to connect to the database
+        try:
+            cur.execute(sql_query, data_values)
+            conn.commit()
+
+        except Exception as err:
+            self.logger.critical(
+                'sqlite3.execute() at remove_table_entry() says: %s' % err)
+
+        conn.close()
+
     def claim_first_uncompleted_job(self, worker_id):
         """
         Claims the first uncompleted job in the queue
@@ -315,111 +353,5 @@ class SQLite:
         except Exception as err:
             self.logger.critical(
                 'sqlite3.execute() at claim_first_uncompleted_job() says: %s' % err)
-
-        conn.close()
-
-    def get_claimed_job(self, worker_id):
-        """
-        Gets the details of the claimed job
-        Returns none if no job was claimed or there are no jobs in the queue
-        """
-
-        table_name = self.queue_table_name
-        db_file = self.db_file
-
-        # Set database connection
-        conn = sqlite3.connect(db_file)
-
-        # Prepare the SQL query
-        sql_query = 'SELECT * FROM %s WHERE claimed_by = "%s"' % (table_name, worker_id)
-
-        self.logger.debug(sql_query)
-
-        cur = conn.cursor()
-
-        # Try to connect to the database
-        try:
-            cur.execute(sql_query)
-            conn.commit()
-
-        except Exception as err:
-            self.logger.critical('sqlite3.execute() at get_claimed_job() says: %s' % err)
-
-        result = cur.fetchall()
-
-        conn.close()
-
-        # Try to place returned data into a dictionary otherwise no data was returned
-        try:
-            result = dict(zip([c[0] for c in cur.description], result[0]))
-        except:
-            result = None
-
-        return result
-
-    def get_job_with_id(self, job_id):
-        """
-        Gets the details of the job with a given id
-        Returns none if no job was claimed or there are no jobs in the queue
-        """
-
-        table_name = self.queue_table_name
-        db_file = self.db_file
-
-        # Set database connection
-        conn = sqlite3.connect(db_file)
-
-        # Prepare the SQL query
-        sql_query = 'SELECT * FROM %s WHERE id = "%s"' % (table_name, job_id)
-
-        self.logger.debug(sql_query)
-
-        cur = conn.cursor()
-
-        # Try to connect to the database
-        try:
-            cur.execute(sql_query)
-            conn.commit()
-
-        except Exception as err:
-            self.logger.critical('sqlite3.execute() at get_job_with_id() says: %s' % err)
-
-        result = cur.fetchall()
-
-        conn.close()
-
-        # Try to place returned data into a dictionary otherwise no data was returned
-        try:
-            result = dict(zip([c[0] for c in cur.description], result[0]))
-        except:
-            result = None
-
-        return result
-
-    def remove_job(self, job_id):
-        """
-        Removes the job with given id
-        """
-
-        table_name = self.queue_table_name
-        db_file = self.db_file
-
-        # Set database connection
-        conn = sqlite3.connect(db_file)
-
-        # Prepare the SQL query
-        sql_query = 'DELETE from %s WHERE id = "%s"' % (table_name, job_id)
-
-        self.logger.debug(sql_query)
-
-        cur = conn.cursor()
-
-        # Try to connect to the database
-        try:
-            cur.execute(sql_query)
-            conn.commit()
-
-        except Exception as err:
-            self.logger.critical('sqlite3.execute() at remove_job() says: %s' % err)
 
         conn.close()

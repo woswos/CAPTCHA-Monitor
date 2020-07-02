@@ -19,7 +19,7 @@ class Relays:
         return result
 
     def add_relay_if_not_exists(self, data):
-        self.db.insert_job_into_table(self.db.relays_table_name, data, ignore_existing=True)
+        self.db.insert_entry_into_table(self.db.relays_table_name, data, ignore_existing=True)
 
     def remove_relay(self, fpr):
         # self.db.remove_job(job_id)
