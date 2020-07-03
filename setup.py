@@ -4,7 +4,7 @@ with open('requirements.txt') as f:
     install_requires = f.readlines()
 
 setup(name='CAPTCHA Monitor',
-      version='0.1',
+      version='0.1.1',
       description='Check if a web site returns a CAPTCHA',
       url='https://github.com/woswos/CAPTCHA-Monitor',
       author='Barkin Simsek',
@@ -14,7 +14,7 @@ setup(name='CAPTCHA Monitor',
       install_requires=install_requires,
       zip_safe=False,
       entry_points={
-            'console_scripts': [
-            'captchamonitor = captchamonitor.captchamonitor:main'
-            ]
+          'console_scripts': [
+              'captchamonitor = captchamonitor.captchamonitor:main'
+          ]
       })
