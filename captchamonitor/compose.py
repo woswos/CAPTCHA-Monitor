@@ -122,111 +122,121 @@ def dispatch_jobs():
 
     relays = Relays()
     tests = Tests()
+    queue = Queue()
 
-    relays_list = relays.get_relays()
+    remaining_jobs = queue.count_remaining_jobs()
+    new_job_dispatch_treshold = batch_size * 0.25
 
-    # If the relay list is empty, fill it!
-    if not relays_list:
-        get_new_relays()
+    # Don't dispatch new jobs if there are a lot of jobs pending
+    if remaining_jobs < new_job_dispatch_treshold:
         relays_list = relays.get_relays()
 
-    for counter in range(batch_size):
+        # If the relay list is empty, fill it!
+        if not relays_list:
+            get_new_relays()
+            relays_list = relays.get_relays()
 
-        # For now choose randomly
-        relay = random.choice(relays_list)
+        for counter in range(batch_size):
 
-        # Only process the ones that allow exiting
-        if relay['is_ipv6_exiting_allowed'] or relay['is_ipv4_exiting_allowed']:
+            # For now choose randomly
+            relay = random.choice(relays_list)
 
-            ipv6_only_urls_list = to_json(tests.get_urls(ipv6_only=True))
-            ipv4_only_urls_list = to_json(tests.get_urls(ipv4_only=True))
-            all_urls_list = ipv4_only_urls_list + ipv6_only_urls_list
-            fetchers_list = to_json(tests.get_fetchers())
+            # Only process the ones that allow exiting
+            if relay['is_ipv6_exiting_allowed'] or relay['is_ipv4_exiting_allowed']:
 
-            performed_tests = json.loads(relay['performed_tests'])
+                ipv6_only_urls_list = to_json(tests.get_urls(ipv6_only=True))
+                ipv4_only_urls_list = to_json(tests.get_urls(ipv4_only=True))
+                all_urls_list = ipv4_only_urls_list + ipv6_only_urls_list
+                fetchers_list = to_json(tests.get_fetchers())
 
-            next_test_values = {}
+                performed_tests = json.loads(relay['performed_tests'])
 
-            # Choose a random random parameters for the next test
-            # These parameters will be used for adding the test if the exit
-            #   relay doesn't have an history of measurements
-            if relay['is_ipv6_exiting_allowed'] == 1:
-                test_urls = ipv6_only_urls_list[0]
-                next_test_values['url'] = test_urls['url']
-                next_test_values['data_hash'] = test_urls['hash']
-            else:
-                test_urls = ipv4_only_urls_list[0]
-                next_test_values['url'] = test_urls['url']
-                next_test_values['data_hash'] = test_urls['hash']
+                next_test_values = {}
 
-            test_methods = fetchers_list[0]
-            next_test_values['method'] = test_methods['method']
-            next_test_values['tbb_security_level'] = ''
-            next_test_values['browser_version'] = ''
-            next_test_values['exit_node'] = relay['address']
-
-            # Now consider the history of the relay's measurements and change some
-            #   of the parameters
-            if performed_tests['data']:
-                # Creata a cartesian product of the tests to get all combinations
-                test_combinations = create_combinations(all_urls_list, fetchers_list)
-
-                # Get a full list of untested values
-                # Simply remove the tested combinations from the full combinations list
-                untested = find_untested(performed_tests['data'], test_combinations)
-
-                # If there is something untested, overwrite the previously
-                #   chosen values
-                # The priority is given to the the untested tests
-                if untested:
-                    # Iterate over the untested measurements until we find
-                    #   a suitable one.
-                    for test in untested:
-                        test_url = test['url']
-                        is_ipv6_test = (test_url in str(ipv6_only_urls_list))
-                        is_relay_ipv6 = (relay['is_ipv6_exiting_allowed'] == '1')
-
-                        # Assign an IPv6 url to an exit relay that supports IPv6
-                        if(is_ipv6_test and is_relay_ipv6):
-                            next_test_values['data_hash'] = url_to_hash(test_url, all_urls_list)
-                            for key in test:
-                                next_test_values[key] = test[key]
-                            break
-                        elif (not is_ipv6_test and not is_relay_ipv6):
-                            next_test_values['data_hash'] = url_to_hash(test_url, all_urls_list)
-                            for key in test:
-                                next_test_values[key] = test[key]
-                            break
-
+                # Choose a random random parameters for the next test
+                # These parameters will be used for adding the test if the exit
+                #   relay doesn't have an history of measurements
+                if relay['is_ipv6_exiting_allowed'] == 1:
+                    test_urls = ipv6_only_urls_list[0]
+                    next_test_values['url'] = test_urls['url']
+                    next_test_values['data_hash'] = test_urls['hash']
                 else:
-                    # If we are here, it means that this exit relay had completed
-                    #   ths combinations of all tests already. Now, we need to refresh
-                    #   the oldest test.
-                    oldest_test = find_oldest(performed_tests['data'])
-                    test_url = oldest_test['url']
-                    next_test_values['data_hash'] = url_to_hash(test_url, all_urls_list)
-                    del oldest_test['timestamp']
+                    test_urls = ipv4_only_urls_list[0]
+                    next_test_values['url'] = test_urls['url']
+                    next_test_values['data_hash'] = test_urls['hash']
 
-                    for key in oldest_test:
-                        next_test_values[key] = oldest_test[key]
+                test_methods = fetchers_list[0]
+                next_test_values['method'] = test_methods['method']
+                next_test_values['tbb_security_level'] = ''
+                next_test_values['browser_version'] = ''
+                next_test_values['exit_node'] = relay['address']
 
-            # Construct the arguments for the job adder
-            args = Args()
-            args.verbose = verbose
-            args.all_exit_nodes = False
-            args.method = next_test_values['method']
-            args.url = next_test_values['url']
-            args.captcha_sign = '| Cloudflare'
-            args.additional_headers = ''
-            args.exit_node = next_test_values['exit_node']
-            args.tbb_security_level = next_test_values['tbb_security_level']
-            args.browser_version = next_test_values['browser_version']
-            args.data_hash = next_test_values['data_hash']
+                # Now consider the history of the relay's measurements and change some
+                #   of the parameters
+                if performed_tests['data']:
+                    # Creata a cartesian product of the tests to get all combinations
+                    test_combinations = create_combinations(all_urls_list, fetchers_list)
 
-            # Add a new job to the queue with given args
-            add.add(args=args, exit_on_finish=False, print_done_message=False)
+                    # Get a full list of untested values
+                    # Simply remove the tested combinations from the full combinations list
+                    untested = find_untested(performed_tests['data'], test_combinations)
 
-    logger.info('Dispatched a new batch of jobs')
+                    # If there is something untested, overwrite the previously
+                    #   chosen values
+                    # The priority is given to the the untested tests
+                    if untested:
+                        # Iterate over the untested measurements until we find
+                        #   a suitable one.
+                        for test in untested:
+                            test_url = test['url']
+                            is_ipv6_test = (test_url in str(ipv6_only_urls_list))
+                            is_relay_ipv6 = (relay['is_ipv6_exiting_allowed'] == '1')
+
+                            # Assign an IPv6 url to an exit relay that supports IPv6
+                            if(is_ipv6_test and is_relay_ipv6):
+                                next_test_values['data_hash'] = url_to_hash(test_url, all_urls_list)
+                                for key in test:
+                                    next_test_values[key] = test[key]
+                                break
+                            elif (not is_ipv6_test and not is_relay_ipv6):
+                                next_test_values['data_hash'] = url_to_hash(test_url, all_urls_list)
+                                for key in test:
+                                    next_test_values[key] = test[key]
+                                break
+
+                    else:
+                        # If we are here, it means that this exit relay had completed
+                        #   ths combinations of all tests already. Now, we need to refresh
+                        #   the oldest test.
+                        oldest_test = find_oldest(performed_tests['data'])
+                        test_url = oldest_test['url']
+                        next_test_values['data_hash'] = url_to_hash(test_url, all_urls_list)
+                        del oldest_test['timestamp']
+
+                        for key in oldest_test:
+                            next_test_values[key] = oldest_test[key]
+
+                # Construct the arguments for the job adder
+                args = Args()
+                args.verbose = verbose
+                args.all_exit_nodes = False
+                args.method = next_test_values['method']
+                args.url = next_test_values['url']
+                args.captcha_sign = '| Cloudflare'
+                args.additional_headers = ''
+                args.exit_node = next_test_values['exit_node']
+                args.tbb_security_level = next_test_values['tbb_security_level']
+                args.browser_version = next_test_values['browser_version']
+                args.data_hash = next_test_values['data_hash']
+
+                # Add a new job to the queue with given args
+                add.add(args=args, exit_on_finish=False, print_done_message=False)
+
+        logger.info('Dispatched a new batch of jobs')
+
+    else:
+        logger.info('Didn\'t dispatch a new batch of jobs since there are %s jobs in the queue already' %
+                    remaining_jobs)
 
 
 def get_new_relays():
