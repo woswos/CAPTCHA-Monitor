@@ -11,56 +11,127 @@ class SQLite:
         tables = {
             'results':
             {
+                # unique ID for this table
                 'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+                # the timestamp when the row was inserted
                 'timestamp': 'DATETIME DEFAULT CURRENT_TIMESTAMP',
+                # name of the desired fetcher to use
                 'method': 'TEXT',
+                # full URL including the http/https prefix
                 'url': 'TEXT',
+                # CAPTCHA sign that will be used for CAPTCHA detection
                 'captcha_sign': 'TEXT',
+                # 1 if CAPTCHA was found, 0 if CAPTCHA was not found
                 'is_captcha_found': 'TEXT',
+                # 1 if the hash of the received data doesn't match `expected_hash`, otherwise 0
                 'is_data_modified': 'TEXT',
+                # the HTML data gathered as a result of the fetch
                 'html_data': 'TEXT',
+                # the HTTP requests in JSON format made by the fether while fetching the URL
                 'requests': 'TEXT',
+                # IPv4 address of the exit node/relay to use, only required when using Tor
                 'exit_node': 'TEXT',
+                # only required when using Tor Browser. Possible values: low, medium, or high
                 'tbb_security_level': 'TEXT',
+                # version of the tool to use, use a single value
                 'browser_version': 'TEXT',
+                # hash gathered using `captchamonitor md5 -u URL`
                 'expected_hash': 'TEXT',
             },
             'queue':
             {
+                # unique ID for this table
                 'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+                # workers use this field for assigning jobs to themselves
                 'claimed_by': 'TEXT DEFAULT "None"',
+                # name of the desired fetcher to use
                 'method': 'TEXT',
+                # full URL including the http/https prefix
                 'url': 'TEXT',
+                # CAPTCHA sign that will be used for CAPTCHA detection
                 'captcha_sign': 'TEXT',
+                # additional HTTP headers in JSON format
                 'additional_headers': 'TEXT',
+                # IPv4 address of the exit node/relay to use, only required when using Tor
                 'exit_node': 'TEXT',
+                # only required when using Tor Browser. Possible values: low, medium, or high
                 'tbb_security_level': 'TEXT',
+                # version of the tool to use, use a single value
                 'browser_version': 'TEXT',
+                # hash gathered using `captchamonitor md5 -u URL`
                 'expected_hash': 'TEXT',
             },
             'failed':
             {
+                # unique ID for this table
                 'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+                # name of the desired fetcher to use
                 'method': 'TEXT',
+                # full URL including the http/https prefix
                 'url': 'TEXT',
+                # CAPTCHA sign that will be used for CAPTCHA detection
                 'captcha_sign': 'TEXT',
+                # additional HTTP headers in JSON format
                 'additional_headers': 'TEXT',
+                # IPv4 address of the exit node/relay to use, only required when using Tor
                 'exit_node': 'TEXT',
+                # only required when using Tor Browser. Possible values: low, medium, or high
                 'tbb_security_level': 'TEXT',
+                # version of the tool to use, use a single value
                 'browser_version': 'TEXT',
+                # hash gathered using `captchamonitor md5 -u URL`
                 'expected_hash': 'TEXT',
             },
             'relays':
             {
+                # unique ID for this table
                 'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+                # last modified timestamp of the row
                 'last_updated': 'DATETIME DEFAULT CURRENT_TIMESTAMP',
+                # BASE64 encoded SHA256 hash
                 'fingerprint': 'TEXT UNIQUE',
+                # IPv4 address of the relay
                 'address': 'TEXT UNIQUE',
+                # 1 or 0 if this relay allows IPv4 exits
                 'is_ipv4_exiting_allowed': 'TEXT',
+                # 1 or 0 if this relay allows IPv6 exits
                 'is_ipv6_exiting_allowed': 'TEXT',
+                # ISO 3166 alpha-2 country code based on GeoIP
                 'country': 'TEXT',
+                # online or offline
                 'status': 'TEXT',
+                # list of performed test in {'data':[]} format
                 'performed_tests': 'TEXT',
+            },
+            'urls':
+            {
+                # unique ID for this table
+                'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+                # full URL including the http/https prefix
+                'url': 'TEXT',
+                # 1 or 0 if the entered URL was a https:// URL
+                'is_https': 'TEXT',
+                # 1 or 0 if this domain supports IPv4
+                'supports_ipv4': 'TEXT',
+                # 1 or 0 if this domain supports IPv6
+                'supports_ipv6': 'TEXT',
+                # hash gathered using `captchamonitor md5 -u URL`
+                'hash': 'TEXT',
+            },
+            'fetchers':
+            {
+                # unique ID for this table
+                'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+                # name of the fetchers coded
+                'method': 'TEXT',
+                # version(s) of the tool to use, use a JSON list like {"data":[]}
+                'versions': 'TEXT',
+                # option 1 is preserved for future use
+                'option_1': 'TEXT',
+                # option 2 is preserved for future use
+                'option_2': 'TEXT',
+                # option 3 is preserved for future use
+                'option_3': 'TEXT',
             }
         }
 
@@ -76,6 +147,8 @@ class SQLite:
         self.results_table_name = 'results'
         self.failed_table_name = 'failed'
         self.relays_table_name = 'relays'
+        self.urls_table_name = 'urls'
+        self.fetchers_table_name = 'fetchers'
 
     def check_if_db_exists(self):
         """

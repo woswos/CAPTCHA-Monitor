@@ -9,6 +9,7 @@ from threading import Timer
 import captchamonitor.utils.tor_launcher as tor_launcher
 from captchamonitor.utils.relays import Relays
 from captchamonitor.utils.queue import Queue
+from captchamonitor.utils.tests import Tests
 from captchamonitor import add
 from datetime import datetime
 import random
@@ -120,16 +121,28 @@ def dispatch_jobs():
     logger.debug('Started dispatching a new batch of jobs')
 
     relays = Relays()
+    tests = Tests()
 
     relays_list = relays.get_relays()
+
+    # If the relay list is empty, fill it!
+    if not relays_list:
+        get_new_relays()
+        relays_list = relays.get_relays()
 
     for counter in range(batch_size):
 
         # For now choose randomly
         relay = random.choice(relays_list)
 
-        # Only process ones that allow exiting
+        # Only process the ones that allow exiting
         if relay['is_ipv6_exiting_allowed'] or relay['is_ipv4_exiting_allowed']:
+
+            ipv6_only_urls_list = to_json(tests.get_urls(ipv6_only=True))
+            ipv4_only_urls_list = to_json(tests.get_urls(ipv4_only=True))
+            all_urls_list = ipv4_only_urls_list + ipv6_only_urls_list
+            fetchers_list = to_json(tests.get_fetchers())
+
             performed_tests = json.loads(relay['performed_tests'])
 
             next_test_values = {}
@@ -137,40 +150,30 @@ def dispatch_jobs():
             # Choose a random random parameters for the next test
             # These parameters will be used for adding the test if the exit
             #   relay doesn't have an history of measurements
-            tests = {}
             if relay['is_ipv6_exiting_allowed'] == 1:
-                tests = get_tests(ipv6_only=True)
-                test_url = list(tests['data']['url'].keys())[0]
-                next_test_values['url'] = test_url
-                next_test_values['data_hash'] = tests['data']['url'][test_url]
+                test_urls = ipv6_only_urls_list[0]
+                next_test_values['url'] = test_urls['url']
+                next_test_values['data_hash'] = test_urls['hash']
             else:
-                tests = get_tests(ipv4_only=True)
-                test_url = list(tests['data']['url'].keys())[0]
-                next_test_values['url'] = test_url
-                next_test_values['data_hash'] = tests['data']['url'][test_url]
+                test_urls = ipv4_only_urls_list[0]
+                next_test_values['url'] = test_urls['url']
+                next_test_values['data_hash'] = test_urls['hash']
 
-            next_test_values['method'] = tests['data']['method'][0]
-            next_test_values['tbb_security_level'] = tests['data']['tbb_security_level'][0]
+            test_methods = fetchers_list[0]
+            next_test_values['method'] = test_methods['method']
+            next_test_values['tbb_security_level'] = ''
             next_test_values['browser_version'] = ''
             next_test_values['exit_node'] = relay['address']
 
             # Now consider the history of the relay's measurements and change some
             #   of the parameters
             if performed_tests['data']:
-                # Get list of the tests
-                tests = get_tests()
-
                 # Creata a cartesian product of the tests to get all combinations
-                test_combinations = create_combinations(tests)
+                test_combinations = create_combinations(all_urls_list, fetchers_list)
 
                 # Get a full list of untested values
                 # Simply remove the tested combinations from the full combinations list
-                untested = find_untested(performed_tests, test_combinations)
-
-                # I know returning the data under 'data' label instead of directly
-                #   returning is dumb but I wanted to be consistent across the
-                #   codebase. One day I might get rid of all of these 'data' labels
-                untested = untested['data']
+                untested = find_untested(performed_tests['data'], test_combinations)
 
                 # If there is something untested, overwrite the previously
                 #   chosen values
@@ -180,17 +183,17 @@ def dispatch_jobs():
                     #   a suitable one.
                     for test in untested:
                         test_url = test['url']
-                        is_ipv6_test = is_ipv6(test_url)
+                        is_ipv6_test = (test_url in str(ipv6_only_urls_list))
                         is_relay_ipv6 = (relay['is_ipv6_exiting_allowed'] == '1')
 
                         # Assign an IPv6 url to an exit relay that supports IPv6
                         if(is_ipv6_test and is_relay_ipv6):
-                            next_test_values['data_hash'] = tests['data']['url'][test_url]
+                            next_test_values['data_hash'] = url_to_hash(test_url, all_urls_list)
                             for key in test:
                                 next_test_values[key] = test[key]
                             break
                         elif (not is_ipv6_test and not is_relay_ipv6):
-                            next_test_values['data_hash'] = tests['data']['url'][test_url]
+                            next_test_values['data_hash'] = url_to_hash(test_url, all_urls_list)
                             for key in test:
                                 next_test_values[key] = test[key]
                             break
@@ -199,10 +202,9 @@ def dispatch_jobs():
                     # If we are here, it means that this exit relay had completed
                     #   ths combinations of all tests already. Now, we need to refresh
                     #   the oldest test.
-                    oldest_test = find_oldest(performed_tests)
-                    oldest_test = oldest_test['data']
+                    oldest_test = find_oldest(performed_tests['data'])
                     test_url = oldest_test['url']
-                    next_test_values['data_hash'] = tests['data']['url'][test_url]
+                    next_test_values['data_hash'] = url_to_hash(test_url, all_urls_list)
                     del oldest_test['timestamp']
 
                     for key in oldest_test:
@@ -263,46 +265,17 @@ class RepeatingTimer(Timer):
             self.finished.wait(self.interval)
 
 
-def is_ipv6(url):
-    tests = get_tests(ipv6_only=True)
-    return url in str(tests)
+def to_json(obj):
+    return json.loads(json.dumps(obj))
 
 
-def get_tests(ipv4_only=False, ipv6_only=False):
-    ipv4_urls = {'http://captcha.wtf': '503189ba9e8413d22c1a31f664820894',
-                 'https://captcha.wtf': '503189ba9e8413d22c1a31f664820894',
-                 'http://captcha.wtf/complex.html': 'b5b69aae854493ae196ce3936644e0ee',
-                 'https://captcha.wtf/complex.html': 'b5b69aae854493ae196ce3936644e0ee'}
-
-    ipv6_urls = {'http://exit11.online': '503189ba9e8413d22c1a31f664820894',
-                 'https://exit11.online': '503189ba9e8413d22c1a31f664820894',
-                 'http://exit11.online/complex.html': 'b5b69aae854493ae196ce3936644e0ee',
-                 'https://exit11.online/complex.html': 'b5b69aae854493ae196ce3936644e0ee'}
-
-    methods = ['tor_browser']
-
-    browser_versions = ['9.5']
-
-    tbb_security_levels = ['low', 'medium', 'high']
-
-    if ipv6_only:
-        urls = ipv6_urls
-    elif ipv4_only:
-        urls = ipv4_urls
-    else:
-        urls = {**ipv4_urls, **ipv6_urls}
-
-    tests_dict = {'url': urls,
-                  'method': methods,
-                  'tbb_security_level': tbb_security_levels,
-                  'browser_version': browser_versions}
-
-    return {'data': tests_dict}
+def url_to_hash(given_url, all_urls_list):
+    for url in all_urls_list:
+        if url['url'] == given_url:
+            return url['hash']
 
 
 def find_oldest(performed_tests):
-    performed_tests = performed_tests['data']
-
     oldest_time = datetime.now()
     oldest_test = {}
     for test in performed_tests:
@@ -311,14 +284,13 @@ def find_oldest(performed_tests):
             oldest_test = test
             oldest_time = test_time
 
-    return {'data': oldest_test}
+    return oldest_test
 
 
 def find_untested(performed_tests, tests_list):
-    performed_tests_copy = copy.deepcopy(performed_tests['data'])
+    performed_tests_copy = copy.deepcopy(performed_tests)
     for test in performed_tests_copy:
         del test['timestamp']
-    tests_list = tests_list['data']
 
     performed_tests_hashes = []
     for test in performed_tests_copy:
@@ -329,12 +301,45 @@ def find_untested(performed_tests, tests_list):
         if hash(frozenset(test.items())) not in performed_tests_hashes:
             not_seen.append(test)
 
-    return {'data': not_seen}
+    return not_seen
 
 
-def create_combinations(tests):
-    dicts = tests['data']
-    return {'data': list(dict(zip(dicts.keys(), x)) for x in itertools.product(*dicts.values()))}
+def create_combinations(urls, fetchers):
+    url_list = []
+    for url in urls:
+        url_list.append({'url': url['url']})
+
+    method_combinations_list = []
+    for fetcher in fetchers:
+        # Needed to place all values into a list for itertools.product()
+        fetcher['method'] = [fetcher['method']]
+
+        # Match methods and their versions and their options
+        combo = list(dict(zip(fetcher.keys(), x)) for x in itertools.product(*fetcher.values()))
+
+        # Merge the lists
+        method_combinations_list += combo
+
+    # Make combinations of urls and methods
+    raw_combos = list(itertools.product(method_combinations_list, url_list))
+
+    result = []
+    for combo in raw_combos:
+        temp = {}
+        for item in combo:
+            for key in item:
+                temp[key] = item[key]
+
+        if temp['method'] == 'tor_browser':
+            temp['tbb_security_level'] = temp['option_1']
+            del temp['option_1']
+
+        temp['browser_version'] = temp['versions']
+        del temp['versions']
+
+        result.append(temp)
+
+    return result
 
 
 def dict_clean_merge(dicts):
