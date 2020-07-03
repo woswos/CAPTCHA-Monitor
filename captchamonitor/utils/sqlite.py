@@ -37,6 +37,8 @@ class SQLite:
                 'browser_version': 'TEXT',
                 # hash gathered using `captchamonitor md5 -u URL`
                 'expected_hash': 'TEXT',
+                # version of the captchamonitor
+                'captchamonitor_version': 'TEXT',
             },
             'queue':
             {

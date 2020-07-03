@@ -2,6 +2,7 @@ import time
 import port_for
 import os
 import logging
+import captchamonitor.utils
 from captchamonitor.utils.detect import captcha
 from captchamonitor.utils.detect import diff
 from captchamonitor.utils.fetch import fetch_via_method
@@ -18,6 +19,8 @@ def worker(loop, env_var, retry_budget, timeout_value=30):
     os.environ['CM_DOWNLOAD_FOLDER'] = str(env_var['CM_TOR_DIR_PATH'])
 
     worker_id = os.environ['CM_WORKER_ID']
+
+    captchamonitor_version = captchamonitor.__version__
 
     logger = logging.getLogger(__name__)
 
@@ -99,6 +102,8 @@ def worker(loop, env_var, retry_budget, timeout_value=30):
                         del job_details['id']
                         del job_details['additional_headers']
                         del job_details['claimed_by']
+
+                        job_details['captchamonitor_version'] = captchamonitor_version
 
                         # Combine the fetched data and job details
                         results = {**job_details, **fetched_data}
