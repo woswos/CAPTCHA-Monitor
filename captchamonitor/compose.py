@@ -129,12 +129,12 @@ def dispatch_jobs():
 
     # Don't dispatch new jobs if there are a lot of jobs pending
     if remaining_jobs < new_job_dispatch_treshold:
-        relays_list = relays.get_relays()
+        relays_list = relays.get_online_relays()
 
         # If the relay list is empty, fill it!
         if not relays_list:
             get_new_relays()
-            relays_list = relays.get_relays()
+            relays_list = relays.get_online_relays()
 
         for counter in range(batch_size):
 
@@ -245,21 +245,36 @@ def get_new_relays():
     logger.debug('Started getting the list of new relays')
 
     relays = Relays()
+    relays.make_all_relays_offline()
+    relay_list = relays.get_relays_fingerprints()
+
+    fingerprints = set()
+    for relay in relay_list:
+        fingerprints.add(relay['fingerprint'])
 
     # Get latest consensus
     tor = tor_launcher.TorLauncher()
     for relay in tor.get_consensus(use_local_dir=use_local_tor):
         # For now, add only exit relays
         if relay['is_ipv4_exiting_allowed'] == '1':
-            # Add the new relay if doesn't exits
-            data = {'fingerprint': relay['fingerprint'],
-                    'address': relay['address'],
-                    'is_ipv4_exiting_allowed': relay['is_ipv4_exiting_allowed'],
-                    'is_ipv6_exiting_allowed': relay['is_ipv6_exiting_allowed'],
-                    'last_updated': relay['published'],
-                    'status': 'online',
-                    'performed_tests': '{ "data": [] }'}
-            relays.add_relay_if_not_exists(data)
+            if relay['fingerprint'] not in fingerprints:
+                # Add the new relay if doesn't exits
+                data = {'fingerprint': relay['fingerprint'],
+                        'address': relay['address'],
+                        'is_ipv4_exiting_allowed': relay['is_ipv4_exiting_allowed'],
+                        'is_ipv6_exiting_allowed': relay['is_ipv6_exiting_allowed'],
+                        'last_updated': relay['published'],
+                        'status': 'online',
+                        'performed_tests': '{ "data": [] }'}
+                relays.add_relay_if_not_exists(data)
+
+            else:
+                data = {'status': 'online',
+                        'last_updated': relay['published'],
+                        'is_ipv4_exiting_allowed': relay['is_ipv4_exiting_allowed'],
+                        'is_ipv6_exiting_allowed': relay['is_ipv6_exiting_allowed']}
+                # Now update the database
+                relays.update_relay(relay['fingerprint'], data)
 
     logger.info('Got the list of new relays')
 

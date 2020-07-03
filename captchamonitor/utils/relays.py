@@ -18,6 +18,24 @@ class Relays:
             self.logger.debug('No relay entries found')
         return result
 
+    def get_online_relays(self):
+        identifiers = {'status': 'online'}
+        result = self.db.get_table_entries(self.db.relays_table_name, identifiers=identifiers)
+        if result is None:
+            self.logger.debug('No relay entries found')
+        return result
+
+    def get_relays_fingerprints(self):
+        columns = ['fingerprint']
+        result = self.db.get_table_entries(self.db.relays_table_name, columns=columns)
+        if result is None:
+            self.logger.debug('No relay entries found')
+        return result
+
+    def make_all_relays_offline(self):
+        data = {'status': 'offline'}
+        self.db.update_table_entry(self.db.relays_table_name, data)
+
     def add_relay_if_not_exists(self, data):
         self.db.insert_entry_into_table(self.db.relays_table_name, data, ignore_existing=True)
 
