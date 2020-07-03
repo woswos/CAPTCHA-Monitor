@@ -317,7 +317,7 @@ class SQLite:
 
         return result
 
-    def update_table_entry(self, table, data, identifiers):
+    def update_table_entry(self, table, data, identifiers=None):
         """
         Updates a specific table entry with given data using given identifiers
         """
@@ -336,14 +336,19 @@ class SQLite:
             sql_set += ' %s=?,' % field
             sql_set_values.append(data[field])
 
-        sql_where = ' WHERE'
-        sql_where_values = []
-        for field in identifiers:
-            sql_where += ' %s=? AND' % field
-            sql_where_values.append(identifiers[field])
+        if identifiers:
+            sql_where = ' WHERE'
+            sql_where_values = []
+            for field in identifiers:
+                sql_where += ' %s=? AND' % field
+                sql_where_values.append(identifiers[field])
 
-        sql_query = sql_table + sql_set[:-1] + sql_where[:-4]
-        data_values = sql_set_values + sql_where_values
+            sql_query = sql_table + sql_set[:-1] + sql_where[:-4]
+            data_values = sql_set_values + sql_where_values
+
+        else:
+            sql_query = sql_table + sql_set[:-1]
+            data_values = sql_set_values
 
         self.logger.debug(sql_query)
         self.logger.debug(data_values)
