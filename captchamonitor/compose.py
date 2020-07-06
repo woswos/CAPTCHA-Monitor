@@ -137,10 +137,10 @@ def dispatch_jobs():
             get_new_relays()
             relays_list = relays.get_online_relays()
 
-        for counter in range(batch_size):
+        # For now choose randomly
+        relays = random.sample(list(relays_list), batch_size)
 
-            # For now choose randomly
-            relay = random.choice(relays_list)
+        for relay in relays:
 
             # Only process the ones that allow exiting
             if relay['is_ipv6_exiting_allowed'] or relay['is_ipv4_exiting_allowed']:
@@ -157,7 +157,7 @@ def dispatch_jobs():
                 # Choose a random random parameters for the next test
                 # These parameters will be used for adding the test if the exit
                 #   relay doesn't have an history of measurements
-                if relay['is_ipv6_exiting_allowed'] == 1:
+                if relay['is_ipv6_exiting_allowed'] == '1':
                     test_urls = ipv6_only_urls_list[0]
                     next_test_values['url'] = test_urls['url']
                     next_test_values['data_hash'] = test_urls['hash']
