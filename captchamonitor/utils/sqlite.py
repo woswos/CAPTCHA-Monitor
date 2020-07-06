@@ -100,6 +100,8 @@ class SQLite:
                 'is_ipv6_exiting_allowed': 'TEXT',
                 # ISO 3166 alpha-2 country code based on GeoIP
                 'country': 'TEXT',
+                # continent based on GeoIP, plain English
+                'continent': 'TEXT',
                 # online or offline
                 'status': 'TEXT',
                 # list of performed test in {'data':[]} format
