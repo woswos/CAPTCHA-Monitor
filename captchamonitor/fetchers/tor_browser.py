@@ -1,5 +1,5 @@
 """
-Fetch a given URL using seleniumwire and Tor Browser
+Fetch a given URL using selenium and Tor Browser
 """
 
 import os
