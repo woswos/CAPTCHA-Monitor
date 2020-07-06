@@ -2,7 +2,6 @@ import logging
 import os
 import pwd
 from captchamonitor import fetchers
-import captchamonitor.utils.tor_launcher as tor_launcher
 
 
 def fetch_via_method(data, timeout=30):
@@ -16,10 +15,16 @@ def fetch_via_method(data, timeout=30):
     tbb_security_level = data['tbb_security_level']
     browser_version = data['browser_version']
 
-    method_path = os.path.join(os.environ['CM_BROWSER_VERSIONS_PATH'], method)
+    method_to_folder = {'tor_browser': 'tor_browser',
+                        'firefox': 'firefox',
+                        'firefox_over_tor': 'firefox',
+                        'chromium': 'chromium',
+                        'chromium_over_tor': 'chromium'}
+
+    method_path = os.path.join(os.environ['CM_BROWSER_VERSIONS_PATH'], method_to_folder[method])
 
     # if ('firefox' in method) or ('chrome' in method) or ('tor_browser' in method):
-    if ('tor_browser' in method):
+    if ('tor_browser' in method) or ('firefox' in method):
         # Find the latest version available if not specified
         if (browser_version == ''):
             browser_version = get_latest_version(method_path)
