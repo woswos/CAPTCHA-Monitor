@@ -121,6 +121,8 @@ class SQLite:
                 'supports_ipv6': 'TEXT',
                 # hash gathered using `captchamonitor md5 -u URL`
                 'hash': 'TEXT',
+                # CAPTCHA sign that will be used for CAPTCHA detection
+                'captcha_sign': 'TEXT',
             },
             'fetchers':
             {

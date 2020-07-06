@@ -25,6 +25,7 @@ class Tests:
             temp = {}
             temp['url'] = url['url']
             temp['hash'] = url['hash']
+            temp['captcha_sign'] = url['captcha_sign']
 
             if url['supports_ipv6'] == '1':
                 ipv6_urls.append(temp)

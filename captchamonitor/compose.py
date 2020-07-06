@@ -171,6 +171,7 @@ def dispatch_jobs():
                 next_test_values['tbb_security_level'] = ''
                 next_test_values['browser_version'] = ''
                 next_test_values['exit_node'] = relay['address']
+                next_test_values['captcha_sign'] = '| Cloudflare'
 
                 # Now consider the history of the relay's measurements and change some
                 #   of the parameters
@@ -196,11 +197,13 @@ def dispatch_jobs():
                             # Assign an IPv6 url to an exit relay that supports IPv6
                             if(is_ipv6_test and is_relay_ipv6):
                                 next_test_values['data_hash'] = url_to_hash(test_url, all_urls_list)
+                                next_test_values['captcha_sign'] = url_to_captcha_sign(test_url, all_urls_list)
                                 for key in test:
                                     next_test_values[key] = test[key]
                                 break
                             elif (not is_ipv6_test and not is_relay_ipv6):
                                 next_test_values['data_hash'] = url_to_hash(test_url, all_urls_list)
+                                next_test_values['captcha_sign'] = url_to_captcha_sign(test_url, all_urls_list)
                                 for key in test:
                                     next_test_values[key] = test[key]
                                 break
@@ -212,6 +215,7 @@ def dispatch_jobs():
                         oldest_test = find_oldest(performed_tests['data'])
                         test_url = oldest_test['url']
                         next_test_values['data_hash'] = url_to_hash(test_url, all_urls_list)
+                        next_test_values['captcha_sign'] = url_to_captcha_sign(test_url, all_urls_list)
                         del oldest_test['timestamp']
 
                         for key in oldest_test:
@@ -223,7 +227,7 @@ def dispatch_jobs():
                 args.all_exit_nodes = False
                 args.method = next_test_values['method']
                 args.url = next_test_values['url']
-                args.captcha_sign = '| Cloudflare'
+                args.captcha_sign = next_test_values['captcha_sign']
                 args.additional_headers = ''
                 args.exit_node = next_test_values['exit_node']
                 args.tbb_security_level = next_test_values['tbb_security_level']
@@ -304,6 +308,10 @@ def url_to_hash(given_url, all_urls_list):
         if url['url'] == given_url:
             return url['hash']
 
+def url_to_captcha_sign(given_url, all_urls_list):
+    for url in all_urls_list:
+        if url['url'] == given_url:
+            return url['captcha_sign']
 
 def find_oldest(performed_tests):
     oldest_time = datetime.now()
