@@ -6,3 +6,4 @@ pysocks
 pycurl
 requests
 port_for
+maxminddb

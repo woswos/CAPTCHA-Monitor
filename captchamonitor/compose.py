@@ -10,6 +10,7 @@ import captchamonitor.utils.tor_launcher as tor_launcher
 from captchamonitor.utils.relays import Relays
 from captchamonitor.utils.queue import Queue
 from captchamonitor.utils.tests import Tests
+from captchamonitor.utils.geoip import GeoIP
 from captchamonitor import add
 from datetime import datetime
 import random
@@ -244,6 +245,8 @@ def get_new_relays():
 
     logger.debug('Started getting the list of new relays')
 
+    geoip = GeoIP()
+
     relays = Relays()
     relays.make_all_relays_offline()
     relay_list = relays.get_relays_fingerprints()
@@ -265,6 +268,8 @@ def get_new_relays():
                         'is_ipv6_exiting_allowed': relay['is_ipv6_exiting_allowed'],
                         'last_updated': relay['published'],
                         'status': 'online',
+                        'country': geoip.get_country(relay['address']),
+                        'continent': geoip.get_continent(relay['address']),
                         'performed_tests': '{ "data": [] }'}
                 relays.add_relay_if_not_exists(data)
 
