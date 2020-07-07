@@ -158,15 +158,15 @@ def dispatch_jobs():
                 # These parameters will be used for adding the test if the exit
                 #   relay doesn't have an history of measurements
                 if relay['is_ipv6_exiting_allowed'] == '1':
-                    test_urls = ipv6_only_urls_list[0]
+                    test_urls = random.choice(ipv6_only_urls_list)
                     next_test_values['url'] = test_urls['url']
                     next_test_values['data_hash'] = test_urls['hash']
                 else:
-                    test_urls = ipv4_only_urls_list[0]
+                    test_urls = random.choice(ipv4_only_urls_list)
                     next_test_values['url'] = test_urls['url']
                     next_test_values['data_hash'] = test_urls['hash']
 
-                test_methods = fetchers_list[0]
+                test_methods = random.choice(fetchers_list)
                 next_test_values['method'] = test_methods['method']
                 next_test_values['tbb_security_level'] = ''
                 next_test_values['browser_version'] = ''
@@ -189,21 +189,33 @@ def dispatch_jobs():
                     if untested:
                         # Iterate over the untested measurements until we find
                         #   a suitable one.
-                        for test in untested:
+
+                        # Limit the loop iterations just in case of an infinite loop case
+                        for i in range(1000):
+
+                            # Choose a random untested measurement
+                            test = random.choice(untested)
+
+                            # Process the chosen test
                             test_url = test['url']
                             is_ipv6_test = (test_url in str(ipv6_only_urls_list))
                             is_relay_ipv6 = (relay['is_ipv6_exiting_allowed'] == '1')
 
                             # Assign an IPv6 url to an exit relay that supports IPv6
-                            if(is_ipv6_test and is_relay_ipv6):
-                                next_test_values['data_hash'] = url_to_hash(test_url, all_urls_list)
-                                next_test_values['captcha_sign'] = url_to_captcha_sign(test_url, all_urls_list)
+                            if (is_ipv6_test and is_relay_ipv6):
+                                next_test_values['data_hash'] = url_to_hash(test_url,
+                                                                            all_urls_list)
+                                next_test_values['captcha_sign'] = url_to_captcha_sign(test_url,
+                                                                                       all_urls_list)
                                 for key in test:
                                     next_test_values[key] = test[key]
                                 break
+
                             elif (not is_ipv6_test and not is_relay_ipv6):
-                                next_test_values['data_hash'] = url_to_hash(test_url, all_urls_list)
-                                next_test_values['captcha_sign'] = url_to_captcha_sign(test_url, all_urls_list)
+                                next_test_values['data_hash'] = url_to_hash(test_url,
+                                                                            all_urls_list)
+                                next_test_values['captcha_sign'] = url_to_captcha_sign(test_url,
+                                                                                       all_urls_list)
                                 for key in test:
                                     next_test_values[key] = test[key]
                                 break
@@ -214,8 +226,10 @@ def dispatch_jobs():
                         #   the oldest test.
                         oldest_test = find_oldest(performed_tests['data'])
                         test_url = oldest_test['url']
-                        next_test_values['data_hash'] = url_to_hash(test_url, all_urls_list)
-                        next_test_values['captcha_sign'] = url_to_captcha_sign(test_url, all_urls_list)
+                        next_test_values['data_hash'] = url_to_hash(test_url,
+                                                                    all_urls_list)
+                        next_test_values['captcha_sign'] = url_to_captcha_sign(test_url,
+                                                                               all_urls_list)
                         del oldest_test['timestamp']
 
                         for key in oldest_test:
@@ -308,10 +322,12 @@ def url_to_hash(given_url, all_urls_list):
         if url['url'] == given_url:
             return url['hash']
 
+
 def url_to_captcha_sign(given_url, all_urls_list):
     for url in all_urls_list:
         if url['url'] == given_url:
             return url['captcha_sign']
+
 
 def find_oldest(performed_tests):
     oldest_time = datetime.now()
