@@ -106,6 +106,8 @@ class SQLite:
                 'status': 'TEXT',
                 # list of performed test in {'data':[]} format
                 'performed_tests': 'TEXT',
+                # nickname of the relay
+                'nickname': 'TEXT',
             },
             'urls':
             {

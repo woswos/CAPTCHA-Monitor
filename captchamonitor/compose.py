@@ -282,6 +282,7 @@ def get_new_relays():
                 # Add the new relay if doesn't exits
                 data = {'fingerprint': relay['fingerprint'],
                         'address': relay['address'],
+                        'nickname': relay['nickname'],
                         'is_ipv4_exiting_allowed': relay['is_ipv4_exiting_allowed'],
                         'is_ipv6_exiting_allowed': relay['is_ipv6_exiting_allowed'],
                         'last_updated': relay['published'],
@@ -293,6 +294,9 @@ def get_new_relays():
 
             else:
                 data = {'status': 'online',
+                        'nickname': relay['nickname'],
+                        'country': geoip.get_country(relay['address']),
+                        'continent': geoip.get_continent(relay['address']),
                         'last_updated': relay['published'],
                         'is_ipv4_exiting_allowed': relay['is_ipv4_exiting_allowed'],
                         'is_ipv6_exiting_allowed': relay['is_ipv6_exiting_allowed']}
