@@ -1,8 +1,8 @@
 <!-- Unfortunately GitHub markdown doesn't suppor resizing and centering svg images-->
 <div align="center"><p align="center"><img src="logo.svg" alt="CAPTCHA Monitor Logo" width="50%"></p></div>
 
-Check if a website returns a Cloudflare CAPTCHA using the Tor Browser and other 
-mainstream web browsers/tools. By default, this tool searches for *"Cloudflare"* 
+Check if a website returns a CAPTCHA using the Tor Browser and other 
+mainstream web browsers/tools. By default, this tool searches for *"| Cloudflare"* 
 text within the fetched page, but it is possible to customize the CAPTCHA sign, 
 which this tool searches for.
 
@@ -11,18 +11,57 @@ which this tool searches for.
 * Change the working directory into the cloned repository and install the CAPTCHA 
 Monitor via `$ pip install -e .`
 * Install Tor via `$ apt install tor`
-* Download the latest version of Tor Browser Bundle from 
-[torproject.org](https://www.torproject.org/download/) website and extract the 
-archive file
-* Install Firefox via `$ apt install firefox`
 * Install the `geckodriver` from the 
 [geckodriver releases](https://github.com/mozilla/geckodriver/releases/) page, 
 v0.23.0 version or newer. [Here](https://askubuntu.com/questions/870530/how-to-install-geckodriver-in-ubuntu) 
 is a simple installation tutorial if you need one.
-* Install Chromium via `$ apt install chromium-browser`
 * Install the `ChromeDriver` from 
 [chromium.org](https://chromedriver.chromium.org/downloads) website. Choose the 
-one that matches the Chromium version you installed in the previous step.
+one that matches the Chromium version you have.
+* Clone [HTTP-Header-Live](https://gitlab.torproject.org/woswos/HTTP-Header-Live)
+repository to your machine
+* Follow the web browser installation steps below
+
+### Web Browser Installation Steps
+* Create a folder in a preferred location on your computer, I will call mine 
+`browsers`
+* You need to create folders for each web browser under the folder you just 
+    created (mine was `browsers`)
+    * For example I want to add Tor Browser and Firefox, so I will create two 
+    folders in the following structure
+    ```
+    browsers
+        |
+        +- tor_browser
+        +- firefox
+    ```
+* Next, you need to download the specific version of the browsers you want to 
+use and place them under the respective folders.
+* For the final step, you need to rename the root folders of the extracted 
+    archive folders with the version name
+    * For example, I downloaded Tor Browser version 9.5, I extracted the archive
+    file, and I renamed the extracted folder to "9.5". The resulting folder 
+    structure should look like the following:
+    ```
+    browsers
+        |
+        +- tor_browser
+        |   +- 9.5
+        |       +- Browser
+        |       +- start-tor-browser.desktop
+        +- firefox
+    ```
+* You just need to repeat this process for other browsers and their versions. 
+Infact, my own `browsers` folder looks like this:
+```
+browsers
+    |
+    +- tor_browser
+    |   +- 9.5
+    |   +- 9.5.1
+    +- firefox
+        +- 78.0.1
+```
 
 ### Installation Notes
 * Depending on your computer setup, CAPTCHA Monitor might have trouble 
@@ -32,16 +71,21 @@ not installed on your system. You might install them with
 again.
 
 ## Configuring the CAPTCHA Monitor
-You need to set some environment variables to use CAPTCHA Monitor. These 
-environment variables are `CM_TBB_PATH` and `CM_DB_FILE_PATH`. 
-`CM_TBB_PATH` is the path to the Tor Browser Bundle and `CM_DB_FILE_PATH` is the
-path to the database file. You don't need to have a file at the location 
-`CM_DB_FILE_PATH`, it will be created for you. Please use absolute paths for 
-both. 
+You need to set some environment variables to use the CAPTCHA Monitor. These 
+environment variables are `CM_BROWSER_VERSIONS_PATH`, `CM_DB_FILE_PATH`, and 
+`CM_HTTP_HEADER_LIVE_FILE`. Please use absolute paths for all of these.
+* `CM_BROWSER_VERSIONS_PATH` is the path to your own `browsers` folder as I 
+explained above.
+* `CM_DB_FILE_PATH` is the path to the database file. You don't need to have a 
+file at the location `CM_DB_FILE_PATH`, it will be created for you. 
+* `CM_HTTP_HEADER_LIVE_FILE` is the phe path to the HTTP Header Live extension xpi
+file. It is located in the `CAPTHCA-Monitor-Release` folder within the cloned 
+repository
 
 Here is are samples for the environment variables:
-* `CM_TBB_PATH="/home/woswos/tor-browser_en-US"`
-* `CM_DB_FILE_PATH="/home/woswos/captcha_monitor.sqlite"`
+* `CM_BROWSER_VERSIONS_PATH=/home/woswos/browsers`
+* `CM_DB_FILE_PATH=/home/woswos/captcha_monitor.sqlite`
+* `CM_HTTP_HEADER_LIVE_FILE=/home/woswos/HTTP-Header-Live/CAPTHCA-Monitor-Release/{ed102056-8b4f-43a9-99cd-6d1b25abe87e}.xpi`
 
 ## Usage
 CAPTCHA Monitor is designed to have a job queue and worker(s) that process the 
@@ -60,9 +104,12 @@ environment variable.
 In order to specify the details of the job, you can use the following arguments:
 - `-u` to specify the website URL
 - `-m` to specify the method (see the methods section below)
+- `-b` to specify a browser version, the CAPTCHA Monitor will use the latest version
+of the browser avaliable in the `browsers` folder when this option is not specified
+- `-d` to specify the expected MD5 hash of the HTML data for checking for data integrity
+    - The MD5 hash value can be obtained by using `captchamonitor md5 -u URL` command
 - `-s` to specify the Tor Browser's security level (if using tor_browser)
-- `-c` to specify a captcha sign other than *"Cloudflare"*
-- `-a` to specify additional request headers in JSON format (the ones colliding will be overwritten with the ones you provided)
+- `-c` to specify a captcha sign other than *"| Cloudflare"*
 - `-e` to specify the Tor exit node IPv4 address (if fetching over Tor)
 - `-x` using this flag will add the job you specified with all Tor exit nodes (if fetching over Tor)
 
