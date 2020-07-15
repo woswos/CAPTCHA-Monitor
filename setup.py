@@ -4,7 +4,7 @@ with open('requirements.txt') as f:
     install_requires = f.readlines()
 
 setup(name='CAPTCHA Monitor',
-      version='0.1.1',
+      version='0.1.2',
       description='Check if a web site returns a CAPTCHA',
       url='https://github.com/woswos/CAPTCHA-Monitor',
       author='Barkin Simsek',
