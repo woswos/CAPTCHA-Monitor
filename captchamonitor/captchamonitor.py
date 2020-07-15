@@ -3,7 +3,7 @@ import argparse
 import sys
 import os
 
-from captchamonitor import compose, add, md5, export, stats, cloudflare, run
+from captchamonitor import compose, analyze, add, md5, export, stats, cloudflare, run
 
 logger_format = '%(asctime)s %(module)s [%(levelname)s] %(message)s'
 logging.basicConfig(format=logger_format)
@@ -41,6 +41,9 @@ ADD_JOB_HELP = 'Add a new job to queue'
 
 COMPOSE_DESC = 'Automatically add new jobs base on the job history'
 COMPOSE_HELP = 'Automatically add new jobs base on the job history'
+
+ANALYZE_DESC = 'Analyze the collected data'
+ANALYZE_HELP = 'Analyze the collected data'
 
 RUN_DESC = 'Run jobs in the queue'
 RUN_HELP = 'Run jobs in the queue'
@@ -167,6 +170,20 @@ class main():
                                     action='store_true')
 
         compose_parser.add_argument('-v', '--verbose',
+                                    help="""show all log messages""",
+                                    action='store_true')
+
+        ###########
+        # ANALYZE #
+        ###########
+        analyze_parser = sub_parser.add_parser('analyze',
+                                               description=ANALYZE_DESC,
+                                               help=ANALYZE_HELP,
+                                               formatter_class=formatter_class)
+
+        analyze_parser.set_defaults(func=analyze, formatter_class=formatter_class)
+
+        analyze_parser.add_argument('-v', '--verbose',
                                     help="""show all log messages""",
                                     action='store_true')
 

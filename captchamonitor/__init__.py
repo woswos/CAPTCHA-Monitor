@@ -1,4 +1,5 @@
 from .compose import compose as compose
+from .analyze import analyze as analyze
 from .add import add as add
 from .md5 import md5 as md5
 from .export import export as export
