@@ -23,8 +23,7 @@ def fetch_via_method(data, timeout=30):
 
     method_path = os.path.join(os.environ['CM_BROWSER_VERSIONS_PATH'], method_to_folder[method])
 
-    # if ('firefox' in method) or ('chrome' in method) or ('tor_browser' in method):
-    if ('tor_browser' in method) or ('firefox' in method):
+    if ('tor_browser' in method) or ('firefox' in method) or ('chromium' in method):
         # Find the latest version available if not specified
         if (browser_version == ''):
             browser_version = get_latest_version(method_path)
