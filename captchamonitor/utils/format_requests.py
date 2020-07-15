@@ -11,7 +11,7 @@ def tb(requests_data, url):
         temp = {}
 
         # Skip the internal request to the browser extension
-        if '255.255.255.255' not in str(request['url']):
+        if ('255.255.255.255' not in str(request['url'])) and ('chrome-extension' not in str(request['url'])):
             for key, value in request.items():
                 if value != '':
                     temp[key] = parse_headers(value)
