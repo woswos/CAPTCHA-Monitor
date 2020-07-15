@@ -7,7 +7,6 @@ import logging
 import json
 import time
 import socket
-from urltools import compare
 from selenium import webdriver
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary

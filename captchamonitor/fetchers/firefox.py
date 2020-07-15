@@ -8,7 +8,6 @@ import json
 import sys
 import socket
 import time
-from urltools import compare
 from selenium import webdriver
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
