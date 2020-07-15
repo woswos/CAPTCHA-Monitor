@@ -8,6 +8,8 @@ import json
 import sys
 import socket
 import time
+import pathlib
+import glob
 from selenium import webdriver
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
@@ -20,18 +22,26 @@ def fetch_via_firefox(url, additional_headers=None, timeout=30, **kwargs):
 
     try:
         firefox_path = os.environ['CM_BROWSER_PATH']
-        http_header_live = os.environ['CM_HTTP_HEADER_LIVE_FILE']
         download_folder = os.environ['CM_DOWNLOAD_FOLDER']
     except Exception as err:
         logger.error('Some of the environment variables are missing: %s', err)
 
     results = {}
 
-    http_header_live_file = os.path.join(download_folder, 'captcha_monitor_website_data.json')
+    http_header_live_export_file = os.path.join(download_folder,
+                                                'captcha_monitor_website_data.json')
+
+    # Find the right extension
+    http_header_live_folder = '../assests/http_header_live/'
+    script_path = pathlib.Path(__file__).parent.absolute()
+    search_string = os.path.abspath(os.path.join(script_path,
+                                                 http_header_live_folder,
+                                                 '*.xpi'))
+    http_header_live_extension = glob.glob(search_string)[0]
 
     # Delete the previous HTTP-Header-Live export
-    if os.path.exists(http_header_live_file):
-        os.remove(http_header_live_file)
+    if os.path.exists(http_header_live_export_file):
+        os.remove(http_header_live_export_file)
 
     f_binary = os.path.join(firefox_path, 'firefox')
     binary = FirefoxBinary(f_binary)
@@ -72,7 +82,7 @@ def fetch_via_firefox(url, additional_headers=None, timeout=30, **kwargs):
         return None
 
     # Install the HTTP-Header-Live extension
-    driver.install_addon(http_header_live, temporary=True)
+    driver.install_addon(http_header_live_extension, temporary=True)
 
     # Set driver page load timeout
     driver.implicitly_wait(timeout)
@@ -93,7 +103,7 @@ def fetch_via_firefox(url, additional_headers=None, timeout=30, **kwargs):
     logger.debug('Waiting for HTTP-Header-Live extension')
     for counter in range(timeout):
         try:
-            with open(http_header_live_file) as file:
+            with open(http_header_live_export_file) as file:
                 requests_data = json.load(file)
                 break
 
@@ -108,7 +118,7 @@ def fetch_via_firefox(url, additional_headers=None, timeout=30, **kwargs):
     if requests_data is None:
         driver.quit()
         # Don't return anything since we couldn't capture the headers
-        logger.error('Couldn\'t capture the headers from %s' % http_header_live_file)
+        logger.error('Couldn\'t capture the headers from %s' % http_header_live_export_file)
         return None
 
     # Record the results
