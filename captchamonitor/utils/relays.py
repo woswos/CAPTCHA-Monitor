@@ -50,5 +50,5 @@ class Relays:
 
     def get_completed_jobs_for_given_relay(self, address):
         identifiers = {'exit_node': address}
-        columns = ['timestamp', 'method', 'url', 'tbb_security_level', 'browser_version']
+        columns = ['timestamp', 'method', 'url', 'tbb_security_level', 'browser_version', 'is_captcha_found']
         return self.db.get_table_entries(self.db.results_table_name, columns=columns, identifiers=identifiers)

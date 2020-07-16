@@ -96,6 +96,8 @@ def match_relays_and_jobs():
 
         # If this relay has completed jobs
         if len(completed_jobs) != 0:
+            # Calculate the CAPTCHA probability based on the completed job history
+            captcha_probability = calculate_captcha_probability(completed_jobs)
 
             # Create a list of completed jobs in the format we need
             data_list = []
@@ -109,7 +111,8 @@ def match_relays_and_jobs():
 
             data_list_dict = dict_clean_merge(data_list)
 
-            data = {'performed_tests': json.dumps(data_list_dict)}
+            data = {'performed_tests': json.dumps(data_list_dict),
+                    'captcha_probability': captcha_probability}
             # Now update the database
             relays.update_relay(relay['fingerprint'], data)
 
@@ -442,3 +445,21 @@ def dict_clean_merge(dicts):
         result.append({**timestamp, **hash_to_data[hash_val]})
 
     return {'data': result}
+
+
+def calculate_captcha_probability(results):
+    total_count = 0
+    captcha_is_found_count = 0
+    probability = 0
+
+    for result in results:
+        total_count += 1
+        captcha_is_found_count += int(result['is_captcha_found'])
+
+    try:
+        probability = round(((captcha_is_found_count/total_count)*100), 4)
+
+    except (ZeroDivisionError):
+        pass
+
+    return probability

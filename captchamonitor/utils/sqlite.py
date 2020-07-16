@@ -108,6 +108,8 @@ class SQLite:
                 'performed_tests': 'TEXT',
                 # nickname of the relay
                 'nickname': 'TEXT',
+                # overall CAPTCHA probability percentage
+                'captcha_probability': 'TEXT',
             },
             'urls':
             {
