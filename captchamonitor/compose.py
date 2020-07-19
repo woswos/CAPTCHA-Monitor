@@ -150,8 +150,21 @@ def dispatch_jobs():
 
                 ipv6_only_urls_list = to_json(tests.get_urls(ipv6_only=True))
                 ipv4_only_urls_list = to_json(tests.get_urls(ipv4_only=True))
+
+                if ipv4_only_urls_list is None:
+                    logger.error('There are no IPv4 URLs to test in the database')
+                    return
+
+                if ipv6_only_urls_list is None:
+                    logger.error('There are no IPv6 URLs to test in the database')
+                    return
+
                 all_urls_list = ipv4_only_urls_list + ipv6_only_urls_list
                 fetchers_list = to_json(tests.get_fetchers())
+
+                if fetchers_list is None:
+                    logger.error('There are no fetchers to test in the database')
+                    return
 
                 performed_tests = json.loads(relay['performed_tests'])
 
@@ -164,17 +177,24 @@ def dispatch_jobs():
                     test_urls = random.choice(ipv6_only_urls_list)
                     next_test_values['url'] = test_urls['url']
                     next_test_values['data_hash'] = test_urls['hash']
+                    next_test_values['captcha_sign'] = test_urls['captcha_sign']
                 else:
                     test_urls = random.choice(ipv4_only_urls_list)
                     next_test_values['url'] = test_urls['url']
                     next_test_values['data_hash'] = test_urls['hash']
+                    next_test_values['captcha_sign'] = test_urls['captcha_sign']
 
                 test_methods = random.choice(fetchers_list)
                 next_test_values['method'] = test_methods['method']
-                next_test_values['tbb_security_level'] = ''
-                next_test_values['browser_version'] = ''
                 next_test_values['exit_node'] = relay['address']
-                next_test_values['captcha_sign'] = '| Cloudflare'
+
+                if test_methods['method'] == 'tor_browser':
+                    next_test_values['tbb_security_level'] = random.choice(test_methods['option_1'])
+                else:
+                    next_test_values['tbb_security_level'] = ''
+
+                # Leaving the browser_version empty will let CAPTCHA Monitor use the latest version available
+                next_test_values['browser_version'] = ''
 
                 # Now consider the history of the relay's measurements and change some
                 #   of the parameters
@@ -423,7 +443,9 @@ def dict_clean_merge(dicts):
     hashes = {}
     hash_to_data = {}
     for value in new_list:
-        new_timestamp = datetime.strptime(value['timestamp'], '%Y-%m-%d %H:%M:%S')
+        new_timestamp_str = str(value['timestamp']).split('.')[0]
+        new_timestamp = datetime.strptime(new_timestamp_str, '%Y-%m-%d %H:%M:%S')
+
         del value['timestamp']
         hash_val = hash(frozenset(value.items()))
         hash_to_data[hash_val] = value
