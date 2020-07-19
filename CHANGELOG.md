@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2020-07-19
+### Added
+- Relay nicknames
+- Chromium and Chromium over Tor fetchers that use the HTTP Header Live extension (#36)
+- CAPTCHA probability calculations for every relay (#34)
+
+### Changed
+- Moved the HTTP Header Live extension into this package, so users don't need to install
+it seperately anymore (#32)
+
+### Removed
+- Unused imports
+
 
 ## [0.1.1] - 2020-07-08
 ### Added
@@ -113,6 +126,7 @@ to capture HTTP headers (#16)
 - The README file and instructions
 
 
+[0.1.2]: https://gitlab.torproject.org/woswos/CAPTCHA-Monitor/-/merge_requests/11/diffs
 [0.1.1]: https://gitlab.torproject.org/woswos/CAPTCHA-Monitor/-/merge_requests/10/diffs
 [0.1.0.1]: https://gitlab.torproject.org/woswos/CAPTCHA-Monitor/-/merge_requests/9/diffs
 [0.1.0]: https://gitlab.torproject.org/woswos/CAPTCHA-Monitor/-/merge_requests/8/diffs
