@@ -1,6 +1,6 @@
 import logging
 import os
-from captchamonitor.utils.sqlite import SQLite
+from captchamonitor.utils.db import DB
 
 
 class Relays:
@@ -8,8 +8,7 @@ class Relays:
         """
         This class is used for interacting with the 'relays' table in the database
         """
-        self.db = SQLite()
-        self.db.check_if_db_exists()
+        self.db = DB()
         self.logger = logging.getLogger(__name__)
 
     def get_relays(self):

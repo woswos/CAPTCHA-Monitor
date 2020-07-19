@@ -1,15 +1,14 @@
 import logging
 import os
-from captchamonitor.utils.sqlite import SQLite
+from captchamonitor.utils.db import DB
 
 
 class Queue:
     def __init__(self):
         """
-        This class is an abstraction layer for the SQLite class to have a simpler interface
+        This class is an abstraction layer for the DB class to have a simpler interface
         """
-        self.db = SQLite()
-        self.db.check_if_db_exists()
+        self.db = DB()
         self.logger = logging.getLogger(__name__)
 
     def get_job(self, worker_id):

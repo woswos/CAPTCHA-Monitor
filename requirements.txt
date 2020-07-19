@@ -6,3 +6,4 @@ requests
 port_for
 maxminddb
 pyvirtualdisplay
+psycopg2-binary

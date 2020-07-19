@@ -1,7 +1,7 @@
 import logging
 import os
 import json
-from captchamonitor.utils.sqlite import SQLite
+from captchamonitor.utils.db import DB
 
 
 class Tests:
@@ -9,8 +9,7 @@ class Tests:
         """
         This class is used for interacting with the 'urls' and 'fetchers' table in the database
         """
-        self.db = SQLite()
-        self.db.check_if_db_exists()
+        self.db = DB()
         self.logger = logging.getLogger(__name__)
 
     def get_urls(self, ipv4_only=False, ipv6_only=False):
