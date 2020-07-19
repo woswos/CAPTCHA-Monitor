@@ -4,7 +4,7 @@ import hashlib
 
 def captcha(captcha_sign, data):
     logger = logging.getLogger(__name__)
-    return (captcha_sign.lower() in data.lower())
+    return int(captcha_sign.lower() in data.lower())
 
 
 def diff(expected_hash, received_data):
