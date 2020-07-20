@@ -42,6 +42,7 @@ CAPTCHA_Monitor.egg-info
 config.ini
 .coverage
 captchamonitor.db
+.env
 
 # Docs
 _build

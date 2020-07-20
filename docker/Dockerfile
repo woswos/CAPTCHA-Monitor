@@ -1,11 +1,8 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 ENV TOR_VERSION=10.0a1
 ENV GECKO_VERSION=v0.26.0
-ENV CHROMEDRIVER_VERSION=83.0.4103.39
-
-ENV TB_RELEASE_FILE=tor-browser-linux64-${TOR_VERSION}_en-US.tar.xz
-ENV TB_RELEASE_URL=https://dist.torproject.org/torbrowser/${TOR_VERSION}/${TB_RELEASE_FILE}
+ENV CHROMEDRIVER_VERSION=84.0.4147.30
 
 ENV GECKO_RELEASE_FILE=geckodriver-${GECKO_VERSION}-linux64.tar.gz
 ENV GECKO_RELEASE_URL=https://github.com/mozilla/geckodriver/releases/download/${GECKO_VERSION}/${GECKO_RELEASE_FILE}
@@ -13,29 +10,29 @@ ENV GECKO_RELEASE_URL=https://github.com/mozilla/geckodriver/releases/download/$
 ENV CHROMEDRIVER_RELEASE_FILE=chromedriver_linux64.zip
 ENV CHROMEDRIVER_RELEASE_URL=https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/${CHROMEDRIVER_RELEASE_FILE}
 
-ENV CM_TBB_PATH="/root/tor-browser_en-US"
-ENV CM_TOR_HOST="127.0.0.1"
-ENV CM_TOR_SOCKS_PORT="9050"
-ENV CM_TOR_CONTROL_PORT="9051"
-ENV CM_DB_FILE_PATH="/root/captchamonitor_data/captcha-monitor.db"
-ENV CM_TOR_DIR_PATH="/root/.tor"
-
-ENV CHROME_BIN=/usr/local/bin/chromium-browser
-ENV CHROME_PATH=/usr/local/lib/chromium/
+# Do not show any interactive dialogs
+ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBCONF_NONINTERACTIVE_SEEN=true
 
 # Install dependencies
 RUN apt-get update \
-    && apt-get install -y python3-pip python3-dev git libcurl4-openssl-dev libssl-dev tor unzip wget firefox chromium-browser=83.0.4103.61-0ubuntu0.18.04.1
+    && apt-get install -y python3-pip python3-dev git libcurl4-openssl-dev libssl-dev tor unzip wget xvfb
+
+# Add Chromium PPA
+RUN apt-key adv --fetch-keys "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xea6e302dc78cc4b087cfc3570ebea9b02842f111" \
+&& echo 'deb http://ppa.launchpad.net/chromium-team/beta/ubuntu bionic main ' >> /etc/apt/sources.list.d/chromium-team-beta.list \
+&& apt update
+
+# Install Firefox and Chromium
+# Here Firefox is installed to install the Firefox dependencies but the installed
+#   Firefox is not used in the experiments
+RUN apt-get update \
+    && apt-get install -y firefox chromium-browser
 
 WORKDIR /root/
 
 # Install captchamonitor, geckodriver, and chromedriver
-RUN mkdir captchamonitor_data \
-    mkdir .tor \
-    && wget ${TB_RELEASE_URL} \
-    && tar -xJf ${TB_RELEASE_FILE} \
-    && rm -v ${TB_RELEASE_FILE}* \
-    && wget ${GECKO_RELEASE_URL} \
+RUN wget ${GECKO_RELEASE_URL} \
     && tar -xzf ${GECKO_RELEASE_FILE} -C /usr/bin \
     && rm -v ${GECKO_RELEASE_FILE}* \
     && wget ${CHROMEDRIVER_RELEASE_URL} \
@@ -48,11 +45,5 @@ RUN mkdir captchamonitor_data \
 
 # Remove unused packages
 RUN apt-get purge -y wget unzip \
-    && apt-get autoremove \
-    && apt-get clean
-
-# Uncomment for running the tests
-#RUN pip3 install pytest
-#CMD ["pytest", "-v", "-l", "-x"]
-
-CMD ["captchamonitor", "run", "-l"]
+    && apt-get autoremove -y \
+    && apt-get clean -y
