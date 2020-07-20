@@ -15,7 +15,7 @@ services:
     depends_on:
       - 'start_dependencies'
     restart: always
-    #command: ["captchamonitor", "run", "-c", "-l", "-w", "5"]
+    command: ["captchamonitor", "run", "-c", "-l", "-w", "5"]
 
   captcha_monitor_compose:
     #build: ./
@@ -32,7 +32,7 @@ services:
     depends_on:
       - 'start_dependencies'
     restart: always
-    #command: ["captchamonitor", "compose"]
+    command: ["captchamonitor", "compose"]
 
   start_dependencies:
     image: dadarek/wait-for-dependencies
