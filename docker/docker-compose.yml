@@ -1,7 +1,48 @@
-version: "3.0"
+version: '3.1'
 services:
-  captcha_monitor:
-    build: ./
+  captcha_monitor_run:
+    #build: ./
+    image: woswos/captchamonitor
+    environment:
+      CM_DB_USER: ${CM_DB_USER}
+      CM_DB_PASS: ${CM_DB_PASS}
+      CM_DB_NAME: ${CM_DB_NAME}
+      CM_DB_HOST: 'db'
+      CM_DB_PORT: 5432
+      CM_BROWSER_VERSIONS_PATH: /root/browsers
     volumes:
-      - ~/captcha_monitor:/root/db
+      - ${CM_BROWSER_VERSIONS_PATH}:/root/browsers
+    depends_on:
+      - 'db'
     restart: always
+    command: ["captchamonitor", "run", "-c", "-l", "-w", "5"]
+
+  captcha_monitor_compose:
+    #build: ./
+    image: woswos/captchamonitor
+    environment:
+      CM_DB_USER: ${CM_DB_USER}
+      CM_DB_PASS: ${CM_DB_PASS}
+      CM_DB_NAME: ${CM_DB_NAME}
+      CM_DB_HOST: 'db'
+      CM_DB_PORT: 5432
+      CM_BROWSER_VERSIONS_PATH: /root/browsers
+    volumes:
+      - ${CM_BROWSER_VERSIONS_PATH}:/root/browsers
+    depends_on:
+      - 'db'
+    restart: always
+    command: ["captchamonitor", "compose"]
+
+  db:
+    image: postgres
+    container_name: postgres
+    environment:
+      POSTGRES_USER: ${CM_DB_USER}
+      POSTGRES_PASSWORD: ${CM_DB_PASS}
+      POSTGRES_DB: ${CM_DB_NAME}
+    restart: always
+    volumes:
+      - ${CM_DB_DATA_PERSISTENT_STORAGE_LOC}:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
