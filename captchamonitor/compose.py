@@ -443,7 +443,11 @@ def dict_clean_merge(dicts):
     hashes = {}
     hash_to_data = {}
     for value in new_list:
+        # Get rid of the timezone and milliseconds since everything is in UTC
         new_timestamp_str = str(value['timestamp']).split('.')[0]
+        new_timestamp_str = new_timestamp_str.split('+')[0]
+
+        # Convert to datetime object
         new_timestamp = datetime.strptime(new_timestamp_str, '%Y-%m-%d %H:%M:%S')
 
         del value['timestamp']
