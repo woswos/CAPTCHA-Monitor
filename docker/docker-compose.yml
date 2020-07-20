@@ -13,9 +13,9 @@ services:
     volumes:
       - ${CM_BROWSER_VERSIONS_PATH}:/root/browsers
     depends_on:
-      - 'db'
+      - 'start_dependencies'
     restart: always
-    command: ["captchamonitor", "run", "-c", "-l", "-w", "5"]
+    #command: ["captchamonitor", "run", "-c", "-l", "-w", "5"]
 
   captcha_monitor_compose:
     #build: ./
@@ -30,9 +30,15 @@ services:
     volumes:
       - ${CM_BROWSER_VERSIONS_PATH}:/root/browsers
     depends_on:
-      - 'db'
+      - 'start_dependencies'
     restart: always
-    command: ["captchamonitor", "compose"]
+    #command: ["captchamonitor", "compose"]
+
+  start_dependencies:
+    image: dadarek/wait-for-dependencies
+    depends_on:
+      - db
+    command: db:5432
 
   db:
     image: postgres
