@@ -27,7 +27,6 @@ def fetch_via_chromium_over_tor(url, additional_headers=None, timeout=30, **kwar
 
     results = {}
 
-    chrome_driver_path = '/snap/bin/chromium.chromedriver'
     http_header_live_extension_id = 'mhmbgecfengpllohfhnkpapmbgiphhff'
 
     # Find the right extension
@@ -74,8 +73,7 @@ def fetch_via_chromium_over_tor(url, additional_headers=None, timeout=30, **kwar
     # socket.setdefaulttimeout(15)
 
     try:
-        driver = webdriver.Chrome(options=options,
-                                  executable_path=chrome_driver_path)
+        driver = webdriver.Chrome(options=options)
     except Exception as err:
         display.stop()
         logger.error('Couldn\'t initialize the browser, check if there is enough memory available: %s'
