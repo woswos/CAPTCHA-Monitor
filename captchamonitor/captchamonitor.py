@@ -13,6 +13,11 @@ logger = logging.getLogger('captchamonitor')
 logger.setLevel(logging.INFO)
 
 env_vars = {'CM_BROWSER_VERSIONS_PATH': 'The path to folder that stores browser versions',
+            'CM_DB_USER': 'The database username',
+            'CM_DB_PASS': 'The database password',
+            'CM_DB_NAME': 'The database name',
+            'CM_DB_HOST': 'The IP address of the database server',
+            'CM_DB_PORT': 'The port number of the database server',
             # 'CM_TBB_PATH': 'The path to Tor Browser bundle',
             # 'CM_TOR_HOST': 'The IP address of the Tor server',
             # 'CM_TOR_SOCKS_PORT': 'The port number of the Tor server',
