@@ -9,6 +9,7 @@ import logging
 import json
 import socket
 import time
+import signal
 from pyvirtualdisplay import Display
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -81,7 +82,7 @@ def fetch_via_chromium(url, additional_headers=None, timeout=30, **kwargs):
         driver.switch_to.window("tab2")
 
     except Exception as err:
-        driver.quit()
+        force_quit(driver)
         display.stop()
         logger.error('Couldn\'t launch HTTP-Header-Live: %s' % err)
         return None
@@ -101,7 +102,7 @@ def fetch_via_chromium(url, additional_headers=None, timeout=30, **kwargs):
             raise Exception('This site can’t be reached')
 
     except Exception as err:
-        driver.quit()
+        force_quit(driver)
         display.stop()
         logger.error('webdriver.Chrome.get() says: %s' % err)
         return None
@@ -120,12 +121,12 @@ def fetch_via_chromium(url, additional_headers=None, timeout=30, **kwargs):
             time.sleep(1)
 
         except Exception as err:
-            driver.quit()
+            force_quit(driver)
             logger.error('Cannot parse the headers: %s' % err)
             return None
 
     if requests_data is None:
-        driver.quit()
+        force_quit(driver)
         # Don't return anything since we couldn't capture the headers
         logger.error('Couldn\'t capture the headers from %s' % http_header_live_export_file)
         return None
@@ -136,7 +137,16 @@ def fetch_via_chromium(url, additional_headers=None, timeout=30, **kwargs):
 
     logger.debug('I\'m done fetching %s', url)
 
-    driver.quit()
+    force_quit(driver)
     display.stop()
 
     return results
+
+def force_quit(driver):
+    pid = driver.service.process.pid
+    driver.quit()
+    try:
+        os.kill(int(pid), signal.SIGTERM)
+        logger.debug("Force killed chromium")
+    except ProcessLookupError as ex:
+        pass
