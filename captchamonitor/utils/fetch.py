@@ -19,11 +19,13 @@ def fetch_via_method(data, timeout=30):
                         'firefox': 'firefox',
                         'firefox_over_tor': 'firefox',
                         'chromium': 'chromium',
-                        'chromium_over_tor': 'chromium'}
+                        'chromium_over_tor': 'chromium',
+                        'brave': 'brave',
+                        'brave_over_tor': 'brave'}
 
     method_path = os.path.join(os.environ['CM_BROWSER_VERSIONS_PATH'], method_to_folder[method])
 
-    if ('tor_browser' in method) or ('firefox' in method) or ('chromium' in method):
+    if ('tor_browser' in method) or ('firefox' in method) or ('chromium' in method) or ('brave' in method):
         # Find the latest version available if not specified
         if (browser_version == ''):
             browser_version = get_latest_version(method_path)
@@ -60,6 +62,11 @@ def fetch_via_method(data, timeout=30):
         results = fetchers.chromium_over_tor(url,
                                              additional_headers=additional_headers,
                                              timeout=timeout)
+    elif(method == 'brave_over_tor'):
+        results = fetchers.brave_over_tor(url,
+                                          exit_node,
+                                          additional_headers=additional_headers,
+                                          timeout=timeout)
 
     elif(method == 'requests_over_tor'):
         results = fetchers.requests_over_tor(url,
@@ -81,7 +88,10 @@ def fetch_via_method(data, timeout=30):
         results = fetchers.chromium(url,
                                     additional_headers=additional_headers,
                                     timeout=timeout)
-
+    elif(method == 'brave'):
+        results = fetchers.brave(url,
+                                 additional_headers=additional_headers,
+                                 timeout=timeout)
     elif(method == 'curl'):
         results = fetchers.curl(url, additional_headers)
 

@@ -30,7 +30,10 @@ class TorLauncher():
 
     def start(self):
         self.tor_process = self.launch_tor_process()
-        self.stem_controller = StemController(self.socks_host, self.control_port, self.tor_dir)
+        self.bind_controller(self.socks_host, self.control_port, self.tor_dir)
+
+    def bind_controller(self, socks_host, control_port, tor_dir):
+        self.stem_controller = StemController(socks_host, control_port, tor_dir)
         self.stem_controller.start()
         self.last_circuit_was_successful = False
 

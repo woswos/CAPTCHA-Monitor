@@ -7,3 +7,5 @@ from .requests import fetch_via_requests as requests
 from .requests_over_tor import fetch_via_requests_over_tor as requests_over_tor
 from .curl import fetch_via_curl as curl
 from .curl_over_tor import fetch_via_curl_over_tor as curl_over_tor
+from .brave import fetch_via_brave as brave
+from .brave_over_tor import fetch_via_brave_over_tor as brave_over_tor
