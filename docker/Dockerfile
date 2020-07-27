@@ -16,18 +16,22 @@ ENV DEBCONF_NONINTERACTIVE_SEEN=true
 
 # Install dependencies
 RUN apt-get update \
-    && apt-get install -y python3-pip python3-dev git libcurl4-openssl-dev libssl-dev tor unzip wget xvfb
+    && apt-get install -y python3-pip python3-dev git libcurl4-openssl-dev libssl-dev tor unzip wget xvfb apt-transport-https curl
 
 # Add Chromium PPA
 RUN apt-key adv --fetch-keys "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xea6e302dc78cc4b087cfc3570ebea9b02842f111" \
-&& echo 'deb http://ppa.launchpad.net/chromium-team/beta/ubuntu bionic main ' >> /etc/apt/sources.list.d/chromium-team-beta.list \
-&& apt update
+    && echo 'deb http://ppa.launchpad.net/chromium-team/beta/ubuntu bionic main ' >> /etc/apt/sources.list.d/chromium-team-beta.list \
+    && apt update
+
+# Add Brave PPA
+RUN curl -s https://brave-browser-apt-release.s3.brave.com/brave-core.asc | apt-key --keyring /etc/apt/trusted.gpg.d/brave-browser-release.gpg add - \
+    && echo 'deb [arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main ' >> /etc/apt/sources.list.d/brave-browser-release.list \
+    && apt update
 
 # Install Firefox and Chromium
 # Here Firefox is installed to install the Firefox dependencies but the installed
 #   Firefox is not used in the experiments
-RUN apt-get update \
-    && apt-get install -y firefox chromium-browser
+RUN apt-get install -y firefox chromium-browser brave-browser
 
 WORKDIR /root/
 
@@ -44,6 +48,6 @@ RUN wget ${GECKO_RELEASE_URL} \
     && pip3 install -e .
 
 # Remove unused packages
-RUN apt-get purge -y wget unzip \
+RUN apt-get purge -y unzip \
     && apt-get autoremove -y \
     && apt-get clean -y
