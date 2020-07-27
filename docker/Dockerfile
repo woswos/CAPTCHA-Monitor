@@ -16,7 +16,7 @@ ENV DEBCONF_NONINTERACTIVE_SEEN=true
 
 # Install dependencies
 RUN apt-get update \
-    && apt-get install -y python3-pip python3-dev git libcurl4-openssl-dev libssl-dev tor unzip wget xvfb apt-transport-https curl
+    && apt-get install -y python3-pip python3-dev git libcurl4-openssl-dev libssl-dev tor unzip wget xvfb apt-transport-https curl xdotool
 
 # Add Chromium PPA
 RUN apt-key adv --fetch-keys "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xea6e302dc78cc4b087cfc3570ebea9b02842f111" \
