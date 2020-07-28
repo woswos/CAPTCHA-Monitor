@@ -34,7 +34,7 @@ def fetch_via_brave_over_tor(url, exit_node, additional_headers=None, timeout=30
     options = Options()
     # options.headless = True
     # options.add_argument('--headless')
-    options.add_argument('--no-sandbox')
+    # options.add_argument('--no-sandbox')
     options.add_argument('--disable-gpu')
     options.add_argument('--disable-dev-shm-usage')
 

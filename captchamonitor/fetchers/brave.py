@@ -49,9 +49,9 @@ def fetch_via_brave(url, additional_headers=None, timeout=30, **kwargs):
     display.start()
 
     options = Options()
-    #options.headless = True
+    # options.headless = True
     # options.add_argument('--headless')
-    options.add_argument('--no-sandbox')
+    # options.add_argument('--no-sandbox')
     options.add_argument('--disable-gpu')
     options.add_argument('--disable-dev-shm-usage')
 
