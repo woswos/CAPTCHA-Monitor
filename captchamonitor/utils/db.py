@@ -128,6 +128,10 @@ class DB:
                 'hash': 'TEXT',
                 # CAPTCHA sign that will be used for CAPTCHA detection
                 'captcha_sign': 'TEXT',
+                # CDN provider that is fronting the URL (for example Cloudflare)
+                'cdn_provider': 'TEXT',
+                # Comments about the given URL
+                'comment': 'TEXT',
             },
             'fetchers':
             {
