@@ -166,7 +166,16 @@ def fetch_via_brave_over_tor(url, exit_node, additional_headers=None, timeout=30
 
 def force_quit(driver):
     pid = driver.service.process.pid
+
+    # Close all windows
+    for window in driver.window_handles:
+        driver.switch_to.window(window)
+        driver.close()
+
+    # Quit the driver
     driver.quit()
+
+    # Kill the process, just in case
     try:
         os.kill(int(pid), signal.SIGTERM)
         logger.debug("Force killed chromium")
