@@ -37,11 +37,12 @@ class Queue:
 
         self.logger.debug('Removed the job with id "%s" from queue', job_id)
 
-    def move_failed_job(self, job_id):
+    def move_failed_job(self, job_id, reason):
         identifiers = {'id': job_id}
         data = self.db.get_table_entries(self.db.queue_table_name, identifiers=identifiers)[0]
 
         del data['claimed_by']
+        data['fail_reason'] = reason
         self.db.insert_entry_into_table(self.db.failed_table_name, data)
 
         identifiers = {'id': job_id}

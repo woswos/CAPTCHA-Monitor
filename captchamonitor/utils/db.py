@@ -84,6 +84,8 @@ class DB:
                 'browser_version': 'TEXT',
                 # hash gathered using `captchamonitor md5 -u URL`
                 'expected_hash': 'TEXT',
+                # details about why this job failed
+                'fail_reason': 'TEXT',
             },
             'relays':
             {

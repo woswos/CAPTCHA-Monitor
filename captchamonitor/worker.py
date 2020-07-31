@@ -58,6 +58,7 @@ def worker(loop, env_var, retry_budget, timeout_value=30):
 
                     job_id = job_details['id']
                     success = False
+                    fail_reason = ''
 
                     if job_details['exit_node']:
                         exit_node = job_details['exit_node']
@@ -74,8 +75,8 @@ def worker(loop, env_var, retry_budget, timeout_value=30):
                                 logger.debug('Using %s as the exit node' % job_details['exit_node'])
 
                             except Exception as err:
-                                logger.info(
-                                    'Cloud not connect to the specified exit node: %s' % err)
+                                fail_reason = 'Cloud not connect to the specified exit node: %s' % err
+                                logger.debug(fail_reason)
                                 break
 
                         try:
@@ -88,7 +89,8 @@ def worker(loop, env_var, retry_budget, timeout_value=30):
                                 break
 
                         except Exception as err:
-                            logger.info('Cloud not fetch the URL: %s' % err)
+                            fail_reason = 'Cloud not fetch the URL: %s' % err
+                            logger.debug(fail_reason)
 
                     # Process the results if the fetch was successful
                     error_msg = 'Invalid responses from another server/proxy'
@@ -117,9 +119,9 @@ def worker(loop, env_var, retry_budget, timeout_value=30):
                         queue.remove_job(job_id)
 
                     else:
-                        logger.info('Job %s failed %s time(s), giving up...',
+                        logger.debug('Job %s failed %s time(s), giving up...',
                                     job_id, retry_budget)
-                        queue.move_failed_job(job_id)
+                        queue.move_failed_job(job_id, fail_reason)
 
                 if not loop:
                     logger.info('No job found in the queue, exitting...')
