@@ -66,15 +66,17 @@ def worker(loop, env_var, retry_budget, timeout_value=30):
 
                     # Retry fetching the same job up to the specified amount
                     for number_of_retries in range(retry_budget):
-                        try:
-                            # Create the circuit and get the exact exit node used
-                            job_details['exit_node'] = tor.new_circuit(exit_node)
-                            logger.debug('Using %s as the exit node' % job_details['exit_node'])
+                        # Connect to an exit node only if Tor is required
+                        if 'tor' in job_details['method']:
+                            try:
+                                # Create the circuit and get the exact exit node used
+                                job_details['exit_node'] = tor.new_circuit(exit_node)
+                                logger.debug('Using %s as the exit node' % job_details['exit_node'])
 
-                        except Exception as err:
-                            logger.info(
-                                'Cloud not connect to the specified exit node: %s' % err)
-                            break
+                            except Exception as err:
+                                logger.info(
+                                    'Cloud not connect to the specified exit node: %s' % err)
+                                break
 
                         try:
                             # Fetch the URL using the method specified
