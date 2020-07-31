@@ -15,7 +15,6 @@ from stem.control import Controller
 from pyvirtualdisplay import Display
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-import captchamonitor.utils.format_requests as format_requests
 import captchamonitor.utils.tor_launcher as tor_launcher
 import captchamonitor.utils.fetcher_utils as fetcher_utils
 
@@ -46,6 +45,7 @@ def fetch_via_brave_over_tor(url, exit_node, additional_headers=None, timeout=30
 
     try:
         driver = webdriver.Chrome(options=options)
+
     except Exception as err:
         display.stop()
         logger.error('Couldn\'t initialize the browser, check if there is enough memory available: %s'
@@ -73,6 +73,7 @@ def fetch_via_brave_over_tor(url, exit_node, additional_headers=None, timeout=30
         driver.switch_to.window(tor_window_handle)
 
     else:
+        fetcher_utils.force_quit_driver(driver)
         display.stop()
         logger.error('Couldn\'t attach to the "Private Window with Tor"')
         return None
@@ -96,10 +97,10 @@ def fetch_via_brave_over_tor(url, exit_node, additional_headers=None, timeout=30
 
     # Stop if control port was not obtained for some reason
     if control_port == '':
-        force_quit(driver)
+        fetcher_utils.force_quit_driver(driver)
         display.stop()
         logger.error('Cloud not read the control port for Brave Browser')
-        return
+        return None
 
     # Connect to the Tor process and stop circuit creation
     controller = Controller.from_port(address='127.0.0.1', port=int(control_port))
@@ -120,15 +121,16 @@ def fetch_via_brave_over_tor(url, exit_node, additional_headers=None, timeout=30
             tor.new_circuit(exit_node)
             succeeded = True
             break
+
         except Exception as err:
             time.sleep(5)
 
     # Stop if the circuit was not created for some reason
     if control_port == '':
-        force_quit(driver)
+        fetcher_utils.force_quit_driver(driver)
         display.stop()
         logger.error('Cloud not create the circuit')
-        return
+        return None
 
     # Set driver page load timeout
     driver.implicitly_wait(timeout)
@@ -145,7 +147,7 @@ def fetch_via_brave_over_tor(url, exit_node, additional_headers=None, timeout=30
             raise Exception('This site can’t be reached')
 
     except Exception as err:
-        force_quit(driver)
+        fetcher_utils.force_quit_driver(driver)
         display.stop()
         tor.stop()
         logger.error('webdriver.Chrome.get() says: %s' % err)

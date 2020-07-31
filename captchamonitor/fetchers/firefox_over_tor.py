@@ -14,7 +14,6 @@ from selenium import webdriver
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 from selenium.webdriver.firefox.options import Options
-import captchamonitor.utils.format_requests as format_requests
 import captchamonitor.utils.fetcher_utils as fetcher_utils
 
 
@@ -26,6 +25,7 @@ def fetch_via_firefox_over_tor(url, additional_headers=None, timeout=30, **kwarg
         download_folder = os.environ['CM_DOWNLOAD_FOLDER']
         tor_socks_host = os.environ['CM_TOR_HOST']
         tor_socks_port = os.environ['CM_TOR_SOCKS_PORT']
+
     except Exception as err:
         logger.error('Some of the environment variables are missing: %s', err)
 
@@ -86,6 +86,7 @@ def fetch_via_firefox_over_tor(url, additional_headers=None, timeout=30, **kwarg
         driver = webdriver.Firefox(firefox_profile=profile,
                                    firefox_binary=binary,
                                    options=options)
+
     except Exception as err:
         logger.error('Couldn\'t initialize the browser, check if there is enough memory available: %s'
                      % err)
@@ -103,7 +104,7 @@ def fetch_via_firefox_over_tor(url, additional_headers=None, timeout=30, **kwarg
         driver.get(url)
 
     except Exception as err:
-        driver.quit()
+        fetcher_utils.force_quit_driver(driver)
         logger.error('webdriver.Firefox.get() says: %s' % err)
         return None
 
@@ -118,22 +119,23 @@ def fetch_via_firefox_over_tor(url, additional_headers=None, timeout=30, **kwarg
                 break
 
         except OSError:
+            # Wait for a second if the file is not there yet
             time.sleep(1)
 
         except Exception as err:
-            driver.quit()
+            fetcher_utils.force_quit_driver(driver)
             logger.error('Cannot parse the headers: %s' % err)
             return None
 
     if requests_data is None:
-        driver.quit()
+        fetcher_utils.force_quit_driver(driver)
         # Don't return anything since we couldn't capture the headers
         logger.error('Couldn\'t capture the headers from %s' % http_header_live_export_file)
         return None
 
     # Record the results
     results['html_data'] = driver.page_source
-    results['requests'] = format_requests.tb(requests_data, url)
+    results['requests'] = fetcher_utils.format_requests_tb(requests_data, url)
 
     logger.debug('I\'m done fetching %s', url)
 

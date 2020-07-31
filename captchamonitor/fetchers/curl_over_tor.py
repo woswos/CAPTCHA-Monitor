@@ -7,7 +7,7 @@ import pycurl
 from io import BytesIO
 import json
 import os
-import captchamonitor.utils.format_requests as format_requests
+import captchamonitor.utils.fetcher_utils as fetcher_utils
 
 headers = {}
 status_line = ''
@@ -19,6 +19,7 @@ def fetch_via_curl_over_tor(url, additional_headers=None, **kwargs):
     try:
         tor_socks_host = os.environ['CM_TOR_HOST']
         tor_socks_port = os.environ['CM_TOR_SOCKS_PORT']
+        
     except Exception as err:
         logger.error('Some of the environment variables are missing: %s', err)
 
@@ -69,10 +70,10 @@ def fetch_via_curl_over_tor(url, additional_headers=None, **kwargs):
     data = b_obj.getvalue().decode('utf8')
 
     results['html_data'] = str(data)
-    results['requests'] = format_requests.curl(default_curl_request_headers,
-                                               headers,
-                                               status_line,
-                                               url)
+    results['requests'] = fetcher_utils.format_requests_curl(default_curl_request_headers,
+                                                             headers,
+                                                             status_line,
+                                                             url)
 
     logger.debug('I\'m done fetching %s', url)
 

@@ -6,7 +6,7 @@ import logging
 import pycurl
 from io import BytesIO
 import json
-import captchamonitor.utils.format_requests as format_requests
+import captchamonitor.utils.fetcher_utils as fetcher_utils
 
 headers = {}
 status_line = ''
@@ -58,10 +58,10 @@ def fetch_via_curl(url, additional_headers=None, **kwargs):
     data = b_obj.getvalue().decode('utf8')
 
     results['html_data'] = str(data)
-    results['requests'] = format_requests.curl(default_curl_request_headers,
-                                               headers,
-                                               status_line,
-                                               url)
+    results['requests'] = fetcher_utils.format_requests_curl(default_curl_request_headers,
+                                                             headers,
+                                                             status_line,
+                                                             url)
 
     logger.debug('I\'m done fetching %s', url)
 
