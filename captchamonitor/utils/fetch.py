@@ -21,30 +21,30 @@ def fetch_via_method(data, timeout=30):
                         'chromium': 'chromium',
                         'chromium_over_tor': 'chromium',
                         'brave': 'brave',
-                        'brave_over_tor': 'brave'}
+                        'brave_over_tor': 'brave',
+                        'curl': 'curl',
+                        'curl_over_tor': 'curl',
+                        'requests': 'requests',
+                        'requests_over_tor': 'requests'}
 
     method_path = os.path.join(os.environ['CM_BROWSER_VERSIONS_PATH'], method_to_folder[method])
 
-    if ('tor_browser' in method) or ('firefox' in method) or ('chromium' in method) or ('brave' in method):
-        # Find the latest version available if not specified
-        if (browser_version == ''):
-            browser_version = get_latest_version(method_path)
-            logger.debug('The latest version available for "%s" is "%s"' %
-                         (method, browser_version))
+    # Find the latest version available if not specified
+    if (browser_version == ''):
+        browser_version = get_latest_version(method_path)
+        logger.debug('The latest version available for "%s" is "%s"' %
+                     (method, browser_version))
 
-        browser_path = os.path.join(method_path, browser_version)
+    browser_path = os.path.join(method_path, browser_version)
 
-        if not os.path.exists(browser_path):
-            logger.warning('The specified browser version %s for %s does not exist' %
-                           (browser_version, method))
-            return None
+    if not os.path.exists(browser_path):
+        logger.warning('The specified browser version %s for %s does not exist' %
+                       (browser_version, method))
+        return None
 
-        os.environ['CM_BROWSER_PATH'] = browser_path
+    os.environ['CM_BROWSER_PATH'] = browser_path
 
-        logger.debug('Fetching "%s" via "%s" - "v%s"' % (url, method, browser_version))
-
-    else:
-        logger.debug('Fetching "%s" via "%s"' % (url, method))
+    logger.debug('Fetching "%s" via "%s" - "v%s"' % (url, method, browser_version))
 
     results = {}
     if(method == 'tor_browser'):
