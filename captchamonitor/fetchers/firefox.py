@@ -15,6 +15,7 @@ from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 from selenium.webdriver.firefox.options import Options
 import captchamonitor.utils.format_requests as format_requests
+import captchamonitor.utils.fetcher_utils as fetcher_utils
 
 
 def fetch_via_firefox(url, additional_headers=None, timeout=30, **kwargs):
@@ -127,6 +128,6 @@ def fetch_via_firefox(url, additional_headers=None, timeout=30, **kwargs):
 
     logger.debug('I\'m done fetching %s', url)
 
-    driver.quit()
+    fetcher_utils.force_quit_driver(driver)
 
     return results

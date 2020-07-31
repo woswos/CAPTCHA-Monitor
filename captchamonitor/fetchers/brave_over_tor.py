@@ -9,7 +9,6 @@ import logging
 import json
 import socket
 import time
-import signal
 import subprocess
 from pathlib import Path
 from stem.control import Controller
@@ -18,6 +17,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import captchamonitor.utils.format_requests as format_requests
 import captchamonitor.utils.tor_launcher as tor_launcher
+import captchamonitor.utils.fetcher_utils as fetcher_utils
 
 
 def fetch_via_brave_over_tor(url, exit_node, additional_headers=None, timeout=30, **kwargs):
@@ -34,7 +34,7 @@ def fetch_via_brave_over_tor(url, exit_node, additional_headers=None, timeout=30
     options = Options()
     # options.headless = True
     # options.add_argument('--headless')
-    # options.add_argument('--no-sandbox')
+    options.add_argument('--no-sandbox')
     options.add_argument('--disable-gpu')
     options.add_argument('--disable-dev-shm-usage')
 
@@ -157,27 +157,8 @@ def fetch_via_brave_over_tor(url, exit_node, additional_headers=None, timeout=30
 
     logger.debug('I\'m done fetching %s', url)
 
-    force_quit(driver)
+    fetcher_utils.force_quit_driver(driver)
     display.stop()
     tor.stop()
 
     return results
-
-
-def force_quit(driver):
-    pid = driver.service.process.pid
-
-    # Close all windows
-    for window in driver.window_handles:
-        driver.switch_to.window(window)
-        driver.close()
-
-    # Quit the driver
-    driver.quit()
-
-    # Kill the process, just in case
-    try:
-        os.kill(int(pid), signal.SIGTERM)
-        logger.debug("Force killed chromium")
-    except ProcessLookupError as ex:
-        pass

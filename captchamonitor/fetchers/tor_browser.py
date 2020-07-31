@@ -14,6 +14,7 @@ from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 from selenium.webdriver.firefox.options import Options
 import captchamonitor.utils.format_requests as format_requests
+import captchamonitor.utils.fetcher_utils as fetcher_utils
 
 
 def fetch_via_tor_browser(url, additional_headers=None, security_level='medium', timeout=30, **kwargs):
@@ -30,7 +31,8 @@ def fetch_via_tor_browser(url, additional_headers=None, security_level='medium',
     security_levels = {'high': 1, 'medium': 2, 'low': 4}
 
     results = {}
-    http_header_live_export_file = os.path.join(download_folder, 'captcha_monitor_website_data.json')
+    http_header_live_export_file = os.path.join(download_folder,
+                                                'captcha_monitor_website_data.json')
 
     # Find the right extension
     http_header_live_folder = '../assests/http_header_live/'
@@ -90,7 +92,7 @@ def fetch_via_tor_browser(url, additional_headers=None, security_level='medium',
     options.headless = True
 
     # Set the timeout for webdriver initialization
-    #socket.setdefaulttimeout(15)
+    # socket.setdefaulttimeout(15)
 
     try:
         driver = webdriver.Firefox(firefox_profile=profile,
@@ -106,7 +108,7 @@ def fetch_via_tor_browser(url, additional_headers=None, security_level='medium',
 
     # Set driver page load timeout
     driver.implicitly_wait(timeout)
-    #socket.setdefaulttimeout(timeout)
+    # socket.setdefaulttimeout(timeout)
 
     # Try sending a request to the server and get server's response
     try:
@@ -146,6 +148,6 @@ def fetch_via_tor_browser(url, additional_headers=None, security_level='medium',
 
     logger.debug('I\'m done fetching %s', url)
 
-    driver.quit()
+    fetcher_utils.force_quit_driver(driver)
 
     return results
