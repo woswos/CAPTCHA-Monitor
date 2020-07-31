@@ -1,7 +1,6 @@
 version: '3.1'
 services:
   captcha_monitor_run:
-    #build: ./
     image: woswos/captchamonitor
     environment:
       CM_DB_USER: ${CM_DB_USER}
@@ -9,16 +8,15 @@ services:
       CM_DB_NAME: ${CM_DB_NAME}
       CM_DB_HOST: 'db'
       CM_DB_PORT: 5432
-      CM_BROWSER_VERSIONS_PATH: /root/browsers
+      CM_BROWSER_VERSIONS_PATH: /home/captchamonitoruser/browsers
     volumes:
-      - ${CM_BROWSER_VERSIONS_PATH}:/root/browsers
+      - ${CM_BROWSER_VERSIONS_PATH}:/home/captchamonitoruser/browsers
     depends_on:
       - 'start_dependencies'
     restart: always
     command: ["captchamonitor", "run", "-c", "-l", "-w", "5"]
 
   captcha_monitor_compose:
-    #build: ./
     image: woswos/captchamonitor
     environment:
       CM_DB_USER: ${CM_DB_USER}
@@ -26,9 +24,9 @@ services:
       CM_DB_NAME: ${CM_DB_NAME}
       CM_DB_HOST: 'db'
       CM_DB_PORT: 5432
-      CM_BROWSER_VERSIONS_PATH: /root/browsers
+      CM_BROWSER_VERSIONS_PATH: /home/captchamonitoruser/browsers
     volumes:
-      - ${CM_BROWSER_VERSIONS_PATH}:/root/browsers
+      - ${CM_BROWSER_VERSIONS_PATH}:/home/captchamonitoruser/browsers
     depends_on:
       - 'start_dependencies'
     restart: always
