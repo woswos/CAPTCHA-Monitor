@@ -134,6 +134,8 @@ class DB:
                 'cdn_provider': 'TEXT',
                 # Comments about the given URL
                 'comment': 'TEXT',
+                # 1 or 0 indicating whether this URL requires multiple HTTP requests to fetch
+                'requires_multiple_reqs': 'TEXT',
             },
             'fetchers':
             {
