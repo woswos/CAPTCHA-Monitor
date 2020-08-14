@@ -293,7 +293,7 @@ class DB:
 
         cursor.close()
 
-    def get_table_entries(self, table, columns=['*'], identifiers=''):
+    def get_table_entries(self, table, columns=['*'], identifiers='', after_timestamp='', before_timestamp='', order_by='', order = 'ASC', limit = ''):
         """
         Gets the given entries in a given table
         Gets all values if no columns are provided
@@ -319,8 +319,26 @@ class DB:
         else:
             sql_query = sql_base[:-1] + sql_table
 
-        self.logger.debug(sql_query)
+        if before_timestamp != '':
+            sql_query = (sql_query + ' WHERE ') if (not 'WHERE' in sql_query) else (sql_query + ' AND ')
 
+            if after_timestamp != '':
+                sql_query += ' timestamp BETWEEN \'%s\'::timestamp AND \'%s\'::timestamp ' % (after_timestamp, before_timestamp)
+            else:
+                sql_query += ' timestamp < \'%s\'::timestamp ' % before_timestamp
+
+        elif after_timestamp != '':
+            sql_query = (sql_query + ' WHERE ') if (not 'WHERE' in sql_query) else (sql_query + ' AND ')
+            sql_query += ' timestamp > \'%s\'::timestamp ' % after_timestamp
+
+        if order_by != '':
+            sql_query += ' ORDER BY %s %s' % (order_by, order)
+
+        if limit != '':
+            sql_query += ' LIMIT %s' % limit
+
+        self.logger.debug(sql_query)
+        
         cursor = connection.cursor()
 
         # Try to connect to the database
