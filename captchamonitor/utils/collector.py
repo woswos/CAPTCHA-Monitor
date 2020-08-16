@@ -1,5 +1,16 @@
 import datetime
 import logging
+import logging
+import sys
+import os
+import time
+import tarfile
+import requests
+import shutil
+import datetime
+import fnmatch
+import tempfile
+from pathlib import Path
 import stem.descriptor
 
 
@@ -51,7 +62,11 @@ class ConsensusRouterEntry:
                  IPv6=None, IPv6ORPort=None,
                  ORPort=None, DirPort=None, bandwidth=None, flags=None,
                  guard_probability=None, middle_probability=None, exit_probability=None,
-                 consensus_weight_fraction=None):
+                 consensus_weight_fraction=None, captcha_percentage=0):
+        """
+        Constructor method
+        """
+
         self.logger = logging.getLogger(__name__)
         self.nickname = nickname
         self.identity = identity
@@ -70,7 +85,7 @@ class ConsensusRouterEntry:
         self.middle_probability = middle_probability
         self.exit_probability = exit_probability
         self.consensus_weight_fraction = consensus_weight_fraction
-        self.captcha_percentage = 0
+        self.captcha_percentage = captcha_percentage
 
 
 class ServerDescEntry:
@@ -112,6 +127,10 @@ class ServerDescEntry:
     def __init__(self, nickname, address, fingerprint, bandwidth_avg=None, bandwidth_burst=None,
                  bandwidth_observed=None, platform=None, uptime=None, family=None,
                  accept=None, reject=None, IPv6_accept=None, IPv6_reject=None):
+        """
+        Constructor method
+        """
+
         self.nickname = nickname
         self.address = address
         self.bandwidth_avg = bandwidth_avg
@@ -141,6 +160,9 @@ class ParseConsensusV3:
         """
         Constructor method
         """
+
+        logger = logging.getLogger(__name__)
+        logger.debug('Parsing %s', consensus_file)
 
         # Read the file
         file = open(consensus_file, 'r')
@@ -388,6 +410,9 @@ class ParseServerDesc:
         Constructor method
         """
 
+        logger = logging.getLogger(__name__)
+        logger.debug('Parsing %s', server_descriptors_file)
+
         # Read the file
         file = open(server_descriptors_file, 'r')
         lines = file.readlines()
@@ -489,3 +514,144 @@ class ParseServerDesc:
                                               family=family))
 
         return relays
+
+
+def get_consensus(consensus_time):
+    """
+    Finds the consensus document that was published at given date and deletes it
+
+    :param date: the date for valid-after timestamp of the consensus document
+    :type date: datetime object
+
+    :returns: parsed consensus
+    :rtype: ParseConsensusV3 object
+    """
+
+    # Try at most 3 times
+    for i in range(3):
+        try:
+            consensus_file = consensus_date_to_local_file(consensus_time)
+            # Get the corresponding consensus
+            consensus = ParseConsensusV3(consensus_file)
+            break
+
+        except Exception as err:
+            # Remove the file from computer
+            remove_consensus_file(consensus_time)
+
+            logger.debug('Couldn\'t parse the consensus for %s ' % consensus_time)
+            logger.debug('Possibly the file is corrupted and downloading again')
+
+    return consensus
+
+
+def consensus_date_to_local_file(date):
+    """
+    Finds the consensus document that was published at given date
+
+    :param date: the date for valid-after timestamp of the consensus document
+    :type date: datetime object
+
+    :returns: absolute path to the consensus document
+    :rtype: str
+    """
+
+    logger = logging.getLogger(__name__)
+
+    # Create the base path for consensus cache
+    consensus_dir = os.path.join(str(Path.home()), 'captchamonitor', 'consensuses')
+    if not os.path.exists(consensus_dir):
+        os.makedirs(consensus_dir)
+
+    date_str = date.strftime('%Y-%m-%d-%H-%M-%S')
+
+    # Try 3 times maximum
+    for i in range(3):
+        # Find the requested consensus from the cache
+        for file in os.listdir(consensus_dir):
+            if fnmatch.fnmatch(file, '*' + date_str + '*'):
+                return os.path.join(consensus_dir, file)
+
+        # If we are here, it means that the requested consensus is not cached yet
+        logger.debug('Requested consensus is not cached yet, downloading...')
+        download_consensus(date, consensus_dir)
+
+    logger.debug('Cannot source the requested consensus, try again')
+
+
+def download_consensus(date, consensus_dir):
+    """
+    Downloads the consensus document for the specified date from CollecTor
+
+    :param date: the date for valid-after timestamp of the consensus document
+    :type date: datetime object
+    :param consensus_dir: the absolute path to the directory where cached consensus files are stored
+    :type consensus_dir: str
+    """
+
+    logger = logging.getLogger(__name__)
+
+    url_consensuses_recent = 'https://collector.torproject.org/recent/relay-descriptors/consensuses/'
+    url_consensuses_archive = 'https://collector.torproject.org/archive/relay-descriptors/consensuses/'
+
+    date_str = date.strftime('%Y-%m-%d-%H-%M-%S')
+
+    # Check for recent consensuses first
+    recent_consensuses = requests.get(url_consensuses_recent).text
+
+    if date_str in recent_consensuses:
+        base_url = url_consensuses_recent
+        file_name = date_str + '-consensus'
+        url = base_url + file_name
+        file_path = os.path.join(consensus_dir, file_name)
+
+        # Download the consensus file directly to consensus_dir
+        open(file_path, 'wb').write(requests.get(url).content)
+
+    else:
+        # Create a temporary directory and download the consensus archive
+        with tempfile.TemporaryDirectory() as download_dir:
+            base_url = url_consensuses_archive
+            folder_name = 'consensuses-%s-%s' % (date.strftime('%Y'), date.strftime('%m'))
+            archive_name = folder_name + '.tar.xz'
+            archive_path = os.path.join(download_dir, archive_name)
+            extracted_path = os.path.join(download_dir, folder_name)
+            url = base_url + archive_name
+
+            # Download the consensus archive to a temp location
+            open(archive_path, 'wb').write(requests.get(url).content)
+
+            # Extract the archive
+            with tarfile.open(archive_path) as f:
+                f.extractall(download_dir)
+
+            # Recursively move files
+            for day_folder in os.listdir(extracted_path):
+                for con_file in os.listdir(os.path.join(extracted_path, day_folder)):
+                    try:
+                        shutil.move(os.path.join(extracted_path,
+                                                 day_folder, con_file), consensus_dir)
+
+                    except Exception as err:
+                        # We can simply skip already existing files
+                        logger.debug(err)
+
+
+def remove_consensus_file(date):
+    """
+    Finds the consensus document that was published at given date and deletes it
+
+    :param date: the date for valid-after timestamp of the consensus document
+    :type date: datetime object
+    """
+
+    logger = logging.getLogger(__name__)
+
+    date_str = date.strftime('%Y-%m-%d-%H-%M-%S')
+
+    # Create the base path for consensus cache
+    consensus_dir = os.path.join(str(Path.home()), 'captchamonitor', 'consensuses')
+    if os.path.exists(consensus_dir):
+        file = os.path.join(consensus_dir, date_str + '-consensus')
+        os.remove(file)
+        logger.debug('Removed the consensus file %s', file)
