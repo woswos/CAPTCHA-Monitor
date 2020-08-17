@@ -49,9 +49,9 @@ def run(args):
             logger.info('Started running with %s worker(s)' % worker_count)
 
         # Create the base path for the Tor directory
-        worker_tor_base_dir = os.path.join(str(Path.home()), 'captchamonitor')
+        worker_tor_base_dir = os.path.join(str(Path.home()), 'captchamonitor', 'workers')
         if not os.path.exists(worker_tor_base_dir):
-            os.mkdir(worker_tor_base_dir)
+            os.makedirs(worker_tor_base_dir)
 
         elif clean:
             # if exits, delete the existing one and recreate it
