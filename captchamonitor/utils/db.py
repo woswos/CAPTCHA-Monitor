@@ -293,7 +293,7 @@ class DB:
 
         cursor.close()
 
-    def get_table_entries(self, table, columns=['*'], identifiers='', after_timestamp='', before_timestamp='', order_by='', order = 'ASC', limit = ''):
+    def get_table_entries(self, table, columns=['*'], identifiers='', identifier_operators='', after_timestamp='', before_timestamp='', order_by='', order = 'ASC', limit = ''):
         """
         Gets the given entries in a given table
         Gets all values if no columns are provided
@@ -312,7 +312,12 @@ class DB:
 
         sql_where = ' WHERE'
         for field in identifiers:
-            sql_where += ' %s=\'%s\' AND' % (field, identifiers[field])
+            try:
+                # Use the defined operator
+                sql_where += ' %s%s\'%s\' AND' % (field, identifier_operators[field], identifiers[field])
+            except:
+                # Fallback to '=' if no operator is defined
+                sql_where += ' %s=\'%s\' AND' % (field, identifiers[field])
 
         if identifiers != '':
             sql_query = sql_base[:-1] + sql_table + sql_where[:-4]
@@ -338,7 +343,7 @@ class DB:
             sql_query += ' LIMIT %s' % limit
 
         self.logger.debug(sql_query)
-        
+
         cursor = connection.cursor()
 
         # Try to connect to the database
