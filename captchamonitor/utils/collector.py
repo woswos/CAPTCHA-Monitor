@@ -1,6 +1,5 @@
 import datetime
 import logging
-import logging
 import sys
 import os
 import time
@@ -12,8 +11,11 @@ import fnmatch
 import tempfile
 from pathlib import Path
 import stem.descriptor
+from typing import List
+from dataclasses import dataclass
 
 
+@dataclass
 class ConsensusRouterEntry:
     """
     Stores a v3 type router/relay/node entry
@@ -58,36 +60,29 @@ class ConsensusRouterEntry:
     :returns: ConsensusRouterEntry object
     """
 
-    def __init__(self, nickname, identity, digest, publication, IP, is_exit,
-                 IPv6=None, IPv6ORPort=None,
-                 ORPort=None, DirPort=None, bandwidth=None, flags=None,
-                 guard_probability=None, middle_probability=None, exit_probability=None,
-                 consensus_weight_fraction=None, captcha_percentage=0):
-        """
-        Constructor method
-        """
+    nickname: str
+    identity: str
+    digest: str
+    publication: datetime
+    IP: str
+    IPv6: str
+    IPv6ORPort: str
+    is_exit: bool
+    ORPort: int
+    DirPort: int
+    bandwidth: int
+    flags: List
+    guard_probability: float = 0.0
+    middle_probability: float = 0.0
+    exit_probability: float = 0.0
+    consensus_weight_fraction: float = 0.0
+    captcha_percentage: float = 0.0
 
-        self.logger = logging.getLogger(__name__)
-        self.nickname = nickname
-        self.identity = identity
-        self.fingerprint = stem.descriptor.router_status_entry._base64_to_hex(identity)
-        self.digest = digest
-        self.publication = publication
-        self.IP = IP
-        self.IPv6 = IPv6
-        self.IPv6ORPort = IPv6ORPort
-        self.is_exit = is_exit
-        self.ORPort = ORPort
-        self.DirPortP = DirPort
-        self.bandwidth = bandwidth
-        self.flags = flags
-        self.guard_probability = guard_probability
-        self.middle_probability = middle_probability
-        self.exit_probability = exit_probability
-        self.consensus_weight_fraction = consensus_weight_fraction
-        self.captcha_percentage = captcha_percentage
+    def __post_init__(self):
+        self.fingerprint = stem.descriptor.router_status_entry._base64_to_hex(self.identity)
 
 
+@dataclass
 class ServerDescEntry:
     """
     Stores a server descriptor entry
@@ -124,26 +119,19 @@ class ServerDescEntry:
     :returns: ServerDescEntry object
     """
 
-    def __init__(self, nickname, address, fingerprint, bandwidth_avg=None, bandwidth_burst=None,
-                 bandwidth_observed=None, platform=None, uptime=None, family=None,
-                 accept=None, reject=None, IPv6_accept=None, IPv6_reject=None):
-        """
-        Constructor method
-        """
-
-        self.nickname = nickname
-        self.address = address
-        self.bandwidth_avg = bandwidth_avg
-        self.bandwidth_burst = bandwidth_burst
-        self.bandwidth_observed = bandwidth_observed
-        self.platform = platform
-        self.fingerprint = fingerprint
-        self.uptime = uptime
-        self.accept = accept
-        self.reject = reject
-        self.IPv6_accept = IPv6_accept
-        self.IPv6_reject = IPv6_reject
-        self.family = family
+    nickname: str
+    address: str
+    bandwidth_avg: int
+    bandwidth_burst: int
+    bandwidth_observed: int
+    platform: str
+    fingerprint: str
+    uptime: int
+    accept: List
+    reject: List
+    IPv6_accept: List
+    IPv6_reject: List
+    family: List
 
 
 class ParseConsensusV3:
@@ -527,22 +515,30 @@ def get_consensus(consensus_time):
     :rtype: ParseConsensusV3 object
     """
 
+    logger = logging.getLogger(__name__)
+
     # Try at most 3 times
     for i in range(3):
         try:
-            consensus_file = consensus_date_to_local_file(consensus_time)
             # Get the corresponding consensus
+            consensus_file = consensus_date_to_local_file(consensus_time)
+
+            # Parse the consensus file
             consensus = ParseConsensusV3(consensus_file)
-            break
+
+            return consensus
 
         except Exception as err:
             # Remove the file from computer
             remove_consensus_file(consensus_time)
 
-            logger.debug('Couldn\'t parse the consensus for %s ' % consensus_time)
-            logger.debug('Possibly the file is corrupted and downloading again')
+            logger.debug('Couldn\'t parse the consensus for %s: %s' % (consensus_time, err))
+            logger.debug('Possibly the file is corrupted, and downloading again')
 
-    return consensus
+    # If we are here, it means that we failed
+    logger.debug('Cannot access requested consensus, please try again later')
+
+    return None
 
 
 def consensus_date_to_local_file(date):
