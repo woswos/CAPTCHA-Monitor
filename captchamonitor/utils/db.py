@@ -113,6 +113,16 @@ class DB:
                 'nickname': 'TEXT',
                 # overall CAPTCHA probability percentage
                 'captcha_probability': 'TEXT',
+                # relay's first seen date
+                'first_seen': 'TEXT',
+                # relay's last seen date
+                'last_seen': 'TEXT',
+                # the Tor version running on the relay
+                'version': 'TEXT',
+                # relay's autonomous system number/code
+                'asn': 'TEXT',
+                # the operating system of the relay
+                'platform': 'TEXT',
             },
             'urls':
             {
