@@ -11,6 +11,7 @@ from captchamonitor.utils.relays import Relays
 from captchamonitor.utils.queue import Queue
 from captchamonitor.utils.tests import Tests
 from captchamonitor.utils.geoip import GeoIP
+from captchamonitor.utils.onionoo import get_onionoo_relay_details
 from captchamonitor import add
 from datetime import datetime
 import random
@@ -301,30 +302,43 @@ def get_new_relays():
     for relay in tor.get_consensus(use_local_dir=use_local_tor):
         # For now, add only exit relays
         if relay['is_ipv4_exiting_allowed'] == '1':
-            if relay['fingerprint'] not in fingerprints:
-                # Add the new relay if doesn't exits
-                data = {'fingerprint': relay['fingerprint'],
-                        'address': relay['address'],
-                        'nickname': relay['nickname'],
-                        'is_ipv4_exiting_allowed': relay['is_ipv4_exiting_allowed'],
-                        'is_ipv6_exiting_allowed': relay['is_ipv6_exiting_allowed'],
-                        'last_updated': relay['published'],
-                        'status': 'online',
+
+            onionoo = get_onionoo_relay_details(relay['fingerprint'])
+
+            if onionoo != None:
+                data = {'status': 'online',
+                        'nickname': onionoo.nickname,
+                        'is_ipv4_exiting_allowed': str(int(onionoo.is_IPv4_exit)),
+                        'is_ipv6_exiting_allowed': str(int(onionoo.is_IPv6_exit)),
+                        'first_seen': onionoo.first_seen,
+                        'last_seen': onionoo.last_seen,
+                        'version': onionoo.version,
+                        'asn': onionoo.asn,
+                        'platform': onionoo.platform,
                         'country': geoip.get_country(relay['address']),
-                        'continent': geoip.get_continent(relay['address']),
-                        'performed_tests': '{ "data": [] }'}
-                relays.add_relay_if_not_exists(data)
+                        'continent': geoip.get_continent(relay['address'])}
+
+                if relay['fingerprint'] not in fingerprints:
+                    data.update({'fingerprint': relay['fingerprint']})
+                    data.update({'address': relay['address']})
+                    data.update({'performed_tests': '{ "data": [] }'})
+
+                    # Add the new relay if doesn't exits
+                    relays.add_relay_if_not_exists(data)
+
+                else:
+                    # Now update the database
+                    relays.update_relay(relay['fingerprint'], data)
 
             else:
                 data = {'status': 'online',
-                        'nickname': relay['nickname'],
-                        'country': geoip.get_country(relay['address']),
-                        'continent': geoip.get_continent(relay['address']),
-                        'last_updated': relay['published'],
-                        'is_ipv4_exiting_allowed': relay['is_ipv4_exiting_allowed'],
-                        'is_ipv6_exiting_allowed': relay['is_ipv6_exiting_allowed']}
-                # Now update the database
-                relays.update_relay(relay['fingerprint'], data)
+                        'fingerprint': relay['fingerprint'],
+                        'address': relay['address'],
+                        'is_ipv4_exiting_allowed': '1',
+                        'performed_tests': '{ "data": [] }'}
+
+                # Add the new relay if doesn't exits
+                relays.add_relay_if_not_exists(data)
 
     logger.info('Got the list of new relays')
 
