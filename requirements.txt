@@ -7,3 +7,5 @@ port_for
 maxminddb
 pyvirtualdisplay
 psycopg2-binary
+numpy
+scipy
