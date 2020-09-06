@@ -192,6 +192,12 @@ class main():
                                     help="""show all log messages""",
                                     action='store_true')
 
+        analyze_parser.add_argument('-g', '--process_captcha_rates',
+                                    help="""specify the interval in hours to analyze and recreate the graph data""",
+                                    metavar='N',
+                                    type=int,
+                                    default=30)
+
         #######
         # RUN #
         #######
