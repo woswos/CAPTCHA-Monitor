@@ -649,5 +649,8 @@ def remove_consensus_file(date):
     consensus_dir = os.path.join(str(Path.home()), 'captchamonitor', 'consensuses')
     if os.path.exists(consensus_dir):
         file = os.path.join(consensus_dir, date_str + '-consensus')
-        os.remove(file)
+        try:
+            os.remove(file)
+        except FileNotFoundError:
+            pass
         logger.debug('Removed the consensus file %s', file)
