@@ -161,7 +161,36 @@ class DB:
                 'option_2': 'TEXT',
                 # option 3 is preserved for future use
                 'option_3': 'TEXT',
-            }
+            },
+            'digests':
+            {
+                # unique ID for this table
+                'id': 'BIGSERIAL PRIMARY KEY',
+                # the timestamp corresponding to the CAPTCHA rate
+                'timestamp': 'TIMESTAMPTZ',
+                # the Measurement class attribute used to bin the measurements
+                'binned_by': 'TEXT',
+                # the unique key for the current bin
+                'bin_key': 'TEXT',
+                # the function used to decide which measurements to include
+                'measurement_filter': 'TEXT',
+                # the arguments supplied to the filtering function, result of json.dumps()
+                'measurement_filter_args': 'TEXT',
+                # indicates whether exit relay weights were used while taking the average
+                'weighted': 'BOOLEAN',
+                # the sample size for the current bin
+                'sample_size': 'INT',
+                # the calculated CAPTCHA rate for the current bin
+                'captcha_rate': 'FLOAT',
+                # the confidence interval used to calculate the lower and upper bounds, between 0.0 and 1.0
+                'confidence_interval': 'FLOAT',
+                # the mean of the bootstrapped measurements
+                'confidence_interval_mean': 'FLOAT',
+                # the lower bound of confidence interval of the bootstrapped measurements
+                'confidence_interval_lower_bound': 'FLOAT',
+                # the upper bound of confidence interval of the bootstrapped measurements
+                'confidence_interval_upper_bound': 'FLOAT',
+            },
         }
 
         self.logger = logging.getLogger(__name__)
@@ -184,6 +213,7 @@ class DB:
         self.relays_table_name = 'relays'
         self.urls_table_name = 'urls'
         self.fetchers_table_name = 'fetchers'
+        self.digest_table_name = 'digests'
 
         try:
             # Set database connection
