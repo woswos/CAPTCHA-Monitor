@@ -8,9 +8,9 @@ services:
       CM_DB_NAME: ${CM_DB_NAME}
       CM_DB_HOST: 'db'
       CM_DB_PORT: 5432
-      CM_BROWSER_VERSIONS_PATH: /home/captchamonitoruser/browsers
+      CM_BROWSER_VERSIONS_PATH: /home/cm/browsers
     volumes:
-      - ${CM_BROWSER_VERSIONS_PATH}:/home/captchamonitoruser/browsers
+      - ${CM_BROWSER_VERSIONS_PATH}:/home/cm/browsers
     depends_on:
       - 'start_dependencies'
     restart: always
@@ -24,9 +24,9 @@ services:
       CM_DB_NAME: ${CM_DB_NAME}
       CM_DB_HOST: 'db'
       CM_DB_PORT: 5432
-      CM_BROWSER_VERSIONS_PATH: /home/captchamonitoruser/browsers
+      CM_BROWSER_VERSIONS_PATH: /home/cm/browsers
     volumes:
-      - ${CM_BROWSER_VERSIONS_PATH}:/home/captchamonitoruser/browsers
+      - ${CM_BROWSER_VERSIONS_PATH}:/home/cm/browsers
     depends_on:
       - 'start_dependencies'
     restart: always
