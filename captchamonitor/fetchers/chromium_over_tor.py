@@ -2,73 +2,79 @@
 Fetch a given URL using selenium, Chromium, and Tor
 """
 
+import glob
+import json
+import logging
 import os
 import pathlib
-import glob
-import logging
-import json
 import socket
 import time
+
+import captchamonitor.utils.fetcher_utils as fetcher_utils
 from pyvirtualdisplay import Display
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-import captchamonitor.utils.fetcher_utils as fetcher_utils
 
 
-def fetch_via_chromium_over_tor(url, additional_headers=None, timeout=30, **kwargs):
+def fetch_via_chromium_over_tor(
+    url, additional_headers=None, timeout=30, **kwargs
+):
     logger = logging.getLogger(__name__)
 
     try:
-        download_folder = os.environ['CM_DOWNLOAD_FOLDER']
-        tor_socks_host = os.environ['CM_TOR_HOST']
-        tor_socks_port = os.environ['CM_TOR_SOCKS_PORT']
+        download_folder = os.environ["CM_DOWNLOAD_FOLDER"]
+        tor_socks_host = os.environ["CM_TOR_HOST"]
+        tor_socks_port = os.environ["CM_TOR_SOCKS_PORT"]
 
     except Exception as err:
-        logger.error('Some of the environment variables are missing: %s', err)
+        logger.error("Some of the environment variables are missing: %s", err)
 
     results = {}
 
-    http_header_live_extension_id = 'mhmbgecfengpllohfhnkpapmbgiphhff'
+    http_header_live_extension_id = "mhmbgecfengpllohfhnkpapmbgiphhff"
 
     # Find the right extension
-    http_header_live_folder = '../assests/http_header_live/'
+    http_header_live_folder = "../assests/http_header_live/"
     script_path = pathlib.Path(__file__).parent.absolute()
-    search_string = os.path.abspath(os.path.join(script_path,
-                                                 http_header_live_folder,
-                                                 '*.crx'))
+    search_string = os.path.abspath(
+        os.path.join(script_path, http_header_live_folder, "*.crx")
+    )
     http_header_live_extension = glob.glob(search_string)[0]
 
-    http_header_live_export_file = os.path.join(download_folder,
-                                                'captcha_monitor_website_data.json')
+    http_header_live_export_file = os.path.join(
+        download_folder, "captcha_monitor_website_data.json"
+    )
 
     # Delete the previous HTTP-Header-Live export
     if os.path.exists(http_header_live_export_file):
         os.remove(http_header_live_export_file)
 
     # Start virtual display because Chromium doesn't support extensions in headless mode
-    display = Display(visible=True, size=(1000, 900), backend='xvfb')
+    display = Display(visible=True, size=(1000, 900), backend="xvfb")
     display.start()
 
     options = Options()
     # options.headless = True
     # options.add_argument('--headless')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-gpu')
-    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--disable-dev-shm-usage")
 
     # Set the download folder and disable pop up windows
-    prefs = {"profile.default_content_settings.popups": 0,
-             "download.default_directory": download_folder,
-             "directory_upgrade": True}
+    prefs = {
+        "profile.default_content_settings.popups": 0,
+        "download.default_directory": download_folder,
+        "directory_upgrade": True,
+    }
     options.add_experimental_option("prefs", prefs)
 
     # Required to enabled third party extensions
-    options.add_argument('–-enable-easy-off-store-extension-install')
+    options.add_argument("–-enable-easy-off-store-extension-install")
     options.add_extension(http_header_live_extension)
 
     # Set connections to Tor
-    proxy_string = 'socks5://%s:%s' % (tor_socks_host, tor_socks_port)
-    options.add_argument('--proxy-server=%s' % proxy_string)
+    proxy_string = "socks5://%s:%s" % (tor_socks_host, tor_socks_port)
+    options.add_argument("--proxy-server=%s" % proxy_string)
 
     # Set the timeout for webdriver initialization
     # socket.setdefaulttimeout(15)
@@ -78,20 +84,25 @@ def fetch_via_chromium_over_tor(url, additional_headers=None, timeout=30, **kwar
 
     except Exception as err:
         display.stop()
-        logger.error('Couldn\'t initialize the browser, check if there is enough memory available: %s'
-                     % err)
+        logger.error(
+            "Couldn't initialize the browser, check if there is enough memory available: %s"
+            % err
+        )
         return None
 
     # Start the HTTP-Header-Live extension and switch to a new tab for the actual URL fetch
     try:
-        driver.get('chrome-extension://%s/HTTPHeaderMain.html' % http_header_live_extension_id)
+        driver.get(
+            "chrome-extension://%s/HTTPHeaderMain.html"
+            % http_header_live_extension_id
+        )
         driver.execute_script("window.open('about:blank', 'tab2');")
         driver.switch_to.window("tab2")
 
     except Exception as err:
         fetcher_utils.force_quit_driver(driver)
         display.stop()
-        logger.error('Couldn\'t launch HTTP-Header-Live: %s' % err)
+        logger.error("Couldn't launch HTTP-Header-Live: %s" % err)
         return None
 
     # Set driver page load timeout
@@ -105,19 +116,19 @@ def fetch_via_chromium_over_tor(url, additional_headers=None, timeout=30, **kwar
         # Chromium returns a valid HTML page even if the page was not fetched.
         #   The returned page contains the license and 'The Chromium Authors'
         #   was choosen because of this reason.
-        if 'The Chromium Authors' in driver.page_source:
-            raise Exception('This site can’t be reached')
+        if "The Chromium Authors" in driver.page_source:
+            raise Exception("This site can’t be reached")
 
     except Exception as err:
         fetcher_utils.force_quit_driver(driver)
         display.stop()
-        logger.error('webdriver.Chrome.get() says: %s' % err)
+        logger.error("webdriver.Chrome.get() says: %s" % err)
         return None
 
     # Wait for HTTP-Header-Live extension to finish
     timeout = 20
     requests_data = None
-    logger.debug('Waiting for HTTP-Header-Live extension')
+    logger.debug("Waiting for HTTP-Header-Live extension")
     for counter in range(timeout):
         try:
             with open(http_header_live_export_file) as file:
@@ -131,21 +142,24 @@ def fetch_via_chromium_over_tor(url, additional_headers=None, timeout=30, **kwar
         except Exception as err:
             fetcher_utils.force_quit_driver(driver)
             display.stop()
-            logger.error('Cannot parse the headers: %s' % err)
+            logger.error("Cannot parse the headers: %s" % err)
             return None
 
     if requests_data is None:
         fetcher_utils.force_quit_driver(driver)
         display.stop()
         # Don't return anything since we couldn't capture the headers
-        logger.error('Couldn\'t capture the headers from %s' % http_header_live_export_file)
+        logger.error(
+            "Couldn't capture the headers from %s"
+            % http_header_live_export_file
+        )
         return None
 
     # Record the results
-    results['html_data'] = driver.page_source
-    results['requests'] = fetcher_utils.format_requests_tb(requests_data, url)
+    results["html_data"] = driver.page_source
+    results["requests"] = fetcher_utils.format_requests_tb(requests_data, url)
 
-    logger.debug('I\'m done fetching %s', url)
+    logger.debug("I'm done fetching %s", url)
 
     fetcher_utils.force_quit_driver(driver)
     display.stop()

@@ -1,12 +1,17 @@
-import pytest
 import os
 import shutil
+
+import pytest
 from captchamonitor.utils.db_export import export
 from captchamonitor.utils.sqlite import SQLite
 
-export_location = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'export')
-os.environ['CM_DB_FILE_PATH'] = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'cm.db')
-db_file = os.environ['CM_DB_FILE_PATH']
+export_location = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), "export"
+)
+os.environ["CM_DB_FILE_PATH"] = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), "cm.db"
+)
+db_file = os.environ["CM_DB_FILE_PATH"]
 
 
 @pytest.fixture

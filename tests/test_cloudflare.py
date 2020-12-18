@@ -1,14 +1,14 @@
-import pytest
-import pycurl
-from io import BytesIO
 import json
+from io import BytesIO
+
+import pycurl
+import pytest
 from captchamonitor.utils.cloudflare import Cloudflare
 
-
-email = ''
-api_token = ''
-domain = ''
-security_level = 'medium'
+email = ""
+api_token = ""
+domain = ""
+security_level = "medium"
 # security_level options: essentially_off, low, medium, high, under_attack
 
 """

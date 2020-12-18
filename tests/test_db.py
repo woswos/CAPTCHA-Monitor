@@ -7,37 +7,45 @@ import string
 
 
 def randomString(size=10, chars=string.ascii_uppercase + string.digits):
-    return ''.join(random.choice(chars) for _ in range(size))
+    return "".join(random.choice(chars) for _ in range(size))
 
 
-os.environ['CM_DB_FILE_PATH'] = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'cm.db')
-db_file = os.environ['CM_DB_FILE_PATH']
+os.environ["CM_DB_FILE_PATH"] = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), "cm.db"
+)
+db_file = os.environ["CM_DB_FILE_PATH"]
 
-job_1 = {'method': randomString(),
-         'url': randomString(),
-         'captcha_sign': randomString(),
-         'additional_headers': randomString(),
-         'exit_node': randomString(),
-         'tbb_security_level': randomString(),
-         'browser_version': randomString()}
+job_1 = {
+    "method": randomString(),
+    "url": randomString(),
+    "captcha_sign": randomString(),
+    "additional_headers": randomString(),
+    "exit_node": randomString(),
+    "tbb_security_level": randomString(),
+    "browser_version": randomString(),
+}
 
-job_2 = {'method': randomString(),
-         'url': randomString(),
-         'captcha_sign': randomString(),
-         'additional_headers': randomString(),
-         'exit_node': randomString(),
-         'tbb_security_level': randomString(),
-         'browser_version': randomString()}
+job_2 = {
+    "method": randomString(),
+    "url": randomString(),
+    "captcha_sign": randomString(),
+    "additional_headers": randomString(),
+    "exit_node": randomString(),
+    "tbb_security_level": randomString(),
+    "browser_version": randomString(),
+}
 
-result_1 = {'method': randomString(),
-            'url': randomString(),
-            'captcha_sign': randomString(),
-            'is_captcha_found': 0,
-            'html_data': randomString(),
-            'requests': randomString(),
-            'exit_node': None,
-            'tbb_security_level': None,
-            'browser_version': None}
+result_1 = {
+    "method": randomString(),
+    "url": randomString(),
+    "captcha_sign": randomString(),
+    "is_captcha_found": 0,
+    "html_data": randomString(),
+    "requests": randomString(),
+    "exit_node": None,
+    "tbb_security_level": None,
+    "browser_version": None,
+}
 
 
 @pytest.fixture
@@ -60,7 +68,7 @@ def test_db_insert_job(fresh_db):
     fresh_db.insert_entry_into_table(fresh_db.queue_table_name, job_1)
 
     # Check if the value was inserted
-    sql_query = 'SELECT * FROM %s' % fresh_db.queue_table_name
+    sql_query = "SELECT * FROM %s" % fresh_db.queue_table_name
     conn = sqlite3.connect(db_file)
     cur = conn.cursor()
     cur.execute(sql_query)
@@ -68,15 +76,17 @@ def test_db_insert_job(fresh_db):
     result = dict(zip([c[0] for c in cur.description], result[0]))
     conn.commit()
 
-    assert result['url'] == job_1['url']
+    assert result["url"] == job_1["url"]
 
 
 def test_db_get_uncompleted_job_with_no_job(fresh_db):
     worker_id = randomString(32)
     fresh_db.claim_first_uncompleted_job(worker_id)
 
-    identifiers = {'claimed_by': worker_id}
-    job = fresh_db.get_table_entries(fresh_db.queue_table_name, identifiers=identifiers)
+    identifiers = {"claimed_by": worker_id}
+    job = fresh_db.get_table_entries(
+        fresh_db.queue_table_name, identifiers=identifiers
+    )
 
     assert job == []
 
@@ -87,10 +97,12 @@ def test_db_get_uncompleted_job_with_job(fresh_db):
     worker_id = randomString(32)
     fresh_db.claim_first_uncompleted_job(worker_id)
 
-    identifiers = {'claimed_by': worker_id}
-    job = fresh_db.get_table_entries(fresh_db.queue_table_name, identifiers=identifiers)
+    identifiers = {"claimed_by": worker_id}
+    job = fresh_db.get_table_entries(
+        fresh_db.queue_table_name, identifiers=identifiers
+    )
     print(job)
-    assert job[0]['url'] == job_1['url']
+    assert job[0]["url"] == job_1["url"]
 
 
 def test_db_get_uncompleted_job_with_multiple_jobs(fresh_db):
@@ -101,10 +113,12 @@ def test_db_get_uncompleted_job_with_multiple_jobs(fresh_db):
     worker_id = randomString(32)
     fresh_db.claim_first_uncompleted_job(worker_id)
 
-    identifiers = {'claimed_by': worker_id}
-    job = fresh_db.get_table_entries(fresh_db.queue_table_name, identifiers=identifiers)
+    identifiers = {"claimed_by": worker_id}
+    job = fresh_db.get_table_entries(
+        fresh_db.queue_table_name, identifiers=identifiers
+    )
 
-    assert job[0]['url'] == job_1['url']
+    assert job[0]["url"] == job_1["url"]
 
 
 def test_db_remove_job(fresh_db):
@@ -114,15 +128,19 @@ def test_db_remove_job(fresh_db):
     worker_id = randomString(32)
     fresh_db.claim_first_uncompleted_job(worker_id)
 
-    identifiers = {'claimed_by': worker_id}
-    job = fresh_db.get_table_entries(fresh_db.queue_table_name, identifiers=identifiers)
+    identifiers = {"claimed_by": worker_id}
+    job = fresh_db.get_table_entries(
+        fresh_db.queue_table_name, identifiers=identifiers
+    )
 
     # Delete the job
-    identifiers = {'id': job[0]['id']}
-    fresh_db.remove_table_entry(fresh_db.queue_table_name, identifiers=identifiers)
+    identifiers = {"id": job[0]["id"]}
+    fresh_db.remove_table_entry(
+        fresh_db.queue_table_name, identifiers=identifiers
+    )
 
     # Check if the job was deleted
-    sql_query = 'SELECT * FROM %s' % fresh_db.queue_table_name
+    sql_query = "SELECT * FROM %s" % fresh_db.queue_table_name
     conn = sqlite3.connect(db_file)
     cur = conn.cursor()
     cur.execute(sql_query)
@@ -140,15 +158,19 @@ def test_db_remove_job_with_multiple_jobs_in_the_queue(fresh_db):
     worker_id = randomString(32)
     fresh_db.claim_first_uncompleted_job(worker_id)
 
-    identifiers = {'claimed_by': worker_id}
-    job = fresh_db.get_table_entries(fresh_db.queue_table_name, identifiers=identifiers)
+    identifiers = {"claimed_by": worker_id}
+    job = fresh_db.get_table_entries(
+        fresh_db.queue_table_name, identifiers=identifiers
+    )
 
     # Delete the first job
-    identifiers = {'id': job[0]['id']}
-    fresh_db.remove_table_entry(fresh_db.queue_table_name, identifiers=identifiers)
+    identifiers = {"id": job[0]["id"]}
+    fresh_db.remove_table_entry(
+        fresh_db.queue_table_name, identifiers=identifiers
+    )
 
     # Check if the job was deleted
-    sql_query = 'SELECT * FROM %s' % fresh_db.queue_table_name
+    sql_query = "SELECT * FROM %s" % fresh_db.queue_table_name
     conn = sqlite3.connect(db_file)
     cur = conn.cursor()
     cur.execute(sql_query)
@@ -156,14 +178,14 @@ def test_db_remove_job_with_multiple_jobs_in_the_queue(fresh_db):
     result = dict(zip([c[0] for c in cur.description], result[0]))
     conn.commit()
 
-    assert result['url'] == job_2['url']
+    assert result["url"] == job_2["url"]
 
 
 def test_db_insert_result(fresh_db):
     fresh_db.insert_entry_into_table(fresh_db.results_table_name, result_1)
 
     # Check if the value was inserted
-    sql_query = 'SELECT * FROM %s' % fresh_db.results_table_name
+    sql_query = "SELECT * FROM %s" % fresh_db.results_table_name
     conn = sqlite3.connect(db_file)
     cur = conn.cursor()
     cur.execute(sql_query)
@@ -171,14 +193,14 @@ def test_db_insert_result(fresh_db):
     result = dict(zip([c[0] for c in cur.description], result[0]))
     conn.commit()
 
-    assert result['url'] == result_1['url']
+    assert result["url"] == result_1["url"]
 
 
 def test_db_insert_failed(fresh_db):
     fresh_db.insert_entry_into_table(fresh_db.failed_table_name, job_1)
 
     # Check if the value was inserted
-    sql_query = 'SELECT * FROM %s' % fresh_db.failed_table_name
+    sql_query = "SELECT * FROM %s" % fresh_db.failed_table_name
     conn = sqlite3.connect(db_file)
     cur = conn.cursor()
     cur.execute(sql_query)
@@ -186,4 +208,4 @@ def test_db_insert_failed(fresh_db):
     result = dict(zip([c[0] for c in cur.description], result[0]))
     conn.commit()
 
-    assert result['url'] == job_1['url']
+    assert result["url"] == job_1["url"]

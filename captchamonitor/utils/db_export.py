@@ -1,6 +1,6 @@
-import sqlite3
 import logging
 import os
+import sqlite3
 
 
 def dict_factory(cursor, row):
@@ -11,17 +11,19 @@ def dict_factory(cursor, row):
 
 
 def export(path):
-    '''
+    """
     Export the SQlite database to JSON file
 
     Original code taken from https://github.com/Austyns/sqlite-to-json-python
-    '''
+    """
     logger = logging.getLogger(__name__)
 
     try:
-        db_file = os.environ['CM_DB_FILE_PATH']
+        db_file = os.environ["CM_DB_FILE_PATH"]
     except Exception as err:
-        logger.warning('CM_DB_FILE_PATH environment variable is not set: %s', err)
+        logger.warning(
+            "CM_DB_FILE_PATH environment variable is not set: %s", err
+        )
 
     db_export_location = path
 
@@ -45,14 +47,18 @@ def export(path):
 
         cur1 = conn.cursor()
 
-        cur1.execute("SELECT * FROM " + table_name['name'])
+        cur1.execute("SELECT * FROM " + table_name["name"])
 
         # fetch all or one we'll go for all.
         results = cur1.fetchall()
 
         # generate and save JSON files with the table name for each of the database tables
-        export_file_name = os.path.join(db_export_location, (table_name['name']+'.json'))
-        with open(export_file_name, 'a') as the_file:
-            the_file.write(format(results).replace(" u'", "'").replace('"', "\""))
+        export_file_name = os.path.join(
+            db_export_location, (table_name["name"] + ".json")
+        )
+        with open(export_file_name, "a") as the_file:
+            the_file.write(
+                format(results).replace(" u'", "'").replace('"', '"')
+            )
 
     connection.close()

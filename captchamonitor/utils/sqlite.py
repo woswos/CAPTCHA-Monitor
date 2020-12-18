@@ -1,6 +1,6 @@
+import logging
 import os
 import sqlite3
-import logging
 
 
 class SQLite:
@@ -9,156 +9,152 @@ class SQLite:
         The class that communicates with the database directly
         """
         tables = {
-            'results':
-            {
+            "results": {
                 # unique ID for this table
-                'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+                "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
                 # the timestamp when the row was inserted
-                'timestamp': 'DATETIME DEFAULT CURRENT_TIMESTAMP',
+                "timestamp": "DATETIME DEFAULT CURRENT_TIMESTAMP",
                 # name of the desired fetcher to use
-                'method': 'TEXT',
+                "method": "TEXT",
                 # full URL including the http/https prefix
-                'url': 'TEXT',
+                "url": "TEXT",
                 # CAPTCHA sign that will be used for CAPTCHA detection
-                'captcha_sign': 'TEXT',
+                "captcha_sign": "TEXT",
                 # 1 if CAPTCHA was found, 0 if CAPTCHA was not found
-                'is_captcha_found': 'TEXT',
+                "is_captcha_found": "TEXT",
                 # 1 if the hash of the received data doesn't match `expected_hash`, otherwise 0
-                'is_data_modified': 'TEXT',
+                "is_data_modified": "TEXT",
                 # the HTML data gathered as a result of the fetch
-                'html_data': 'TEXT',
+                "html_data": "TEXT",
                 # the HTTP requests in JSON format made by the fether while fetching the URL
-                'requests': 'TEXT',
+                "requests": "TEXT",
                 # IPv4 address of the exit node/relay to use, only required when using Tor
-                'exit_node': 'TEXT',
+                "exit_node": "TEXT",
                 # only required when using Tor Browser. Possible values: low, medium, or high
-                'tbb_security_level': 'TEXT',
+                "tbb_security_level": "TEXT",
                 # version of the tool to use, use a single value
-                'browser_version': 'TEXT',
+                "browser_version": "TEXT",
                 # hash gathered using `captchamonitor md5 -u URL`
-                'expected_hash': 'TEXT',
+                "expected_hash": "TEXT",
                 # version of the captchamonitor
-                'captchamonitor_version': 'TEXT',
+                "captchamonitor_version": "TEXT",
             },
-            'queue':
-            {
+            "queue": {
                 # unique ID for this table
-                'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+                "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
                 # workers use this field for assigning jobs to themselves
-                'claimed_by': 'TEXT DEFAULT "None"',
+                "claimed_by": 'TEXT DEFAULT "None"',
                 # name of the desired fetcher to use
-                'method': 'TEXT',
+                "method": "TEXT",
                 # full URL including the http/https prefix
-                'url': 'TEXT',
+                "url": "TEXT",
                 # CAPTCHA sign that will be used for CAPTCHA detection
-                'captcha_sign': 'TEXT',
+                "captcha_sign": "TEXT",
                 # additional HTTP headers in JSON format
-                'additional_headers': 'TEXT',
+                "additional_headers": "TEXT",
                 # IPv4 address of the exit node/relay to use, only required when using Tor
-                'exit_node': 'TEXT',
+                "exit_node": "TEXT",
                 # only required when using Tor Browser. Possible values: low, medium, or high
-                'tbb_security_level': 'TEXT',
+                "tbb_security_level": "TEXT",
                 # version of the tool to use, use a single value
-                'browser_version': 'TEXT',
+                "browser_version": "TEXT",
                 # hash gathered using `captchamonitor md5 -u URL`
-                'expected_hash': 'TEXT',
+                "expected_hash": "TEXT",
             },
-            'failed':
-            {
+            "failed": {
                 # unique ID for this table
-                'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+                "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
                 # name of the desired fetcher to use
-                'method': 'TEXT',
+                "method": "TEXT",
                 # full URL including the http/https prefix
-                'url': 'TEXT',
+                "url": "TEXT",
                 # CAPTCHA sign that will be used for CAPTCHA detection
-                'captcha_sign': 'TEXT',
+                "captcha_sign": "TEXT",
                 # additional HTTP headers in JSON format
-                'additional_headers': 'TEXT',
+                "additional_headers": "TEXT",
                 # IPv4 address of the exit node/relay to use, only required when using Tor
-                'exit_node': 'TEXT',
+                "exit_node": "TEXT",
                 # only required when using Tor Browser. Possible values: low, medium, or high
-                'tbb_security_level': 'TEXT',
+                "tbb_security_level": "TEXT",
                 # version of the tool to use, use a single value
-                'browser_version': 'TEXT',
+                "browser_version": "TEXT",
                 # hash gathered using `captchamonitor md5 -u URL`
-                'expected_hash': 'TEXT',
+                "expected_hash": "TEXT",
             },
-            'relays':
-            {
+            "relays": {
                 # unique ID for this table
-                'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+                "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
                 # last modified timestamp of the row
-                'last_updated': 'DATETIME DEFAULT CURRENT_TIMESTAMP',
+                "last_updated": "DATETIME DEFAULT CURRENT_TIMESTAMP",
                 # BASE64 encoded SHA256 hash
-                'fingerprint': 'TEXT UNIQUE',
+                "fingerprint": "TEXT UNIQUE",
                 # IPv4 address of the relay
-                'address': 'TEXT UNIQUE',
+                "address": "TEXT UNIQUE",
                 # 1 or 0 if this relay allows IPv4 exits
-                'is_ipv4_exiting_allowed': 'TEXT',
+                "is_ipv4_exiting_allowed": "TEXT",
                 # 1 or 0 if this relay allows IPv6 exits
-                'is_ipv6_exiting_allowed': 'TEXT',
+                "is_ipv6_exiting_allowed": "TEXT",
                 # ISO 3166 alpha-2 country code based on GeoIP
-                'country': 'TEXT',
+                "country": "TEXT",
                 # continent based on GeoIP, plain English
-                'continent': 'TEXT',
+                "continent": "TEXT",
                 # online or offline
-                'status': 'TEXT',
+                "status": "TEXT",
                 # list of performed test in {'data':[]} format
-                'performed_tests': 'TEXT',
+                "performed_tests": "TEXT",
                 # nickname of the relay
-                'nickname': 'TEXT',
+                "nickname": "TEXT",
                 # overall CAPTCHA probability percentage
-                'captcha_probability': 'TEXT',
+                "captcha_probability": "TEXT",
             },
-            'urls':
-            {
+            "urls": {
                 # unique ID for this table
-                'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+                "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
                 # full URL including the http/https prefix
-                'url': 'TEXT',
+                "url": "TEXT",
                 # 1 or 0 if the entered URL was a https:// URL
-                'is_https': 'TEXT',
+                "is_https": "TEXT",
                 # 1 or 0 if this domain supports IPv4
-                'supports_ipv4': 'TEXT',
+                "supports_ipv4": "TEXT",
                 # 1 or 0 if this domain supports IPv6
-                'supports_ipv6': 'TEXT',
+                "supports_ipv6": "TEXT",
                 # hash gathered using `captchamonitor md5 -u URL`
-                'hash': 'TEXT',
+                "hash": "TEXT",
                 # CAPTCHA sign that will be used for CAPTCHA detection
-                'captcha_sign': 'TEXT',
+                "captcha_sign": "TEXT",
             },
-            'fetchers':
-            {
+            "fetchers": {
                 # unique ID for this table
-                'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+                "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
                 # name of the fetchers coded
-                'method': 'TEXT',
+                "method": "TEXT",
                 # version(s) of the tool to use, use a JSON list like {"data":[]}
-                'versions': 'TEXT',
+                "versions": "TEXT",
                 # option 1 is preserved for future use
-                'option_1': 'TEXT',
+                "option_1": "TEXT",
                 # option 2 is preserved for future use
-                'option_2': 'TEXT',
+                "option_2": "TEXT",
                 # option 3 is preserved for future use
-                'option_3': 'TEXT',
-            }
+                "option_3": "TEXT",
+            },
         }
 
         self.logger = logging.getLogger(__name__)
 
         try:
-            self.db_file = os.environ['CM_DB_FILE_PATH']
+            self.db_file = os.environ["CM_DB_FILE_PATH"]
         except Exception as err:
-            self.logger.error('CM_DB_FILE_PATH environment variable is not set: %s', err)
+            self.logger.error(
+                "CM_DB_FILE_PATH environment variable is not set: %s", err
+            )
 
         self.tables = tables
-        self.queue_table_name = 'queue'
-        self.results_table_name = 'results'
-        self.failed_table_name = 'failed'
-        self.relays_table_name = 'relays'
-        self.urls_table_name = 'urls'
-        self.fetchers_table_name = 'fetchers'
+        self.queue_table_name = "queue"
+        self.results_table_name = "results"
+        self.failed_table_name = "failed"
+        self.relays_table_name = "relays"
+        self.urls_table_name = "urls"
+        self.fetchers_table_name = "fetchers"
 
     def check_if_db_exists(self):
         """
@@ -169,12 +165,14 @@ class SQLite:
 
         # Return if the database already exists
         if os.path.isfile(db_file) and os.access(db_file, os.R_OK):
-            self.logger.debug('The SQLite database already exists, skipping the creation')
+            self.logger.debug(
+                "The SQLite database already exists, skipping the creation"
+            )
             return
 
-        self.logger.info('The SQLite database does not exist, creating it now')
+        self.logger.info("The SQLite database does not exist, creating it now")
 
-        open(db_file, 'w').close()
+        open(db_file, "w").close()
 
         # Set database connection
         conn = sqlite3.connect(db_file)
@@ -182,14 +180,14 @@ class SQLite:
         # Create listed tables
         for table in tables:
             # SQL query to create the tables for the first time run
-            create_table = 'CREATE TABLE %s (' % table
+            create_table = "CREATE TABLE %s (" % table
 
             # Insert field values
             for field in tables[table]:
-                create_table += ' %s %s,' % (field, tables[table][field])
+                create_table += " %s %s," % (field, tables[table][field])
 
             # Replace the last comma with ')' to complete the query
-            create_table = create_table[:-1] + ')'
+            create_table = create_table[:-1] + ")"
 
             conn.cursor().execute(create_table)
 
@@ -207,23 +205,24 @@ class SQLite:
         # Set database connection
         conn = sqlite3.connect(db_file)
 
-        data_fields = ''
-        data_q_marks = ''
+        data_fields = ""
+        data_q_marks = ""
         data_values = []
         for field in data:
-            data_fields += '%s,' % field
-            data_q_marks += '?,'
+            data_fields += "%s," % field
+            data_q_marks += "?,"
             data_values.append(data[field])
 
-        sql_query = 'INTO %s (%s) VALUES (%s)' % (table_name,
-                                                  data_fields[:-1],
-                                                  data_q_marks[:-1]
-                                                  )
+        sql_query = "INTO %s (%s) VALUES (%s)" % (
+            table_name,
+            data_fields[:-1],
+            data_q_marks[:-1],
+        )
 
         if ignore_existing:
-            sql_query = 'INSERT OR IGNORE ' + sql_query
+            sql_query = "INSERT OR IGNORE " + sql_query
         else:
-            sql_query = 'INSERT ' + sql_query
+            sql_query = "INSERT " + sql_query
 
         self.logger.debug(sql_query)
         self.logger.debug(data_values)
@@ -236,11 +235,13 @@ class SQLite:
             conn.commit()
 
         except Exception as err:
-            self.logger.critical('sqlite3.execute() at insert_entry_into_table() says: %s' % err)
+            self.logger.critical(
+                "sqlite3.execute() at insert_entry_into_table() says: %s" % err
+            )
 
         conn.close()
 
-    def get_table_entries(self, table, columns=['*'], identifiers=''):
+    def get_table_entries(self, table, columns=["*"], identifiers=""):
         """
         Gets the given entries in a given table
         Gets all values if no columns are provided
@@ -253,18 +254,18 @@ class SQLite:
         # Set database connection
         conn = sqlite3.connect(db_file)
 
-        sql_base = 'SELECT'
+        sql_base = "SELECT"
 
         for column in columns:
-            sql_base += ' %s,' % column
+            sql_base += " %s," % column
 
-        sql_table = ' FROM %s' % table_name
+        sql_table = " FROM %s" % table_name
 
-        sql_where = ' WHERE'
+        sql_where = " WHERE"
         for field in identifiers:
             sql_where += ' %s="%s" AND' % (field, identifiers[field])
 
-        if identifiers != '':
+        if identifiers != "":
             sql_query = sql_base[:-1] + sql_table + sql_where[:-4]
         else:
             sql_query = sql_base[:-1] + sql_table
@@ -279,7 +280,9 @@ class SQLite:
             conn.commit()
 
         except Exception as err:
-            self.logger.critical('sqlite3.execute() at get_table_entries() says: %s' % err)
+            self.logger.critical(
+                "sqlite3.execute() at get_table_entries() says: %s" % err
+            )
 
         result = cur.fetchall()
 
@@ -289,7 +292,9 @@ class SQLite:
         # Try to place returned data into a dictionary otherwise no data was returned
         try:
             for i in range(len(result)):
-                final.append(dict(zip([c[0] for c in cur.description], result[i])))
+                final.append(
+                    dict(zip([c[0] for c in cur.description], result[i]))
+                )
         except:
             final = None
 
@@ -307,7 +312,7 @@ class SQLite:
         conn = sqlite3.connect(db_file)
 
         # Prepare the SQL query
-        sql_query = 'SELECT count(id) FROM %s' % table_name
+        sql_query = "SELECT count(id) FROM %s" % table_name
 
         self.logger.debug(sql_query)
 
@@ -319,7 +324,9 @@ class SQLite:
             conn.commit()
 
         except Exception as err:
-            self.logger.critical('sqlite3.execute() at count_table_entries() says: %s' % err)
+            self.logger.critical(
+                "sqlite3.execute() at count_table_entries() says: %s" % err
+            )
 
         result = cur.fetchone()[0]
 
@@ -338,19 +345,19 @@ class SQLite:
         # Set database connection
         conn = sqlite3.connect(db_file)
 
-        sql_table = 'UPDATE %s ' % table_name
+        sql_table = "UPDATE %s " % table_name
 
-        sql_set = 'SET '
+        sql_set = "SET "
         sql_set_values = []
         for field in data:
-            sql_set += ' %s=?,' % field
+            sql_set += " %s=?," % field
             sql_set_values.append(data[field])
 
         if identifiers:
-            sql_where = ' WHERE'
+            sql_where = " WHERE"
             sql_where_values = []
             for field in identifiers:
-                sql_where += ' %s=? AND' % field
+                sql_where += " %s=? AND" % field
                 sql_where_values.append(identifiers[field])
 
             sql_query = sql_table + sql_set[:-1] + sql_where[:-4]
@@ -372,7 +379,8 @@ class SQLite:
 
         except Exception as err:
             self.logger.critical(
-                'sqlite3.execute() at update_table_entry() says: %s' % err)
+                "sqlite3.execute() at update_table_entry() says: %s" % err
+            )
 
         conn.close()
 
@@ -387,12 +395,12 @@ class SQLite:
         # Set database connection
         conn = sqlite3.connect(db_file)
 
-        sql_table = 'DELETE from %s ' % table_name
+        sql_table = "DELETE from %s " % table_name
 
-        sql_where = ' WHERE'
+        sql_where = " WHERE"
         sql_where_values = []
         for field in identifiers:
-            sql_where += ' %s=? AND' % field
+            sql_where += " %s=? AND" % field
             sql_where_values.append(identifiers[field])
 
         sql_query = sql_table + sql_where[:-4]
@@ -410,7 +418,8 @@ class SQLite:
 
         except Exception as err:
             self.logger.critical(
-                'sqlite3.execute() at remove_table_entry() says: %s' % err)
+                "sqlite3.execute() at remove_table_entry() says: %s" % err
+            )
 
         conn.close()
 
@@ -425,9 +434,12 @@ class SQLite:
         # Set database connection
         conn = sqlite3.connect(db_file)
 
-        sql_query = '''UPDATE %s SET claimed_by = "%s"
-                    WHERE id = (SELECT min(id) FROM %s WHERE claimed_by = "None")''' % (
-                    table_name, worker_id, table_name)
+        sql_query = """UPDATE %s SET claimed_by = "%s"
+                    WHERE id = (SELECT min(id) FROM %s WHERE claimed_by = "None")""" % (
+            table_name,
+            worker_id,
+            table_name,
+        )
 
         self.logger.debug(sql_query)
 
@@ -440,6 +452,8 @@ class SQLite:
 
         except Exception as err:
             self.logger.critical(
-                'sqlite3.execute() at claim_first_uncompleted_job() says: %s' % err)
+                "sqlite3.execute() at claim_first_uncompleted_job() says: %s"
+                % err
+            )
 
         conn.close()

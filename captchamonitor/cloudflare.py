@@ -1,12 +1,14 @@
 import logging
 import sys
+
 from captchamonitor.utils.cloudflare import Cloudflare
+
 
 def cloudflare(args):
     logger = logging.getLogger(__name__)
 
     if args.verbose:
-        logging.getLogger('captchamonitor').setLevel(logging.DEBUG)
+        logging.getLogger("captchamonitor").setLevel(logging.DEBUG)
 
     email = args.email
     api_token = args.token

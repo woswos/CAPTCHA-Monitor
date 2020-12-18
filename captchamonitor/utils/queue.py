@@ -1,5 +1,6 @@
 import logging
 import os
+
 from captchamonitor.utils.db import DB
 
 
@@ -14,39 +15,52 @@ class Queue:
     def get_job(self, worker_id):
         self.db.claim_first_uncompleted_job(worker_id)
 
-        identifiers = {'claimed_by': worker_id}
-        result = self.db.get_table_entries(self.db.queue_table_name, identifiers=identifiers)
+        identifiers = {"claimed_by": worker_id}
+        result = self.db.get_table_entries(
+            self.db.queue_table_name, identifiers=identifiers
+        )
 
         if not result:
-            self.logger.debug('No jobs available in the queue')
+            self.logger.debug("No jobs available in the queue")
             return None
         return result
 
     def add_job(self, data):
         self.db.insert_entry_into_table(self.db.queue_table_name, data)
-        self.logger.debug('Added new job for fetching "%s" via "%s" to database',
-                          data['url'], data['method'])
+        self.logger.debug(
+            'Added new job for fetching "%s" via "%s" to database',
+            data["url"],
+            data["method"],
+        )
 
     def insert_result(self, data):
         self.db.insert_entry_into_table(self.db.results_table_name, data)
-        self.logger.debug('Inserted the results of %s into the database', data['url'])
+        self.logger.debug(
+            "Inserted the results of %s into the database", data["url"]
+        )
 
     def remove_job(self, job_id):
-        identifiers = {'id': job_id}
-        self.db.remove_table_entry(self.db.queue_table_name, identifiers=identifiers)
+        identifiers = {"id": job_id}
+        self.db.remove_table_entry(
+            self.db.queue_table_name, identifiers=identifiers
+        )
 
         self.logger.debug('Removed the job with id "%s" from queue', job_id)
 
     def move_failed_job(self, job_id, reason):
-        identifiers = {'id': job_id}
-        data = self.db.get_table_entries(self.db.queue_table_name, identifiers=identifiers)[0]
+        identifiers = {"id": job_id}
+        data = self.db.get_table_entries(
+            self.db.queue_table_name, identifiers=identifiers
+        )[0]
 
-        del data['claimed_by']
-        data['fail_reason'] = reason
+        del data["claimed_by"]
+        data["fail_reason"] = reason
         self.db.insert_entry_into_table(self.db.failed_table_name, data)
 
-        identifiers = {'id': job_id}
-        self.db.remove_table_entry(self.db.queue_table_name, identifiers=identifiers)
+        identifiers = {"id": job_id}
+        self.db.remove_table_entry(
+            self.db.queue_table_name, identifiers=identifiers
+        )
 
         self.logger.debug('Moved the job with id "%s" to failed jobs', job_id)
 

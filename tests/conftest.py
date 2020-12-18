@@ -1,14 +1,15 @@
-import pytest
 import logging
-import captchamonitor.utils.tor_launcher as tor_launcher
 
-logger_format = '%(asctime)s %(module)s [%(levelname)s] %(message)s'
+import captchamonitor.utils.tor_launcher as tor_launcher
+import pytest
+
+logger_format = "%(asctime)s %(module)s [%(levelname)s] %(message)s"
 logging.basicConfig(format=logger_format)
-logger = logging.getLogger('captchamonitor')
+logger = logging.getLogger("captchamonitor")
 logger.setLevel(logging.DEBUG)
-logger = logging.getLogger('stem')
+logger = logging.getLogger("stem")
 logger.setLevel(logging.INFO)
-logger = logging.getLogger('log')
+logger = logging.getLogger("log")
 logger.setLevel(logging.INFO)
 
 

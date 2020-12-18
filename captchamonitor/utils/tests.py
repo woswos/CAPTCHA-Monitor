@@ -1,6 +1,7 @@
+import json
 import logging
 import os
-import json
+
 from captchamonitor.utils.db import DB
 
 
@@ -22,14 +23,14 @@ class Tests:
         ipv6_urls = []
         for url in urls:
             temp = {}
-            temp['url'] = url['url']
-            temp['hash'] = url['hash']
-            temp['captcha_sign'] = url['captcha_sign']
+            temp["url"] = url["url"]
+            temp["hash"] = url["hash"]
+            temp["captcha_sign"] = url["captcha_sign"]
 
-            if url['supports_ipv6'] == '1':
+            if url["supports_ipv6"] == "1":
                 ipv6_urls.append(temp)
 
-            if url['supports_ipv4'] == '1':
+            if url["supports_ipv4"] == "1":
                 ipv4_urls.append(temp)
 
         if ipv6_only:
@@ -48,17 +49,17 @@ class Tests:
         methods = []
         for fetcher in fetchers:
             temp = {}
-            temp['method'] = fetcher['method']
-            temp['versions'] = json.loads(fetcher['versions'])['data']
+            temp["method"] = fetcher["method"]
+            temp["versions"] = json.loads(fetcher["versions"])["data"]
 
-            if fetcher['option_1']:
-                temp['option_1'] = json.loads(fetcher['option_1'])['data']
+            if fetcher["option_1"]:
+                temp["option_1"] = json.loads(fetcher["option_1"])["data"]
 
-            if fetcher['option_2']:
-                temp['option_2'] = json.loads(fetcher['option_2'])['data']
+            if fetcher["option_2"]:
+                temp["option_2"] = json.loads(fetcher["option_2"])["data"]
 
-            if fetcher['option_2']:
-                temp['option_2'] = json.loads(fetcher['option_2'])['data']
+            if fetcher["option_2"]:
+                temp["option_2"] = json.loads(fetcher["option_2"])["data"]
 
             methods.append(temp)
 

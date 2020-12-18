@@ -1,18 +1,18 @@
 import datetime
-import logging
-import sys
-import os
-import time
-import tarfile
-import requests
-import shutil
-import datetime
 import fnmatch
+import logging
+import os
+import shutil
+import sys
+import tarfile
 import tempfile
-from pathlib import Path
-import stem.descriptor
-from typing import List
+import time
 from dataclasses import dataclass
+from pathlib import Path
+from typing import List
+
+import requests
+import stem.descriptor
 
 
 @dataclass
@@ -79,7 +79,9 @@ class ConsensusRouterEntry:
     captcha_percentage: float = 0.0
 
     def __post_init__(self):
-        self.fingerprint = stem.descriptor.router_status_entry._base64_to_hex(self.identity)
+        self.fingerprint = stem.descriptor.router_status_entry._base64_to_hex(
+            self.identity
+        )
 
 
 @dataclass
@@ -150,10 +152,10 @@ class ParseConsensusV3:
         """
 
         logger = logging.getLogger(__name__)
-        logger.debug('Parsing %s', consensus_file)
+        logger.debug("Parsing %s", consensus_file)
 
         # Read the file
-        file = open(consensus_file, 'r')
+        file = open(consensus_file, "r")
         lines = file.readlines()
         lines = [x.strip() for x in lines]
         file.close()
@@ -163,10 +165,13 @@ class ParseConsensusV3:
         self.fresh_until = self.parse_fresh_until(lines)
         self.bandwidth_weights = self.parse_bandwidth_weights(lines)
         self.relay_entries = self.parse_relay_entries(lines)
-        self.relay_entries = self.calculate_path_selection_probabilities(self.relay_entries,
-                                                                         self.bandwidth_weights)
+        self.relay_entries = self.calculate_path_selection_probabilities(
+            self.relay_entries, self.bandwidth_weights
+        )
 
-    def calculate_path_selection_probabilities(self, relay_entries, bandwidth_weights):
+    def calculate_path_selection_probabilities(
+        self, relay_entries, bandwidth_weights
+    ):
         """
         Calculates guard, middle, and exit probabilities for relays
 
@@ -182,14 +187,14 @@ class ParseConsensusV3:
         :rtype: list
         """
 
-        wgg = bandwidth_weights['Wgg'] / 10000.0
-        wgd = bandwidth_weights['Wgd'] / 10000.0
-        wmg = bandwidth_weights['Wmg'] / 10000.0
-        wmm = bandwidth_weights['Wmm'] / 10000.0
-        wme = bandwidth_weights['Wme'] / 10000.0
-        wmd = bandwidth_weights['Wmd'] / 10000.0
-        wee = bandwidth_weights['Wee'] / 10000.0
-        wed = bandwidth_weights['Wed'] / 10000.0
+        wgg = bandwidth_weights["Wgg"] / 10000.0
+        wgd = bandwidth_weights["Wgd"] / 10000.0
+        wmg = bandwidth_weights["Wmg"] / 10000.0
+        wmm = bandwidth_weights["Wmm"] / 10000.0
+        wme = bandwidth_weights["Wme"] / 10000.0
+        wmd = bandwidth_weights["Wmd"] / 10000.0
+        wee = bandwidth_weights["Wee"] / 10000.0
+        wed = bandwidth_weights["Wed"] / 10000.0
 
         consensusWeights = {}
         guardWeights = {}
@@ -203,12 +208,16 @@ class ParseConsensusV3:
 
         running_relays = []
         for relay in relay_entries:
-            if 'Running' in relay.flags:
+            if "Running" in relay.flags:
                 running_relays.append(relay)
 
         for relay in running_relays:
-            isExit = relay.flags is not None and 'Exit' in relay.flags and 'BadExit' not in relay.flags
-            isGuard = relay.flags is not None and 'Guard' in relay.flags
+            isExit = (
+                relay.flags is not None
+                and "Exit" in relay.flags
+                and "BadExit" not in relay.flags
+            )
+            isGuard = relay.flags is not None and "Guard" in relay.flags
             consensusWeight = float(relay.bandwidth)
             consensusWeights.update({relay.fingerprint: consensusWeight})
             totalConsensusWeight += consensusWeight
@@ -246,15 +255,21 @@ class ParseConsensusV3:
             fingerprint = relay.fingerprint
 
             if fingerprint in consensusWeights:
-                fraction = float(consensusWeights[fingerprint] / totalConsensusWeight)
+                fraction = float(
+                    consensusWeights[fingerprint] / totalConsensusWeight
+                )
                 relay.consensus_weight_fraction = fraction
 
             if fingerprint in guardWeights:
-                probability = float(guardWeights[fingerprint] / totalGuardWeight)
+                probability = float(
+                    guardWeights[fingerprint] / totalGuardWeight
+                )
                 relay.guard_probability = probability
 
             if fingerprint in middleWeights:
-                probability = float(middleWeights[fingerprint] / totalMiddleWeight)
+                probability = float(
+                    middleWeights[fingerprint] / totalMiddleWeight
+                )
                 relay.middle_probability = probability
 
             if fingerprint in exitWeights:
@@ -279,17 +294,18 @@ class ParseConsensusV3:
         for idx, line in enumerate(consensus_lines):
             params = []
             # Find relay entries
-            if line.startswith('r '):
+            if line.startswith("r "):
                 # Split the line into seperate parameters
-                params = line.split(' ')[1:]
+                params = line.split(" ")[1:]
 
                 # See https://gitweb.torproject.org/torspec.git/tree/dir-spec.txt#n2337
                 #   for the exact order of the params
                 nickname = params[0]
                 identity = params[1]
                 digest = params[2]
-                publication = datetime.datetime.strptime(params[3] + ' ' + params[4],
-                                                         '%Y-%m-%d %H:%M:%S')
+                publication = datetime.datetime.strptime(
+                    params[3] + " " + params[4], "%Y-%m-%d %H:%M:%S"
+                )
                 IP = params[5]
                 ORPort = int(params[6])
                 DirPort = int(params[7])
@@ -302,29 +318,40 @@ class ParseConsensusV3:
                 IPv6ORPort = None
                 for i in range(1, 10):
 
-                    temp_line = consensus_lines[idx+i]
+                    temp_line = consensus_lines[idx + i]
 
-                    if temp_line.startswith('a '):
-                        cur_line = temp_line.split(' ')[1:][0].rsplit(':', 1)
+                    if temp_line.startswith("a "):
+                        cur_line = temp_line.split(" ")[1:][0].rsplit(":", 1)
                         IPv6 = cur_line[0]
                         IPv6ORPort = cur_line[1]
 
-                    elif temp_line.startswith('s '):
-                        flags = temp_line.split(' ')[1:]
-                        is_exit = 'Exit' in flags and 'BadExit' not in flags
+                    elif temp_line.startswith("s "):
+                        flags = temp_line.split(" ")[1:]
+                        is_exit = "Exit" in flags and "BadExit" not in flags
 
-                    elif temp_line.startswith('w '):
-                        bandwidth = float(temp_line.split(' ')[1].split('=')[1])
+                    elif temp_line.startswith("w "):
+                        bandwidth = float(temp_line.split(" ")[1].split("=")[1])
 
                         # Stop searching since bandwidth comes the last
                         break
 
                 # Add relay to the list
-                relays.append(ConsensusRouterEntry(nickname=nickname, identity=identity, digest=digest,
-                                                   publication=publication, IP=IP, is_exit=is_exit,
-                                                   IPv6=IPv6, IPv6ORPort=IPv6ORPort,
-                                                   ORPort=ORPort, DirPort=DirPort,
-                                                   bandwidth=bandwidth, flags=flags))
+                relays.append(
+                    ConsensusRouterEntry(
+                        nickname=nickname,
+                        identity=identity,
+                        digest=digest,
+                        publication=publication,
+                        IP=IP,
+                        is_exit=is_exit,
+                        IPv6=IPv6,
+                        IPv6ORPort=IPv6ORPort,
+                        ORPort=ORPort,
+                        DirPort=DirPort,
+                        bandwidth=bandwidth,
+                        flags=flags,
+                    )
+                )
         return relays
 
     def parse_bandwidth_weights(self, consensus_lines):
@@ -340,12 +367,12 @@ class ParseConsensusV3:
 
         weights = []
         for line in consensus_lines[::-1]:
-            if line.startswith('bandwidth-weights '):
-                weights = line.split(' ')[1:]
+            if line.startswith("bandwidth-weights "):
+                weights = line.split(" ")[1:]
 
         weights_dict = {}
         for weight in weights:
-            values = weight.split('=')
+            values = weight.split("=")
             weights_dict.update({values[0]: float(values[1])})
 
         return weights_dict
@@ -362,9 +389,9 @@ class ParseConsensusV3:
         """
 
         for line in consensus_lines:
-            if line.startswith('valid-after'):
-                date = line.split(' ', 1)[1]
-                return datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
+            if line.startswith("valid-after"):
+                date = line.split(" ", 1)[1]
+                return datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
 
     def parse_fresh_until(self, consensus_lines):
         """
@@ -378,9 +405,9 @@ class ParseConsensusV3:
         """
 
         for line in consensus_lines:
-            if line.startswith('fresh-until'):
-                date = line.split(' ', 1)[1]
-                return datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
+            if line.startswith("fresh-until"):
+                date = line.split(" ", 1)[1]
+                return datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
 
 
 class ParseServerDesc:
@@ -399,10 +426,10 @@ class ParseServerDesc:
         """
 
         logger = logging.getLogger(__name__)
-        logger.debug('Parsing %s', server_descriptors_file)
+        logger.debug("Parsing %s", server_descriptors_file)
 
         # Read the file
-        file = open(server_descriptors_file, 'r')
+        file = open(server_descriptors_file, "r")
         lines = file.readlines()
         lines = [x.strip() for x in lines]
         file.close()
@@ -426,9 +453,9 @@ class ParseServerDesc:
         for idx, line in enumerate(server_desc_lines):
             params = []
             # Find relay entries
-            if line.startswith('router '):
+            if line.startswith("router "):
                 # Split the line into seperate parameters
-                params = line.split(' ')[1:]
+                params = line.split(" ")[1:]
 
                 nickname = params[0]
                 address = params[1]
@@ -437,7 +464,7 @@ class ParseServerDesc:
                 bandwidth_burst = None
                 bandwidth_observed = None
                 platform = None
-                fingerprint = ''
+                fingerprint = ""
                 uptime = None
                 accept = []
                 reject = []
@@ -447,21 +474,23 @@ class ParseServerDesc:
 
                 i = 1
                 # Keep parsing the lines until we hit the next router entry
-                while ((idx+i) < len(server_desc_lines)) and (not server_desc_lines[idx+i].startswith('router ')):
+                while ((idx + i) < len(server_desc_lines)) and (
+                    not server_desc_lines[idx + i].startswith("router ")
+                ):
 
-                    temp_line = server_desc_lines[idx+i]
+                    temp_line = server_desc_lines[idx + i]
 
-                    if temp_line.startswith('bandwidth '):
-                        cur_line = temp_line.split(' ')[1:]
+                    if temp_line.startswith("bandwidth "):
+                        cur_line = temp_line.split(" ")[1:]
                         bandwidth_avg = int(cur_line[0])
                         bandwidth_burst = int(cur_line[1])
                         bandwidth_observed = int(cur_line[2])
 
-                    elif temp_line.startswith('platform '):
-                        platform = temp_line.split(' ', 1)[1:][0]
+                    elif temp_line.startswith("platform "):
+                        platform = temp_line.split(" ", 1)[1:][0]
 
-                    elif temp_line.startswith('fingerprint '):
-                        fingerprint_parts = temp_line.split(' ')[1:]
+                    elif temp_line.startswith("fingerprint "):
+                        fingerprint_parts = temp_line.split(" ")[1:]
 
                         # __A fingerprint (a HASH_LEN-byte of asn1 encoded public
                         # key, encoded in hex, with a single space after every 4
@@ -469,37 +498,51 @@ class ParseServerDesc:
                         for part in fingerprint_parts:
                             fingerprint += str(part)
 
-                    elif temp_line.startswith('uptime '):
-                        uptime = int(temp_line.split(' ')[1:][0])
+                    elif temp_line.startswith("uptime "):
+                        uptime = int(temp_line.split(" ")[1:][0])
 
-                    elif temp_line.startswith('accept '):
-                        accept.append(temp_line.split(' ')[1:][0])
+                    elif temp_line.startswith("accept "):
+                        accept.append(temp_line.split(" ")[1:][0])
 
-                    elif temp_line.startswith('reject '):
-                        reject.append(temp_line.split(' ')[1:][0])
+                    elif temp_line.startswith("reject "):
+                        reject.append(temp_line.split(" ")[1:][0])
 
-                    elif temp_line.startswith('ipv6-policy accept '):
-                        IPv6_accept = IPv6_accept + (temp_line.split(' ')[2:][0]).split(',')
+                    elif temp_line.startswith("ipv6-policy accept "):
+                        IPv6_accept = IPv6_accept + (
+                            temp_line.split(" ")[2:][0]
+                        ).split(",")
 
-                    elif temp_line.startswith('ipv6-policy reject '):
-                        IPv6_reject = IPv6_reject + (temp_line.split(' ')[2:][0]).split(',')
+                    elif temp_line.startswith("ipv6-policy reject "):
+                        IPv6_reject = IPv6_reject + (
+                            temp_line.split(" ")[2:][0]
+                        ).split(",")
 
-                    elif temp_line.startswith('family '):
-                        family = family + (temp_line.split(' ', 1)[1:][0]).split(' ')
+                    elif temp_line.startswith("family "):
+                        family = family + (
+                            temp_line.split(" ", 1)[1:][0]
+                        ).split(" ")
 
                     # Switch to the next line
                     i += 1
 
                 # Add relay to the list
-                relays.append(ServerDescEntry(nickname=nickname, address=address,
-                                              bandwidth_avg=bandwidth_avg,
-                                              bandwidth_burst=bandwidth_burst,
-                                              bandwidth_observed=bandwidth_observed,
-                                              platform=platform, fingerprint=fingerprint,
-                                              uptime=uptime,
-                                              accept=accept, reject=reject,
-                                              IPv6_accept=IPv6_accept, IPv6_reject=IPv6_reject,
-                                              family=family))
+                relays.append(
+                    ServerDescEntry(
+                        nickname=nickname,
+                        address=address,
+                        bandwidth_avg=bandwidth_avg,
+                        bandwidth_burst=bandwidth_burst,
+                        bandwidth_observed=bandwidth_observed,
+                        platform=platform,
+                        fingerprint=fingerprint,
+                        uptime=uptime,
+                        accept=accept,
+                        reject=reject,
+                        IPv6_accept=IPv6_accept,
+                        IPv6_reject=IPv6_reject,
+                        family=family,
+                    )
+                )
 
         return relays
 
@@ -532,11 +575,16 @@ def get_consensus(consensus_time):
             # Remove the file from computer
             remove_consensus_file(consensus_time)
 
-            logger.debug('Couldn\'t parse the consensus for %s: %s' % (consensus_time, err))
-            logger.debug('Possibly the file is corrupted, and downloading again')
+            logger.debug(
+                "Couldn't parse the consensus for %s: %s"
+                % (consensus_time, err)
+            )
+            logger.debug(
+                "Possibly the file is corrupted, and downloading again"
+            )
 
     # If we are here, it means that we failed
-    logger.debug('Cannot access requested consensus, please try again later')
+    logger.debug("Cannot access requested consensus, please try again later")
 
     return None
 
@@ -555,24 +603,26 @@ def consensus_date_to_local_file(date):
     logger = logging.getLogger(__name__)
 
     # Create the base path for consensus cache
-    consensus_dir = os.path.join(str(Path.home()), 'captchamonitor', 'consensuses')
+    consensus_dir = os.path.join(
+        str(Path.home()), "captchamonitor", "consensuses"
+    )
     if not os.path.exists(consensus_dir):
         os.makedirs(consensus_dir)
 
-    date_str = date.strftime('%Y-%m-%d-%H-%M-%S')
+    date_str = date.strftime("%Y-%m-%d-%H-%M-%S")
 
     # Try 3 times maximum
     for i in range(3):
         # Find the requested consensus from the cache
         for file in os.listdir(consensus_dir):
-            if fnmatch.fnmatch(file, '*' + date_str + '*'):
+            if fnmatch.fnmatch(file, "*" + date_str + "*"):
                 return os.path.join(consensus_dir, file)
 
         # If we are here, it means that the requested consensus is not cached yet
-        logger.debug('Requested consensus is not cached yet, downloading...')
+        logger.debug("Requested consensus is not cached yet, downloading...")
         download_consensus(date, consensus_dir)
 
-    logger.debug('Cannot source the requested consensus, try again')
+    logger.debug("Cannot source the requested consensus, try again")
 
 
 def download_consensus(date, consensus_dir):
@@ -587,35 +637,40 @@ def download_consensus(date, consensus_dir):
 
     logger = logging.getLogger(__name__)
 
-    url_consensuses_recent = 'https://collector.torproject.org/recent/relay-descriptors/consensuses/'
-    url_consensuses_archive = 'https://collector.torproject.org/archive/relay-descriptors/consensuses/'
+    url_consensuses_recent = (
+        "https://collector.torproject.org/recent/relay-descriptors/consensuses/"
+    )
+    url_consensuses_archive = "https://collector.torproject.org/archive/relay-descriptors/consensuses/"
 
-    date_str = date.strftime('%Y-%m-%d-%H-%M-%S')
+    date_str = date.strftime("%Y-%m-%d-%H-%M-%S")
 
     # Check for recent consensuses first
     recent_consensuses = requests.get(url_consensuses_recent).text
 
     if date_str in recent_consensuses:
         base_url = url_consensuses_recent
-        file_name = date_str + '-consensus'
+        file_name = date_str + "-consensus"
         url = base_url + file_name
         file_path = os.path.join(consensus_dir, file_name)
 
         # Download the consensus file directly to consensus_dir
-        open(file_path, 'wb').write(requests.get(url).content)
+        open(file_path, "wb").write(requests.get(url).content)
 
     else:
         # Create a temporary directory and download the consensus archive
         with tempfile.TemporaryDirectory() as download_dir:
             base_url = url_consensuses_archive
-            folder_name = 'consensuses-%s-%s' % (date.strftime('%Y'), date.strftime('%m'))
-            archive_name = folder_name + '.tar.xz'
+            folder_name = "consensuses-%s-%s" % (
+                date.strftime("%Y"),
+                date.strftime("%m"),
+            )
+            archive_name = folder_name + ".tar.xz"
             archive_path = os.path.join(download_dir, archive_name)
             extracted_path = os.path.join(download_dir, folder_name)
             url = base_url + archive_name
 
             # Download the consensus archive to a temp location
-            open(archive_path, 'wb').write(requests.get(url).content)
+            open(archive_path, "wb").write(requests.get(url).content)
 
             # Extract the archive
             with tarfile.open(archive_path) as f:
@@ -623,10 +678,14 @@ def download_consensus(date, consensus_dir):
 
             # Recursively move files
             for day_folder in os.listdir(extracted_path):
-                for con_file in os.listdir(os.path.join(extracted_path, day_folder)):
+                for con_file in os.listdir(
+                    os.path.join(extracted_path, day_folder)
+                ):
                     try:
-                        shutil.move(os.path.join(extracted_path,
-                                                 day_folder, con_file), consensus_dir)
+                        shutil.move(
+                            os.path.join(extracted_path, day_folder, con_file),
+                            consensus_dir,
+                        )
 
                     except Exception as err:
                         # We can simply skip already existing files
@@ -643,14 +702,16 @@ def remove_consensus_file(date):
 
     logger = logging.getLogger(__name__)
 
-    date_str = date.strftime('%Y-%m-%d-%H-%M-%S')
+    date_str = date.strftime("%Y-%m-%d-%H-%M-%S")
 
     # Create the base path for consensus cache
-    consensus_dir = os.path.join(str(Path.home()), 'captchamonitor', 'consensuses')
+    consensus_dir = os.path.join(
+        str(Path.home()), "captchamonitor", "consensuses"
+    )
     if os.path.exists(consensus_dir):
-        file = os.path.join(consensus_dir, date_str + '-consensus')
+        file = os.path.join(consensus_dir, date_str + "-consensus")
         try:
             os.remove(file)
         except FileNotFoundError:
             pass
-        logger.debug('Removed the consensus file %s', file)
+        logger.debug("Removed the consensus file %s", file)

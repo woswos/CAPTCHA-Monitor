@@ -1,8 +1,9 @@
 import json
-import requests
 import logging
-from typing import List
 from dataclasses import dataclass
+from typing import List
+
+import requests
 
 
 @dataclass
@@ -72,81 +73,94 @@ def get_onionoo_relay_details(fingerprint):
     """
 
     logger = logging.getLogger(__name__)
-    logger.debug('Getting Onionoo details document for %s', fingerprint)
+    logger.debug("Getting Onionoo details document for %s", fingerprint)
 
-    url = 'https://onionoo.torproject.org/details?fields=fingerprint,nickname,exit_policy_summary,exit_policy_v6_summary,first_seen,last_seen,country,country_name,as,as_name,version,platform&lookup=' + fingerprint
+    url = (
+        "https://onionoo.torproject.org/details?fields=fingerprint,nickname,exit_policy_summary,exit_policy_v6_summary,first_seen,last_seen,country,country_name,as,as_name,version,platform&lookup="
+        + fingerprint
+    )
     result = requests.get(url).text
     result_json = json.loads(result)
 
     try:
-        relay_of_interest = result_json['relays'][0]
+        relay_of_interest = result_json["relays"][0]
 
     except IndexError:
-        logger.debug('Upps, this relay does not exist on Onionoo yet', fingerprint)
+        logger.debug(
+            "Upps, this relay does not exist on Onionoo yet", fingerprint
+        )
         return None
 
     except Exception as err:
-        logger.debug('Could not connecto Onionoo: %s' % err)
+        logger.debug("Could not connecto Onionoo: %s" % err)
         return None
 
     try:
-        exit_policy_summary_accept = relay_of_interest.get('exit_policy_summary')['accept']
+        exit_policy_summary_accept = relay_of_interest.get(
+            "exit_policy_summary"
+        )["accept"]
     except:
         exit_policy_summary_accept = []
 
     try:
-        exit_policy_summary_reject = relay_of_interest.get('exit_policy_summary')['reject']
+        exit_policy_summary_reject = relay_of_interest.get(
+            "exit_policy_summary"
+        )["reject"]
     except:
         exit_policy_summary_reject = []
 
     try:
         exit_policy_v6_summary_accept = relay_of_interest.get(
-            'exit_policy_v6_summary')['accept']
+            "exit_policy_v6_summary"
+        )["accept"]
     except:
         exit_policy_v6_summary_accept = []
 
     try:
         exit_policy_v6_summary_reject = relay_of_interest.get(
-            'exit_policy_v6_summary')['reject']
+            "exit_policy_v6_summary"
+        )["reject"]
     except:
         exit_policy_v6_summary_reject = []
 
     http_port = 80
     https_port = 443
 
-    is_IPv4_http_exit = is_exitting_allowed(http_port,
-                                            exit_policy_summary_accept,
-                                            exit_policy_summary_reject)
-    is_IPv4_https_exit = is_exitting_allowed(https_port,
-                                             exit_policy_summary_accept,
-                                             exit_policy_summary_reject)
-    is_IPv6_http_exit = is_exitting_allowed(http_port,
-                                            exit_policy_v6_summary_accept,
-                                            exit_policy_v6_summary_reject)
-    is_IPv6_https_exit = is_exitting_allowed(https_port,
-                                             exit_policy_v6_summary_accept,
-                                             exit_policy_v6_summary_reject)
+    is_IPv4_http_exit = is_exitting_allowed(
+        http_port, exit_policy_summary_accept, exit_policy_summary_reject
+    )
+    is_IPv4_https_exit = is_exitting_allowed(
+        https_port, exit_policy_summary_accept, exit_policy_summary_reject
+    )
+    is_IPv6_http_exit = is_exitting_allowed(
+        http_port, exit_policy_v6_summary_accept, exit_policy_v6_summary_reject
+    )
+    is_IPv6_https_exit = is_exitting_allowed(
+        https_port, exit_policy_v6_summary_accept, exit_policy_v6_summary_reject
+    )
 
     # See https://gitweb.torproject.org/torspec.git/tree/dir-spec.txt#n2632
     is_IPv4_exit = is_IPv4_https_exit and is_IPv4_http_exit
     is_IPv6_exit = is_IPv6_https_exit and is_IPv6_http_exit
 
-    relay = OnionooRelayDetails(fingerprint=fingerprint,
-                                exit_policy_summary_accept=exit_policy_summary_accept,
-                                exit_policy_summary_reject=exit_policy_summary_reject,
-                                exit_policy_v6_summary_accept=exit_policy_v6_summary_accept,
-                                exit_policy_v6_summary_reject=exit_policy_v6_summary_reject,
-                                is_IPv4_exit=is_IPv4_exit,
-                                is_IPv6_exit=is_IPv6_exit,
-                                nickname=relay_of_interest.get('nickname'),
-                                first_seen=relay_of_interest.get('first_seen'),
-                                last_seen=relay_of_interest.get('last_seen'),
-                                country=relay_of_interest.get('country'),
-                                country_name=relay_of_interest.get('country_name'),
-                                asn=relay_of_interest.get('as'),
-                                as_name=relay_of_interest.get('as_name'),
-                                version=relay_of_interest.get('version'),
-                                platform=relay_of_interest.get('platform'))
+    relay = OnionooRelayDetails(
+        fingerprint=fingerprint,
+        exit_policy_summary_accept=exit_policy_summary_accept,
+        exit_policy_summary_reject=exit_policy_summary_reject,
+        exit_policy_v6_summary_accept=exit_policy_v6_summary_accept,
+        exit_policy_v6_summary_reject=exit_policy_v6_summary_reject,
+        is_IPv4_exit=is_IPv4_exit,
+        is_IPv6_exit=is_IPv6_exit,
+        nickname=relay_of_interest.get("nickname"),
+        first_seen=relay_of_interest.get("first_seen"),
+        last_seen=relay_of_interest.get("last_seen"),
+        country=relay_of_interest.get("country"),
+        country_name=relay_of_interest.get("country_name"),
+        asn=relay_of_interest.get("as"),
+        as_name=relay_of_interest.get("as_name"),
+        version=relay_of_interest.get("version"),
+        platform=relay_of_interest.get("platform"),
+    )
 
     return relay
 
@@ -171,28 +185,28 @@ def is_exitting_allowed(exit_port, accept_list, reject_list):
 
     if accept_list != []:
         for port in accept_list:
-            if ('-' not in str(port)) and (int(port) == exit_port):
+            if ("-" not in str(port)) and (int(port) == exit_port):
                 return True
 
-            elif ('-' in str(port)):
-                low = int(port.split('-')[0])
-                high = int(port.split('-')[1])
+            elif "-" in str(port):
+                low = int(port.split("-")[0])
+                high = int(port.split("-")[1])
 
-                if(low <= exit_port) and (high >= exit_port):
+                if (low <= exit_port) and (high >= exit_port):
                     return True
 
         return False
 
     if reject_list != []:
         for port in reject_list:
-            if ('-' not in str(port)) and (int(port) == exit_port):
+            if ("-" not in str(port)) and (int(port) == exit_port):
                 return False
 
-            elif ('-' in str(port)):
-                low = int(port.split('-')[0])
-                high = int(port.split('-')[1])
+            elif "-" in str(port):
+                low = int(port.split("-")[0])
+                high = int(port.split("-")[1])
 
-                if(low <= exit_port) and (high >= exit_port):
+                if (low <= exit_port) and (high >= exit_port):
                     return False
 
         return True

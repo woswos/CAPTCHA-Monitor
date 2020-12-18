@@ -1,8 +1,9 @@
-import logging
-import maxminddb
 import json
-import pathlib
+import logging
 import os
+import pathlib
+
+import maxminddb
 
 
 class GeoIP:
@@ -16,7 +17,7 @@ class GeoIP:
         Constructor method
         """
 
-        GeoLite2_file = '../assests/GeoLite2/GeoLite2-Country.mmdb'
+        GeoLite2_file = "../assests/GeoLite2/GeoLite2-Country.mmdb"
         script_path = pathlib.Path(__file__).parent.absolute()
         db_file = os.path.join(script_path, GeoLite2_file)
         self.reader = maxminddb.open_database(db_file)
@@ -34,10 +35,10 @@ class GeoIP:
         result = self.reader.get(ip)
 
         try:
-            return result['country']['iso_code']
+            return result["country"]["iso_code"]
 
         except:
-            return 'ZZ'
+            return "ZZ"
 
     def get_continent(self, ip):
         """
@@ -52,7 +53,7 @@ class GeoIP:
         result = self.reader.get(ip)
 
         try:
-            return result['continent']['names']['en']
+            return result["continent"]["names"]["en"]
 
         except:
-            return 'unknown'
+            return "unknown"

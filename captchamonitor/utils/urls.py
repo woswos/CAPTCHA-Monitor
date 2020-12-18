@@ -1,6 +1,7 @@
+import datetime
 import logging
 import os
-import datetime
+
 from captchamonitor.utils.db import DB
 
 

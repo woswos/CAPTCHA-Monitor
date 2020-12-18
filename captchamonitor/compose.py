@@ -1,22 +1,23 @@
-from pathlib import Path
-import os
+import copy
+import itertools
+import json
 import logging
+import os
+import random
 import sys
 import time
-import json
+from datetime import datetime
+from pathlib import Path
 from random import randint
 from threading import Timer
+
 import captchamonitor.utils.tor_launcher as tor_launcher
-from captchamonitor.utils.relays import Relays
-from captchamonitor.utils.queue import Queue
-from captchamonitor.utils.tests import Tests
+from captchamonitor import add
 from captchamonitor.utils.geoip import GeoIP
 from captchamonitor.utils.onionoo import get_onionoo_relay_details
-from captchamonitor import add
-from datetime import datetime
-import random
-import itertools
-import copy
+from captchamonitor.utils.queue import Queue
+from captchamonitor.utils.relays import Relays
+from captchamonitor.utils.tests import Tests
 
 verbose = False
 batch_size = 100
@@ -29,41 +30,51 @@ def compose(args):
     """
     logger = logging.getLogger(__name__)
 
-    os.environ['CM_TOR_DIR_PATH'] = str(os.path.join(str(Path.home()), '.cm_tor', '0'))
+    os.environ["CM_TOR_DIR_PATH"] = str(
+        os.path.join(str(Path.home()), ".cm_tor", "0")
+    )
 
     global batch_size
     batch_size = args.batch_size
 
     if args.verbose:
-        logging.getLogger('captchamonitor').setLevel(logging.DEBUG)
+        logging.getLogger("captchamonitor").setLevel(logging.DEBUG)
         global verbose
         verbose = True
 
     if args.local_tor:
         global use_local_tor
         use_local_tor = True
-        logger.info('Using the local Tor for getting the consensus')
+        logger.info("Using the local Tor for getting the consensus")
 
     try:
-        logger.info('Started running CAPTCHA Monitor Compose')
+        logger.info("Started running CAPTCHA Monitor Compose")
 
-        logger.info('Setting up the tasks...')
+        logger.info("Setting up the tasks...")
 
         tasks = []
         minute_multiplier = 60
-        tasks.append(RepeatingTimer(args.new_relays * minute_multiplier,
-                                    get_new_relays))
-        tasks.append(RepeatingTimer(args.match_relays_and_jobs * minute_multiplier,
-                                    match_relays_and_jobs))
-        tasks.append(RepeatingTimer(args.dispatch_jobs * minute_multiplier,
-                                    dispatch_jobs))
+        tasks.append(
+            RepeatingTimer(args.new_relays * minute_multiplier, get_new_relays)
+        )
+        tasks.append(
+            RepeatingTimer(
+                args.match_relays_and_jobs * minute_multiplier,
+                match_relays_and_jobs,
+            )
+        )
+        tasks.append(
+            RepeatingTimer(
+                args.dispatch_jobs * minute_multiplier, dispatch_jobs
+            )
+        )
 
         for task in tasks:
             task.start()
             # To reduce the chance of simultaneus database access
             time.sleep(randint(10, 30))
 
-        logger.debug('Done with the tasks, started looping...')
+        logger.debug("Done with the tasks, started looping...")
 
         while True:
             time.sleep(1)
@@ -72,28 +83,30 @@ def compose(args):
         logging.error(err, exc_info=True)
 
     except (KeyboardInterrupt, SystemExit):
-        logger.info('Stopping CAPTCHA Monitor Compose...')
+        logger.info("Stopping CAPTCHA Monitor Compose...")
 
     finally:
-        logger.debug('Stopping the timed tasks...')
+        logger.debug("Stopping the timed tasks...")
         # Stop the created tasks
         for task in tasks:
             task.cancel()
 
-        logger.debug('Completely exitting...')
+        logger.debug("Completely exitting...")
         sys.exit()
 
 
 def match_relays_and_jobs():
     logger = logging.getLogger(__name__)
 
-    logger.debug('Started matching job and relay information')
+    logger.debug("Started matching job and relay information")
 
     relays = Relays()
     relays_list = relays.get_relays()
 
     for relay in relays_list:
-        completed_jobs = relays.get_completed_jobs_for_given_relay(relay['address'])
+        completed_jobs = relays.get_completed_jobs_for_given_relay(
+            relay["address"]
+        )
 
         # If this relay has completed jobs
         if len(completed_jobs) != 0:
@@ -102,28 +115,38 @@ def match_relays_and_jobs():
 
             # Create a list of completed jobs in the format we need
             data_list = []
-            data_list.append(json.loads(relay['performed_tests']))
+            data_list.append(json.loads(relay["performed_tests"]))
             for job in completed_jobs:
-                data_list.append({'data': [{'timestamp': job['timestamp'],
-                                            'url': job['url'],
-                                            'method':  job['method'],
-                                            'browser_version': job['browser_version'],
-                                            'tbb_security_level':job['tbb_security_level']}]})
+                data_list.append(
+                    {
+                        "data": [
+                            {
+                                "timestamp": job["timestamp"],
+                                "url": job["url"],
+                                "method": job["method"],
+                                "browser_version": job["browser_version"],
+                                "tbb_security_level": job["tbb_security_level"],
+                            }
+                        ]
+                    }
+                )
 
             data_list_dict = dict_clean_merge(data_list)
 
-            data = {'performed_tests': json.dumps(data_list_dict),
-                    'captcha_probability': captcha_probability}
+            data = {
+                "performed_tests": json.dumps(data_list_dict),
+                "captcha_probability": captcha_probability,
+            }
             # Now update the database
-            relays.update_relay(relay['fingerprint'], data)
+            relays.update_relay(relay["fingerprint"], data)
 
-    logger.info('Matched job and relay information')
+    logger.info("Matched job and relay information")
 
 
 def dispatch_jobs():
     logger = logging.getLogger(__name__)
 
-    logger.debug('Started dispatching a new batch of jobs')
+    logger.debug("Started dispatching a new batch of jobs")
 
     relays = Relays()
     tests = Tests()
@@ -147,65 +170,80 @@ def dispatch_jobs():
         for relay in relays:
 
             # Only process the ones that allow exiting
-            if relay['is_ipv6_exiting_allowed'] or relay['is_ipv4_exiting_allowed']:
+            if (
+                relay["is_ipv6_exiting_allowed"]
+                or relay["is_ipv4_exiting_allowed"]
+            ):
 
                 ipv6_only_urls_list = to_json(tests.get_urls(ipv6_only=True))
                 ipv4_only_urls_list = to_json(tests.get_urls(ipv4_only=True))
 
                 if ipv4_only_urls_list is None:
-                    logger.error('There are no IPv4 URLs to test in the database')
+                    logger.error(
+                        "There are no IPv4 URLs to test in the database"
+                    )
                     return
 
                 if ipv6_only_urls_list is None:
-                    logger.error('There are no IPv6 URLs to test in the database')
+                    logger.error(
+                        "There are no IPv6 URLs to test in the database"
+                    )
                     return
 
                 all_urls_list = ipv4_only_urls_list + ipv6_only_urls_list
                 fetchers_list = to_json(tests.get_fetchers())
 
                 if fetchers_list is None:
-                    logger.error('There are no fetchers to test in the database')
+                    logger.error(
+                        "There are no fetchers to test in the database"
+                    )
                     return
 
-                performed_tests = json.loads(relay['performed_tests'])
+                performed_tests = json.loads(relay["performed_tests"])
 
                 next_test_values = {}
 
                 # Choose a random random parameters for the next test
                 # These parameters will be used for adding the test if the exit
                 #   relay doesn't have an history of measurements
-                if relay['is_ipv6_exiting_allowed'] == '1':
+                if relay["is_ipv6_exiting_allowed"] == "1":
                     test_urls = random.choice(ipv6_only_urls_list)
-                    next_test_values['url'] = test_urls['url']
-                    next_test_values['data_hash'] = test_urls['hash']
-                    next_test_values['captcha_sign'] = test_urls['captcha_sign']
+                    next_test_values["url"] = test_urls["url"]
+                    next_test_values["data_hash"] = test_urls["hash"]
+                    next_test_values["captcha_sign"] = test_urls["captcha_sign"]
                 else:
                     test_urls = random.choice(ipv4_only_urls_list)
-                    next_test_values['url'] = test_urls['url']
-                    next_test_values['data_hash'] = test_urls['hash']
-                    next_test_values['captcha_sign'] = test_urls['captcha_sign']
+                    next_test_values["url"] = test_urls["url"]
+                    next_test_values["data_hash"] = test_urls["hash"]
+                    next_test_values["captcha_sign"] = test_urls["captcha_sign"]
 
                 test_methods = random.choice(fetchers_list)
-                next_test_values['method'] = test_methods['method']
-                next_test_values['exit_node'] = relay['address']
+                next_test_values["method"] = test_methods["method"]
+                next_test_values["exit_node"] = relay["address"]
 
-                if test_methods['method'] == 'tor_browser':
-                    next_test_values['tbb_security_level'] = random.choice(test_methods['option_1'])
+                if test_methods["method"] == "tor_browser":
+                    next_test_values["tbb_security_level"] = random.choice(
+                        test_methods["option_1"]
+                    )
                 else:
-                    next_test_values['tbb_security_level'] = ''
+                    next_test_values["tbb_security_level"] = ""
 
                 # Leaving the browser_version empty will let CAPTCHA Monitor use the latest version available
-                next_test_values['browser_version'] = ''
+                next_test_values["browser_version"] = ""
 
                 # Now consider the history of the relay's measurements and change some
                 #   of the parameters
-                if performed_tests['data']:
+                if performed_tests["data"]:
                     # Creata a cartesian product of the tests to get all combinations
-                    test_combinations = create_combinations(all_urls_list, fetchers_list)
+                    test_combinations = create_combinations(
+                        all_urls_list, fetchers_list
+                    )
 
                     # Get a full list of untested values
                     # Simply remove the tested combinations from the full combinations list
-                    untested = find_untested(performed_tests['data'], test_combinations)
+                    untested = find_untested(
+                        performed_tests["data"], test_combinations
+                    )
 
                     # If there is something untested, overwrite the previously
                     #   chosen values
@@ -221,25 +259,31 @@ def dispatch_jobs():
                             test = random.choice(untested)
 
                             # Process the chosen test
-                            test_url = test['url']
-                            is_ipv6_test = (test_url in str(ipv6_only_urls_list))
-                            is_relay_ipv6 = (relay['is_ipv6_exiting_allowed'] == '1')
+                            test_url = test["url"]
+                            is_ipv6_test = test_url in str(ipv6_only_urls_list)
+                            is_relay_ipv6 = (
+                                relay["is_ipv6_exiting_allowed"] == "1"
+                            )
 
                             # Assign an IPv6 url to an exit relay that supports IPv6
-                            if (is_ipv6_test and is_relay_ipv6):
-                                next_test_values['data_hash'] = url_to_hash(test_url,
-                                                                            all_urls_list)
-                                next_test_values['captcha_sign'] = url_to_captcha_sign(test_url,
-                                                                                       all_urls_list)
+                            if is_ipv6_test and is_relay_ipv6:
+                                next_test_values["data_hash"] = url_to_hash(
+                                    test_url, all_urls_list
+                                )
+                                next_test_values[
+                                    "captcha_sign"
+                                ] = url_to_captcha_sign(test_url, all_urls_list)
                                 for key in test:
                                     next_test_values[key] = test[key]
                                 break
 
-                            elif (not is_ipv6_test and not is_relay_ipv6):
-                                next_test_values['data_hash'] = url_to_hash(test_url,
-                                                                            all_urls_list)
-                                next_test_values['captcha_sign'] = url_to_captcha_sign(test_url,
-                                                                                       all_urls_list)
+                            elif not is_ipv6_test and not is_relay_ipv6:
+                                next_test_values["data_hash"] = url_to_hash(
+                                    test_url, all_urls_list
+                                )
+                                next_test_values[
+                                    "captcha_sign"
+                                ] = url_to_captcha_sign(test_url, all_urls_list)
                                 for key in test:
                                     next_test_values[key] = test[key]
                                 break
@@ -248,13 +292,15 @@ def dispatch_jobs():
                         # If we are here, it means that this exit relay had completed
                         #   ths combinations of all tests already. Now, we need to refresh
                         #   the oldest test.
-                        oldest_test = find_oldest(performed_tests['data'])
-                        test_url = oldest_test['url']
-                        next_test_values['data_hash'] = url_to_hash(test_url,
-                                                                    all_urls_list)
-                        next_test_values['captcha_sign'] = url_to_captcha_sign(test_url,
-                                                                               all_urls_list)
-                        del oldest_test['timestamp']
+                        oldest_test = find_oldest(performed_tests["data"])
+                        test_url = oldest_test["url"]
+                        next_test_values["data_hash"] = url_to_hash(
+                            test_url, all_urls_list
+                        )
+                        next_test_values["captcha_sign"] = url_to_captcha_sign(
+                            test_url, all_urls_list
+                        )
+                        del oldest_test["timestamp"]
 
                         for key in oldest_test:
                             next_test_values[key] = oldest_test[key]
@@ -263,29 +309,33 @@ def dispatch_jobs():
                 args = Args()
                 args.verbose = verbose
                 args.all_exit_nodes = False
-                args.method = next_test_values['method']
-                args.url = next_test_values['url']
-                args.captcha_sign = next_test_values['captcha_sign']
-                args.additional_headers = ''
-                args.exit_node = next_test_values['exit_node']
-                args.tbb_security_level = next_test_values['tbb_security_level']
-                args.browser_version = next_test_values['browser_version']
-                args.data_hash = next_test_values['data_hash']
+                args.method = next_test_values["method"]
+                args.url = next_test_values["url"]
+                args.captcha_sign = next_test_values["captcha_sign"]
+                args.additional_headers = ""
+                args.exit_node = next_test_values["exit_node"]
+                args.tbb_security_level = next_test_values["tbb_security_level"]
+                args.browser_version = next_test_values["browser_version"]
+                args.data_hash = next_test_values["data_hash"]
 
                 # Add a new job to the queue with given args
-                add.add(args=args, exit_on_finish=False, print_done_message=False)
+                add.add(
+                    args=args, exit_on_finish=False, print_done_message=False
+                )
 
-        logger.info('Dispatched a new batch of jobs')
+        logger.info("Dispatched a new batch of jobs")
 
     else:
-        logger.info('Didn\'t dispatch a new batch of jobs since there are %s jobs in the queue already' %
-                    remaining_jobs)
+        logger.info(
+            "Didn't dispatch a new batch of jobs since there are %s jobs in the queue already"
+            % remaining_jobs
+        )
 
 
 def get_new_relays():
     logger = logging.getLogger(__name__)
 
-    logger.debug('Started getting the list of new relays')
+    logger.debug("Started getting the list of new relays")
 
     geoip = GeoIP()
 
@@ -295,52 +345,56 @@ def get_new_relays():
 
     fingerprints = set()
     for relay in relay_list:
-        fingerprints.add(relay['fingerprint'])
+        fingerprints.add(relay["fingerprint"])
 
     # Get latest consensus
     tor = tor_launcher.TorLauncher()
     for relay in tor.get_consensus(use_local_dir=use_local_tor):
         # For now, add only exit relays
-        if relay['is_ipv4_exiting_allowed'] == '1':
+        if relay["is_ipv4_exiting_allowed"] == "1":
 
-            onionoo = get_onionoo_relay_details(relay['fingerprint'])
+            onionoo = get_onionoo_relay_details(relay["fingerprint"])
 
             if onionoo != None:
-                data = {'status': 'online',
-                        'nickname': onionoo.nickname,
-                        'is_ipv4_exiting_allowed': str(int(onionoo.is_IPv4_exit)),
-                        'is_ipv6_exiting_allowed': str(int(onionoo.is_IPv6_exit)),
-                        'first_seen': onionoo.first_seen,
-                        'last_seen': onionoo.last_seen,
-                        'version': onionoo.version,
-                        'asn': onionoo.asn,
-                        'platform': onionoo.platform,
-                        'country': geoip.get_country(relay['address']),
-                        'continent': geoip.get_continent(relay['address'])}
+                data = {
+                    "status": "online",
+                    "nickname": onionoo.nickname,
+                    "is_ipv4_exiting_allowed": str(int(onionoo.is_IPv4_exit)),
+                    "is_ipv6_exiting_allowed": str(int(onionoo.is_IPv6_exit)),
+                    "first_seen": onionoo.first_seen,
+                    "last_seen": onionoo.last_seen,
+                    "version": onionoo.version,
+                    "asn": onionoo.asn,
+                    "platform": onionoo.platform,
+                    "country": geoip.get_country(relay["address"]),
+                    "continent": geoip.get_continent(relay["address"]),
+                }
 
-                if relay['fingerprint'] not in fingerprints:
-                    data.update({'fingerprint': relay['fingerprint']})
-                    data.update({'address': relay['address']})
-                    data.update({'performed_tests': '{ "data": [] }'})
+                if relay["fingerprint"] not in fingerprints:
+                    data.update({"fingerprint": relay["fingerprint"]})
+                    data.update({"address": relay["address"]})
+                    data.update({"performed_tests": '{ "data": [] }'})
 
                     # Add the new relay if doesn't exits
                     relays.add_relay_if_not_exists(data)
 
                 else:
                     # Now update the database
-                    relays.update_relay(relay['fingerprint'], data)
+                    relays.update_relay(relay["fingerprint"], data)
 
             else:
-                data = {'status': 'online',
-                        'fingerprint': relay['fingerprint'],
-                        'address': relay['address'],
-                        'is_ipv4_exiting_allowed': '1',
-                        'performed_tests': '{ "data": [] }'}
+                data = {
+                    "status": "online",
+                    "fingerprint": relay["fingerprint"],
+                    "address": relay["address"],
+                    "is_ipv4_exiting_allowed": "1",
+                    "performed_tests": '{ "data": [] }',
+                }
 
                 # Add the new relay if doesn't exits
                 relays.add_relay_if_not_exists(data)
 
-    logger.info('Got the list of new relays')
+    logger.info("Got the list of new relays")
 
 
 class Args(object):
@@ -360,21 +414,21 @@ def to_json(obj):
 
 def url_to_hash(given_url, all_urls_list):
     for url in all_urls_list:
-        if url['url'] == given_url:
-            return url['hash']
+        if url["url"] == given_url:
+            return url["hash"]
 
 
 def url_to_captcha_sign(given_url, all_urls_list):
     for url in all_urls_list:
-        if url['url'] == given_url:
-            return url['captcha_sign']
+        if url["url"] == given_url:
+            return url["captcha_sign"]
 
 
 def find_oldest(performed_tests):
     oldest_time = datetime.now()
     oldest_test = {}
     for test in performed_tests:
-        test_time = datetime.strptime(test['timestamp'], '%Y-%m-%d %H:%M:%S')
+        test_time = datetime.strptime(test["timestamp"], "%Y-%m-%d %H:%M:%S")
         if oldest_time > test_time:
             oldest_test = test
             oldest_time = test_time
@@ -385,7 +439,7 @@ def find_oldest(performed_tests):
 def find_untested(performed_tests, tests_list):
     performed_tests_copy = copy.deepcopy(performed_tests)
     for test in performed_tests_copy:
-        del test['timestamp']
+        del test["timestamp"]
 
     performed_tests_hashes = []
     for test in performed_tests_copy:
@@ -402,15 +456,18 @@ def find_untested(performed_tests, tests_list):
 def create_combinations(urls, fetchers):
     url_list = []
     for url in urls:
-        url_list.append({'url': url['url']})
+        url_list.append({"url": url["url"]})
 
     method_combinations_list = []
     for fetcher in fetchers:
         # Needed to place all values into a list for itertools.product()
-        fetcher['method'] = [fetcher['method']]
+        fetcher["method"] = [fetcher["method"]]
 
         # Match methods and their versions and their options
-        combo = list(dict(zip(fetcher.keys(), x)) for x in itertools.product(*fetcher.values()))
+        combo = list(
+            dict(zip(fetcher.keys(), x))
+            for x in itertools.product(*fetcher.values())
+        )
 
         # Merge the lists
         method_combinations_list += combo
@@ -425,12 +482,12 @@ def create_combinations(urls, fetchers):
             for key in item:
                 temp[key] = item[key]
 
-        if temp['method'] == 'tor_browser':
-            temp['tbb_security_level'] = temp['option_1']
-            del temp['option_1']
+        if temp["method"] == "tor_browser":
+            temp["tbb_security_level"] = temp["option_1"]
+            del temp["option_1"]
 
-        temp['browser_version'] = temp['versions']
-        del temp['versions']
+        temp["browser_version"] = temp["versions"]
+        del temp["versions"]
 
         result.append(temp)
 
@@ -441,7 +498,7 @@ def dict_clean_merge(dicts):
     # Merge
     master_list = []
     for data in dicts:
-        for d in data['data']:
+        for d in data["data"]:
             master_list.append(d)
 
     # Remove duplicate values
@@ -458,13 +515,15 @@ def dict_clean_merge(dicts):
     hash_to_data = {}
     for value in new_list:
         # Get rid of the timezone and milliseconds since everything is in UTC
-        new_timestamp_str = str(value['timestamp']).split('.')[0]
-        new_timestamp_str = new_timestamp_str.split('+')[0]
+        new_timestamp_str = str(value["timestamp"]).split(".")[0]
+        new_timestamp_str = new_timestamp_str.split("+")[0]
 
         # Convert to datetime object
-        new_timestamp = datetime.strptime(new_timestamp_str, '%Y-%m-%d %H:%M:%S')
+        new_timestamp = datetime.strptime(
+            new_timestamp_str, "%Y-%m-%d %H:%M:%S"
+        )
 
-        del value['timestamp']
+        del value["timestamp"]
         hash_val = hash(frozenset(value.items()))
         hash_to_data[hash_val] = value
 
@@ -481,10 +540,12 @@ def dict_clean_merge(dicts):
     # Now match the hashes and their values
     result = []
     for hash_val in hashes:
-        timestamp = {'timestamp': hashes[hash_val].strftime('%Y-%m-%d %H:%M:%S')}
+        timestamp = {
+            "timestamp": hashes[hash_val].strftime("%Y-%m-%d %H:%M:%S")
+        }
         result.append({**timestamp, **hash_to_data[hash_val]})
 
-    return {'data': result}
+    return {"data": result}
 
 
 def calculate_captcha_probability(results):
@@ -494,10 +555,10 @@ def calculate_captcha_probability(results):
 
     for result in results:
         total_count += 1
-        captcha_is_found_count += int(result['is_captcha_found'])
+        captcha_is_found_count += int(result["is_captcha_found"])
 
     try:
-        probability = round(((captcha_is_found_count/total_count)*100), 4)
+        probability = round(((captcha_is_found_count / total_count) * 100), 4)
 
     except (ZeroDivisionError):
         pass
