@@ -3,6 +3,7 @@ import os
 import time
 
 import port_for
+from stem.util.log import get_logger
 
 import captchamonitor.utils
 import captchamonitor.utils.tor_launcher as tor_launcher
@@ -11,13 +12,25 @@ from captchamonitor.utils.fetch import fetch_via_method
 from captchamonitor.utils.queue import Queue
 
 
-def worker(loop, env_var, retry_budget, timeout_value=30):
+def worker(args):
+    logger = logging.getLogger(__name__)
 
-    # Set environment variables specific to indidual worker
-    os.environ["CM_TOR_HOST"] = str(env_var["CM_TOR_HOST"])
-    os.environ["CM_TOR_DIR_PATH"] = str(env_var["CM_TOR_DIR_PATH"])
-    os.environ["CM_WORKER_ID"] = str(env_var["CM_WORKER_ID"])
-    os.environ["CM_DOWNLOAD_FOLDER"] = str(env_var["CM_TOR_DIR_PATH"])
+    # Silence the stem logger
+    stem_logger = get_logger()
+    stem_logger.propagate = False
+
+    # Get the args
+    retry_budget = args.retry
+    loop = args.loop
+    timeout_value = int(args.timeout)
+
+    if args.verbose:
+        logging.getLogger("captchamonitor").setLevel(logging.DEBUG)
+    else:
+        logging.getLogger("connectionpool").setLevel(logging.ERROR)
+        logging.getLogger("urllib3").setLevel(logging.ERROR)
+
+    os.environ["CM_WORKER_ID"] = os.environ["HOSTNAME"]
 
     worker_id = os.environ["CM_WORKER_ID"]
 
@@ -67,7 +80,7 @@ def worker(loop, env_var, retry_budget, timeout_value=30):
                         exit_node = None
 
                     # Retry fetching the same job up to the specified amount
-                    for number_of_retries in range(retry_budget):
+                    for _ in range(retry_budget):
                         # Connect to an exit node only if Tor is required
                         if "tor" in job_details["method"]:
                             try:

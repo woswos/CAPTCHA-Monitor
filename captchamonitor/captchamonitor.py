@@ -12,6 +12,7 @@ from captchamonitor import (
     md5,
     run,
     stats,
+    worker,
 )
 
 logger_format = "%(asctime)s %(module)s [%(levelname)s] %(message)s"
@@ -53,6 +54,9 @@ CAPTCHA Monitor
 MAIN_HELP = """
 Use 'captchamonitor <subcommand> --help' for more info
 """
+
+WORKER_DESC = "Start in worker mode and process jobs"
+WORKER_HELP = "Start in worker mode and process jobs"
 
 ADD_JOB_DESC = "Add a new job to queue"
 ADD_JOB_HELP = "Add a new job to queue"
@@ -177,6 +181,51 @@ class main:
         )
 
         add_job_parser.add_argument(
+            "-v",
+            "--verbose",
+            help="""show all log messages""",
+            action="store_true",
+        )
+
+        ##########
+        # WORKER #
+        ##########
+        worker_parser = sub_parser.add_parser(
+            "worker",
+            description=WORKER_DESC,
+            help=WORKER_HELP,
+            formatter_class=formatter_class,
+        )
+
+        worker_parser.set_defaults(func=worker, formatter_class=formatter_class)
+
+        worker_parser.add_argument(
+            "-r",
+            "--retry",
+            help="""specify the number of retries for failed jobs""",
+            metavar="N",
+            type=int,
+            default=1,
+        )
+
+        worker_parser.add_argument(
+            "-t",
+            "--timeout",
+            help="""specify the number of seconds to allow each job to run""",
+            metavar="N",
+            type=int,
+            default=30,
+        )
+
+        worker_parser.add_argument(
+            "-l",
+            "--loop",
+            help="""use this argument to process jobs in a loop""",
+            action="store_true",
+            default=True,
+        )
+
+        worker_parser.add_argument(
             "-v",
             "--verbose",
             help="""show all log messages""",
