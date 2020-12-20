@@ -10,42 +10,35 @@ from captchamonitor import (
     compose,
     export,
     md5,
-    run,
     stats,
     worker,
 )
 
-logger_format = "%(asctime)s %(module)s [%(levelname)s] %(message)s"
-logging.basicConfig(format=logger_format)
+logging.basicConfig(format="%(asctime)s %(module)s [%(levelname)s] %(message)s")
 
 # get the root logger for this module
 logger = logging.getLogger("captchamonitor")
 logger.setLevel(logging.INFO)
 
 env_vars = {
-    "CM_BROWSER_VERSIONS_PATH": "The path to folder that stores browser versions",
     "CM_DB_USER": "The database username",
     "CM_DB_PASS": "The database password",
     "CM_DB_NAME": "The database name",
     "CM_DB_HOST": "The IP address of the database server",
     "CM_DB_PORT": "The port number of the database server",
-    # 'CM_TBB_PATH': 'The path to Tor Browser bundle',
-    # 'CM_TOR_HOST': 'The IP address of the Tor server',
-    # 'CM_TOR_SOCKS_PORT': 'The port number of the Tor server',
-    # 'CM_TOR_CONTROL_PORT': 'The control port number of the Tor server',
-    # 'CM_DB_FILE_PATH': 'The path to the database file',
-    # 'CM_HTTP_HEADER_LIVE_FILE': 'The path to the HTTP Header Live extension',
-    # 'CM_TOR_DIR_PATH': 'The path to the Tor directory (usually ~/.tor)'
 }
 
 for env_var in env_vars:
     if env_var not in os.environ:
         logger.warning(
-            "%s (%s) is not set in the environment"
-            % (env_vars[env_var], env_var)
+            "%s (%s) is not set in the environment",
+            env_vars[env_var],
+            env_var,
         )
         sys.exit()
 
+os.environ["CM_TOR_HOST"] = "127.0.0.1"
+os.environ["CM_TOR_DIR_PATH"] = "/home/cm/tor/data"
 
 MAIN_DESC = """
 CAPTCHA Monitor
@@ -67,9 +60,6 @@ COMPOSE_HELP = "Automatically add new jobs base on the job history"
 ANALYZE_DESC = "Analyze the collected data"
 ANALYZE_HELP = "Analyze the collected data"
 
-RUN_DESC = "Run jobs in the queue"
-RUN_HELP = "Run jobs in the queue"
-
 MD5_DESC = "Returns the MD5 hash of a given URL"
 MD5_HELP = "Returns the MD5 hash of a given URL"
 
@@ -86,11 +76,23 @@ CLOUDFLARE_HELP = "Change Cloudflare security levels"
 
 
 def formatter_class(prog):
+    """
+    Formats the arg parse menu
+    """
+
     return argparse.HelpFormatter(prog, max_help_position=52)
 
 
 class main:
+    """
+    Class the handles the command line arguments and running the requested module
+    """
+
     def __init__(self):
+        """
+        Constructor
+        """
+
         main_parser = argparse.ArgumentParser(description=MAIN_DESC)
 
         sub_parser = main_parser.add_subparsers(help=MAIN_HELP)
@@ -326,78 +328,9 @@ class main:
             default=30,
         )
 
-        #######
-        # RUN #
-        #######
-        run_parser = sub_parser.add_parser(
-            "run",
-            description=RUN_DESC,
-            help=RUN_HELP,
-            formatter_class=formatter_class,
-        )
-
-        run_parser.set_defaults(func=run, formatter_class=formatter_class)
-
-        run_parser.add_argument(
-            "-w",
-            "--worker",
-            help="""specify the number of workers to run in parallel""",
-            metavar="N",
-            type=int,
-            default=1,
-        )
-
-        run_parser.add_argument(
-            "-r",
-            "--retry",
-            help="""specify the number of retries for failed jobs""",
-            metavar="N",
-            type=int,
-            default=1,
-        )
-
-        run_parser.add_argument(
-            "-t",
-            "--timeout",
-            help="""specify the number of seconds to allow each job to run""",
-            metavar="N",
-            type=int,
-            default=30,
-        )
-
-        run_parser.add_argument(
-            "-b",
-            "--heartbeat",
-            help="""specify the interval in minutes to print the heartbeat message""",
-            metavar="N",
-            type=int,
-            default=30,
-        )
-
-        run_parser.add_argument(
-            "-l",
-            "--loop",
-            help="""use this argument to process jobs in a loop""",
-            action="store_true",
-        )
-
-        run_parser.add_argument(
-            "-c",
-            "--clean",
-            help="""do a clean start by removing the existing Tor directory""",
-            action="store_true",
-        )
-
-        run_parser.add_argument(
-            "-v",
-            "--verbose",
-            help="""show all log messages""",
-            action="store_true",
-        )
-
-        ############
-        # FIND MD5 #
-        ############
+        #################
+        # CALCULATE MD5 #
+        #################
         md5_parser = sub_parser.add_parser(
             "md5",
             description=MD5_DESC,
