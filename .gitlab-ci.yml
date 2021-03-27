@@ -1,0 +1,16 @@
+# https://docs.gitlab.com/ee/user/project/merge_requests/test_coverage_visualization.html
+# https://docs.gitlab.com/ee/ci/unit_test_reports.html
+
+image: python:latest
+
+tests:
+  stage: test
+  script:
+    - pip install pytest pytest-cov black
+    - pytest --cov=src/ --junitxml=report.xml
+    - coverage xml
+    - black --check .
+  artifacts:
+    reports:
+      cobertura: coverage.xml
+      junit: report.xml

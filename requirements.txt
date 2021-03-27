@@ -1,0 +1,22 @@
+# app
+sqlalchemy
+psycopg2-binary
+selenium-wire
+stem>=1.8.0
+pysocks
+pycurl
+requests
+port_for
+maxminddb
+pyvirtualdisplay
+psycopg2-binary
+numpy
+scipy
+
+# dev/tests
+pytest
+pytest-icdiff
+mypy
+pylint
+requests
+tenacity

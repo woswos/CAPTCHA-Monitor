@@ -1,0 +1,26 @@
+version: "3"
+services:
+
+  captchamonitor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - postgres
+    environment:
+      - DB_HOST=captchamonitor
+      - DB_PASSWORD=captchamonitortest
+      - PYTHONDONTWRITEBYTECODE=1
+    volumes:
+      - ./src:/src
+      - ./tests:/tests
+    ports:
+      - "5005:80"
+
+  postgres:
+    image: postgres:9.6
+    environment:
+      - POSTGRES_USER=captchamonitor
+      - POSTGRES_PASSWORD=captchamonitortest
+    ports:
+      - "54321:5432"
