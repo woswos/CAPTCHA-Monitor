@@ -144,3 +144,5 @@ __pycache__
 
 .gitlab-ci-local/
 report.xml
+
+.vscode/
