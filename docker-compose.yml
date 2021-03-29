@@ -7,20 +7,40 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - postgres
+      - tor
     environment:
-      - DB_HOST=captchamonitor
-      - DB_PASSWORD=captchamonitortest
       - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+      - CM_DB_HOST=postgres
+      - CM_DB_PORT=5432
+      - CM_DB_NAME=captchamonitor_db
+      - CM_DB_USER=captchamonitor_user
+      - CM_DB_PASSWORD=captchamonitor_test
     volumes:
       - ./src:/src
       - ./tests:/tests
-    ports:
-      - "5005:80"
+    networks:
+      - captchamonitor_network
+    entrypoint:
+      - python
+      - -m
+      - captchamonitor
 
   postgres:
     image: postgres:9.6
     environment:
-      - POSTGRES_USER=captchamonitor
-      - POSTGRES_PASSWORD=captchamonitortest
-    ports:
-      - "54321:5432"
+      - POSTGRES_USER=captchamonitor_user
+      - POSTGRES_PASSWORD=captchamonitor_test
+    networks:
+      - captchamonitor_network
+
+  tor:
+    image: osminogin/tor-simple:latest
+    restart: always
+    networks:
+      - captchamonitor_network
+
+      
+networks:
+    captchamonitor_network:
+      driver: bridge
