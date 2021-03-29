@@ -10,6 +10,9 @@ build:
 up:
 	docker-compose up -d
 
+temp:
+	docker-compose up
+
 down:
 	docker-compose down --remove-orphans
 
@@ -19,10 +22,16 @@ test: up
 logs:
 	docker-compose logs --tail=100 captchamonitor
 
-check:
-	black $$(find * -name '*.py')
-	pylint -v $$(find * -name '*.py')
-
 init:
 	pip3 install -U pytest-cov
 	sudo apt install black pylint
+	
+check: check_non_root
+	black $$(find * -name '*.py')
+	pylint -v $$(find * -name '*.py' -not -path "tests/*")
+
+check_non_root:
+ifeq ($(shell id -u), 0)
+	@echo "Please run this command without sudo"
+	exit 1
+endif
