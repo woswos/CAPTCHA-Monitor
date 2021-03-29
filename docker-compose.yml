@@ -31,6 +31,8 @@ services:
     environment:
       - POSTGRES_USER=captchamonitor_user
       - POSTGRES_PASSWORD=captchamonitor_test
+    ports:
+      - "5432:5432"
     networks:
       - captchamonitor_network
 
@@ -40,7 +42,7 @@ services:
     networks:
       - captchamonitor_network
 
-      
+
 networks:
     captchamonitor_network:
       driver: bridge

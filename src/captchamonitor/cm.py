@@ -10,9 +10,12 @@ class CaptchaMonitor:
     The main high level class for putting different modules together
     """
 
-    def __init__(self):
+    def __init__(self, verbose=False):
         """
         Initializes the submodules
+
+        :param verbose: Verbose output option, defaults to False
+        :type verbose: bool, optional
         """
         self.logger = logging.getLogger(__name__)
 
@@ -25,6 +28,7 @@ class CaptchaMonitor:
                 self.config["db_name"],
                 self.config["db_user"],
                 self.config["db_password"],
+                verbose,
             )
 
         except (DatabaseInitError, ConfigInitError) as e:
@@ -32,6 +36,9 @@ class CaptchaMonitor:
                 "Could not initialize CAPTCHA Monitor, exitting"
             )
             sys.exit(1)
+
+        # Obtain the session from database module
+        self.session = self.db.session()
 
     def add_jobs(self):
         """
