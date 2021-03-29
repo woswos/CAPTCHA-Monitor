@@ -1,6 +1,8 @@
+import sys
 import logging
 from captchamonitor.utils.config import Config
 from captchamonitor.utils.database import Database
+from captchamonitor.utils.exceptions import DatabaseInitError, ConfigInitError
 
 
 class CaptchaMonitor:
@@ -14,15 +16,22 @@ class CaptchaMonitor:
         """
         self.logger = logging.getLogger(__name__)
 
-        self.config = Config()
+        try:
+            self.config = Config()
 
-        self.db = Database(
-            self.config["db_host"],
-            self.config["db_port"],
-            self.config["db_name"],
-            self.config["db_user"],
-            self.config["db_password"],
-        )
+            self.db = Database(
+                self.config["db_host"],
+                self.config["db_port"],
+                self.config["db_name"],
+                self.config["db_user"],
+                self.config["db_password"],
+            )
+
+        except (DatabaseInitError, ConfigInitError) as e:
+            self.logger.warning(
+                "Could not initialize CAPTCHA Monitor, exitting"
+            )
+            sys.exit(1)
 
     def add_jobs(self):
         """

@@ -3,6 +3,7 @@ from sqlalchemy import Column, Integer, String
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy_utils import database_exists, create_database
+from captchamonitor.utils.exceptions import DatabaseInitError
 
 
 class Database:
@@ -33,8 +34,13 @@ class Database:
 
         self.engine = create_engine(self.connection_string, echo=True)
 
-        if not database_exists(self.engine.url):
-            self.logger.info("Database doesn't exist, now creating it now")
-            create_database(self.engine.url)
-        else:
-            self.logger.info("Database exists, skipping creation")
+        try:
+            if not database_exists(self.engine.url):
+                self.logger.info("Database doesn't exist, now creating it now")
+                create_database(self.engine.url)
+            else:
+                self.logger.info("Database exists, skipping creation")
+
+        except Exception as e:
+            self.logger.warning("Could not connect to the database:\n %s", e)
+            raise DatabaseInitError

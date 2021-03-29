@@ -1,6 +1,6 @@
 import os
-import sys
 import logging
+from captchamonitor.utils.exceptions import ConfigInitError
 
 ENV_VARS = {
     "db_host": "CM_DB_HOST",
@@ -20,8 +20,6 @@ class Config:
     """
 
     def __init__(self, init=None):
-        self.logger = logging.getLogger(__name__)
-
         # Add if initial values are passed
         if init is not None:
             self.__dict__.update(init)
@@ -30,19 +28,19 @@ class Config:
         for key, value in ENV_VARS.items():
             self.__dict__[key] = os.environ.get(value, None)
             if self.__dict__[key] is None:
-                self.logger.error("Missing configuration variable: %s", value)
-                self.exit()
-
-    def exit(self):
-        self.logger.error("Exitting!")
-        sys.exit(1)
+                logging.getLogger(__name__).logger.error(
+                    "Missing configuration variable: %s", value
+                )
+                raise ConfigInitError
 
     def __getitem__(self, key):
         try:
             return self.__dict__[key]
-        except KeyError:
-            self.logger.error("Requested key doesn't exist in config: %s", key)
-            self.exit()
+        except (KeyError, AttributeError) as e:
+            logging.getLogger(__name__).error(
+                "Requested key doesn't exist in config: %s", key
+            )
+            raise ConfigInitError
 
     def __setitem__(self, key, value):
         self.__dict__[key] = value
