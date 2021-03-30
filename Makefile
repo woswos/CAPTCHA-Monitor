@@ -27,7 +27,7 @@ init:
 	sudo apt install black pylint
 	
 check: check_non_root
-	black $$(find * -name '*.py')
+	black --line-length 88 $$(find * -name '*.py')
 	pylint -v $$(find * -name '*.py' -not -path "tests/*")
 
 check_non_root:

@@ -14,31 +14,31 @@ class TestAttrDict(unittest.TestCase):
 
     def test_should_init_with_one_dict(self):
         my_dict = Config({"eggs": 42, "spam": "ham"})
-        self.assertEquals(my_dict.eggs, 42)
-        self.assertEquals(my_dict["eggs"], 42)
-        self.assertEquals(my_dict.spam, "ham")
-        self.assertEquals(my_dict["spam"], "ham")
+        self.assertEqual(my_dict.eggs, 42)
+        self.assertEqual(my_dict["eggs"], 42)
+        self.assertEqual(my_dict.spam, "ham")
+        self.assertEqual(my_dict["spam"], "ham")
 
     def test_should_not_change_values_by_inited_dict(self):
         base = {"eggs": 42, "spam": "ham"}
         my_dict = Config(base)
         base["eggs"] = 123
-        self.assertEquals(my_dict.eggs, 42)
-        self.assertEquals(my_dict["eggs"], 42)
-        self.assertEquals(my_dict.spam, "ham")
-        self.assertEquals(my_dict["spam"], "ham")
+        self.assertEqual(my_dict.eggs, 42)
+        self.assertEqual(my_dict["eggs"], 42)
+        self.assertEqual(my_dict.spam, "ham")
+        self.assertEqual(my_dict["spam"], "ham")
 
     def test_get_item(self):
         my_dict = Config()
         my_dict.test = 123
-        self.assertEquals(my_dict.test, 123)
-        self.assertEquals(my_dict["test"], 123)
+        self.assertEqual(my_dict.test, 123)
+        self.assertEqual(my_dict["test"], 123)
 
     def test_set_item(self):
         my_dict = Config()
         my_dict["test"] = 123
-        self.assertEquals(my_dict["test"], 123)
-        self.assertEquals(my_dict.test, 123)
+        self.assertEqual(my_dict["test"], 123)
+        self.assertEqual(my_dict.test, 123)
 
     def test_del_attr(self):
         my_dict = Config()
@@ -61,9 +61,9 @@ class TestAttrDict(unittest.TestCase):
         my_dict = Config()
         my_dict["test"] = 123
         my_dict.python = 42
-        self.assertEquals(len(my_dict), 2 + len(ENV_VARS))
+        self.assertEqual(len(my_dict), 2 + len(ENV_VARS))
 
     def test_getting_from_env(self):
         my_dict = Config()
         for key, value in ENV_VARS.items():
-            self.assertEquals(my_dict[key], self.env_var_default_value)
+            self.assertEqual(my_dict[key], self.env_var_default_value)
