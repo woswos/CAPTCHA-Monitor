@@ -32,9 +32,7 @@ class CaptchaMonitor:
             )
 
         except (DatabaseInitError, ConfigInitError) as e:
-            self.logger.warning(
-                "Could not initialize CAPTCHA Monitor, exitting"
-            )
+            self.logger.warning("Could not initialize CAPTCHA Monitor, exitting")
             sys.exit(1)
 
         # Obtain the session from database module
