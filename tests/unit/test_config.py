@@ -46,7 +46,7 @@ class TestAttrDict(unittest.TestCase):
         my_dict["python"] = 42
         del my_dict["test"]
         del my_dict.python
-        with self.assertRaises(ConfigInitError):
+        with self.assertRaises(KeyError):
             temp = my_dict["test"]
         with self.assertRaises(AttributeError):
             temp = my_dict.python
@@ -63,7 +63,25 @@ class TestAttrDict(unittest.TestCase):
         my_dict.python = 42
         self.assertEqual(len(my_dict), 2 + len(ENV_VARS))
 
+    def test_repr(self):
+        my_dict = Config()
+
+        # Create and populate a regular dictionary
+        real_dict = {}
+        for key, value in ENV_VARS.items():
+            real_dict[key] = self.env_var_default_value
+
+        self.assertEqual(repr(my_dict), repr(real_dict))
+
     def test_getting_from_env(self):
         my_dict = Config()
         for key, value in ENV_VARS.items():
             self.assertEqual(my_dict[key], self.env_var_default_value)
+
+    def test_getting_from_env_none_raise_exception(self):
+        # Delete the current values for testing
+        for key, value in ENV_VARS.items():
+            del os.environ[value]
+
+        with self.assertRaises(ConfigInitError):
+            my_dict = Config()

@@ -26,21 +26,22 @@ class Config:
 
         # Read environment variables
         for key, value in ENV_VARS.items():
-            self.__dict__[key] = os.environ.get(value, None)
-            if self.__dict__[key] is None:
-                logging.getLogger(__name__).logger.error(
+            temp = os.environ.get(value, None)
+            if temp is None:
+                logging.getLogger(__name__).error(
                     "Missing configuration variable: %s", value
                 )
                 raise ConfigInitError
+            self.__dict__[key] = temp
 
     def __getitem__(self, key):
         try:
             return self.__dict__[key]
-        except (KeyError, AttributeError) as e:
+        except (KeyError, AttributeError) as exception:
             logging.getLogger(__name__).error(
                 "Requested key doesn't exist in config: %s", key
             )
-            raise ConfigInitError
+            raise exception
 
     def __setitem__(self, key, value):
         self.__dict__[key] = value
