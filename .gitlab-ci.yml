@@ -9,9 +9,9 @@ unit-tests:
     - pip install -r requirements.txt
     - pip install -e src/
     - pip install pytest pytest-cov black
-    - pytest --cov=src/ --junitxml=report.xml
-    - coverage xml
     - black --check --line-length 88 .
+    - pytest --cov=src/ --junitxml=report.xml --cov-report term-missing
+    - coverage xml
   artifacts:
     reports:
       cobertura: coverage.xml
