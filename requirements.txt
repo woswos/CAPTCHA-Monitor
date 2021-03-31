@@ -22,6 +22,7 @@ pytz
 # dev/tests
 pytest
 pytest-icdiff
+pytest-cov
 mypy
 pylint
 requests
