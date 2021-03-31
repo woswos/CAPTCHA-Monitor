@@ -17,7 +17,7 @@ down:
 	docker-compose down --remove-orphans
 
 test: up
-	docker-compose run --rm --no-deps --entrypoint="pytest --cov=/src/ --cov-report term-missing" captchamonitor /tests
+	docker-compose run --rm --no-deps --entrypoint="pytest --cov=/src/captchamonitor/ --cov-report term-missing" captchamonitor /tests
 
 logs:
 	docker-compose logs --tail=100 captchamonitor
