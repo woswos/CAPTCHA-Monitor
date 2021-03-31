@@ -22,7 +22,7 @@ class CaptchaMonitor:
         try:
             self.config = Config()
 
-            self.db = Database(
+            self.database = Database(
                 self.config["db_host"],
                 self.config["db_port"],
                 self.config["db_name"],
@@ -31,12 +31,12 @@ class CaptchaMonitor:
                 verbose,
             )
 
-        except (DatabaseInitError, ConfigInitError) as e:
+        except (DatabaseInitError, ConfigInitError):
             self.logger.warning("Could not initialize CAPTCHA Monitor, exitting")
             sys.exit(1)
 
         # Obtain the session from database module
-        self.session = self.db.session()
+        self.session = self.database.session()
 
     def add_jobs(self):
         """

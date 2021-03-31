@@ -27,7 +27,7 @@ init: check_root
 	
 check: check_non_root
 	black --line-length 88 $$(find * -name '*.py')
-	pylint -v --disable=C0301,R0903 $$(find * -name '*.py' -not -path "tests/*")
+	pylint -v --disable=C0301,R0903,R0913,C0114 --docstring-min-length=10 $$(find * -name '*.py' -not -path "tests/*")
 
 check_non_root:
 ifeq ($(shell id -u), 0)

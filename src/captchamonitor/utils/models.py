@@ -1,3 +1,4 @@
+from datetime import datetime
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.orm import relationship
 from sqlalchemy import (
@@ -10,7 +11,6 @@ from sqlalchemy import (
     JSON,
     Boolean,
 )
-from datetime import datetime
 import pytz
 
 Model = declarative_base()
@@ -110,16 +110,19 @@ class FetchBaseModel(BaseModel):
 
     __abstract__ = True
 
+    # pylint: disable=E0213
     @declared_attr
     def target_fetcher(cls):
         # Name of the desired fetcher to use
         return Column(Integer, ForeignKey("fetcher.id"))
 
+    # pylint: disable=E0213
     @declared_attr
     def url_id(cls):
         # Complete URL including the http/https prefix
         return Column(Integer, ForeignKey("url.id"))
 
+    # pylint: disable=E0213
     @declared_attr
     def relay_fingerprint(cls):
         # Fingerprint exit node/relay to use, only required when using Tor

@@ -43,9 +43,9 @@ class Database:
             else:
                 self.logger.info("Database exists, skipping creation")
 
-        except Exception as e:
-            self.logger.warning("Could not connect to the database:\n %s", e)
-            raise DatabaseInitError
+        except Exception as exception:
+            self.logger.warning("Could not connect to the database:\n %s", exception)
+            raise DatabaseInitError from exception
 
         # Process models
         Model.metadata.create_all(self.engine)
