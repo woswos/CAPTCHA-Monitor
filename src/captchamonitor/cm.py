@@ -1,4 +1,5 @@
 import sys
+import time
 import logging
 from captchamonitor.utils.config import Config
 from captchamonitor.utils.database import Database
@@ -22,17 +23,33 @@ class CaptchaMonitor:
         try:
             self.config = Config()
 
-            self.database = Database(
-                self.config["db_host"],
-                self.config["db_port"],
-                self.config["db_name"],
-                self.config["db_user"],
-                self.config["db_password"],
-                verbose,
+        except ConfigInitError:
+            self.logger.warning(
+                "Could not initialize CAPTCHA Monitor since some configuration values are missing, exitting"
             )
+            sys.exit(1)
 
-        except (DatabaseInitError, ConfigInitError):
-            self.logger.warning("Could not initialize CAPTCHA Monitor, exitting")
+        # Try connecting to the database 3 times
+        for _ in range(3):
+            try:
+                self.database = Database(
+                    self.config["db_host"],
+                    self.config["db_port"],
+                    self.config["db_name"],
+                    self.config["db_user"],
+                    self.config["db_password"],
+                    verbose,
+                )
+                break
+            except DatabaseInitError:
+                self.logger.warning("Could not connect to the database, retrying")
+                time.sleep(3)
+
+        # Check if database connection was made
+        if not hasattr(self, "database"):
+            self.logger.warning(
+                "Could not initialize CAPTCHA Monitor since I couldn't connect to the database, exitting"
+            )
             sys.exit(1)
 
         # Obtain the session from database module
