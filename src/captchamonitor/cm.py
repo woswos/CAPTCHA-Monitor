@@ -4,6 +4,7 @@ import logging
 from captchamonitor.utils.config import Config
 from captchamonitor.utils.database import Database
 from captchamonitor.utils.exceptions import DatabaseInitError, ConfigInitError
+from captchamonitor.core.worker import Worker
 
 
 class CaptchaMonitor:
@@ -67,6 +68,8 @@ class CaptchaMonitor:
         other specified browsers. Inserts the result back into the database.
         """
         self.logger.debug("Running worker")
+
+        Worker(config=self.config, db_session=self.session)
 
     def update_urls(self):
         """

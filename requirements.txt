@@ -6,11 +6,12 @@ selenium-wire
 stem>=1.8.0
 schedule
 pytz
+docker
+port_for
 
 #pysocks
 #pycurl
 #requests
-#port_for
 #maxminddb
 #pyvirtualdisplay
 #psycopg2-binary
