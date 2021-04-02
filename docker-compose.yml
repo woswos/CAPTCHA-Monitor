@@ -2,12 +2,12 @@ version: "3"
 services:
 
   captchamonitor:
+    image: captchamonitor
     build:
       context: .
       dockerfile: Dockerfile
     depends_on:
       - postgres
-      - tor
     environment:
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONUNBUFFERED=1
@@ -16,9 +16,14 @@ services:
       - CM_DB_NAME=captchamonitor_db
       - CM_DB_USER=captchamonitor_user
       - CM_DB_PASSWORD=captchamonitor_test
+      - CM_DOCKER_NETWORK=captchamonitor_network
+      - CM_DOCKER_TOR_CONTAINER_IMAGE=captchamonitor-tor-container
+      - CM_DOCKER_TOR_AUTH_PASS=captchamonitor
+      - CM_DOCKER_TOR_AUTH_PASS_HASHED=16:9EBDF7FF0017633A6057CB181363121298A64BC51D9DE431D788C04443
     volumes:
       - ./src:/src
       - ./tests:/tests
+      - "/var/run/docker.sock:/var/run/docker.sock"
     networks:
       - captchamonitor_network
     entrypoint:
@@ -36,12 +41,14 @@ services:
     networks:
       - captchamonitor_network
 
-  tor:
-    image: osminogin/tor-simple:latest
-    restart: always
-    networks:
-      - captchamonitor_network
-
+  tor-container:
+    image: captchamonitor-tor-container
+    build:
+      context: ./tor-container
+      dockerfile: Dockerfile
+    entrypoint:
+      # Basically do nothing on purpose
+      - /bin/sh
 
 networks:
     captchamonitor_network:

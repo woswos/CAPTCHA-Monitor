@@ -8,6 +8,10 @@ ENV_VARS = {
     "db_name": "CM_DB_NAME",
     "db_user": "CM_DB_USER",
     "db_password": "CM_DB_PASSWORD",
+    "docker_network": "CM_DOCKER_NETWORK",
+    "docker_tor_container_image": "CM_DOCKER_TOR_CONTAINER_IMAGE",
+    "docker_tor_authentication_password": "CM_DOCKER_TOR_AUTH_PASS",
+    "docker_tor_authentication_password_hashed": "CM_DOCKER_TOR_AUTH_PASS_HASHED",
 }
 
 
