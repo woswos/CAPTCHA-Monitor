@@ -69,7 +69,7 @@ class CaptchaMonitor:
         """
         self.logger.debug("Running worker")
 
-        Worker(config=self.config, db_session=self.session)
+        Worker(id=0, config=self.config, db_session=self.session)
 
     def update_urls(self):
         """
