@@ -12,6 +12,9 @@ ENV_VARS = {
     "docker_tor_container_image": "CM_DOCKER_TOR_CONTAINER_IMAGE",
     "docker_tor_authentication_password": "CM_DOCKER_TOR_AUTH_PASS",
     "docker_tor_authentication_password_hashed": "CM_DOCKER_TOR_AUTH_PASS_HASHED",
+    "docker_tor_browser_container_name": "CM_DOCKER_TOR_BROWSER_CONTAINER_NAME",
+    "docker_tor_browser_container_port": "CM_DOCKER_TOR_BROWSER_CONTAINER_PORT",
+    "docker_tor_browser_container_profile_location": "CM_DOCKER_TOR_BROWSER_CONTAINER_PROFILE_LOCATION",
 }
 
 
