@@ -20,10 +20,13 @@ services:
       - CM_DOCKER_TOR_CONTAINER_IMAGE=captchamonitor-tor-container
       - CM_DOCKER_TOR_AUTH_PASS=captchamonitor
       - CM_DOCKER_TOR_AUTH_PASS_HASHED=16:9EBDF7FF0017633A6057CB181363121298A64BC51D9DE431D788C04443
+      - CM_DOCKER_TOR_BROWSER_CONTAINER_NAME=tor-browser-container
+      - CM_DOCKER_TOR_BROWSER_CONTAINER_PORT=4444
     volumes:
       - ./src:/src
       - ./tests:/tests
-      - "/var/run/docker.sock:/var/run/docker.sock"
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/woswos/testvolume/profile.default:/profile
     networks:
       - captchamonitor_network
     entrypoint:
@@ -41,15 +44,30 @@ services:
     networks:
       - captchamonitor_network
 
+  tor-browser-container:
+    image: captchamonitor-tor-browser-container
+    build:
+      context: ./standalone-tor-browser
+      dockerfile: Dockerfile
+    ports:
+      - "4444:4444"
+    networks:
+      - captchamonitor_network
+    volumes:
+      - /dev/shm:/dev/shm
+    logging:
+      driver: none
+
   tor-container:
     image: captchamonitor-tor-container
     build:
       context: ./tor-container
       dockerfile: Dockerfile
     entrypoint:
-      # Basically do nothing on purpose
+      # Basically do nothing on purpose, this container will be created and run
+      # as needed by the main code
       - /bin/sh
-
+      
 networks:
     captchamonitor_network:
       driver: bridge
