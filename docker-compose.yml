@@ -1,4 +1,4 @@
-version: "3"
+version: "2.2"
 
 services:
   captchamonitor:
@@ -7,7 +7,14 @@ services:
       context: .
       dockerfile: Dockerfile
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+      tor-browser-container:
+        condition: service_healthy
+      firefox-browser-container:
+        condition: service_healthy
+      chrome-browser-container:
+        condition: service_healthy
     environment:
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONUNBUFFERED=1
@@ -44,6 +51,21 @@ services:
       - "5432:5432"
     networks:
       - captchamonitor_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U captchamonitor_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  tor-container:
+    image: captchamonitor-tor-container
+    build:
+      context: ./tor-container
+      dockerfile: Dockerfile
+    entrypoint:
+      # Basically do nothing on purpose, this container will be created and run
+      # as needed by the main code
+      - /bin/sh
 
   tor-browser-container:
     image: captchamonitor-tor-browser-container
@@ -55,20 +77,45 @@ services:
     networks:
       - captchamonitor_network
     volumes:
-      - /dev/shm:/dev/shm
       - tor_browser_profile_volume:/opt/tor-browser_en-US/Browser/TorBrowser/Data/Browser/profile.default
-    # logging:
-    #   driver: none
+    shm_size: '2gb'
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/bin/check-grid.sh --host 0.0.0.0 --port 4444"]
+      interval: 15s
+      timeout: 30s
+      retries: 5
+    logging:
+      driver: none
 
-  tor-container:
-    image: captchamonitor-tor-container
-    build:
-      context: ./tor-container
-      dockerfile: Dockerfile
-    entrypoint:
-      # Basically do nothing on purpose, this container will be created and run
-      # as needed by the main code
-      - /bin/sh
+  firefox-browser-container:
+    image: selenium/standalone-firefox:latest
+    ports:
+      - "4445:4444"
+    networks:
+      - captchamonitor_network
+    shm_size: '2gb'
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/bin/check-grid.sh --host 0.0.0.0 --port 4444"]
+      interval: 15s
+      timeout: 30s
+      retries: 5
+    logging:
+      driver: none
+
+  chrome-browser-container:
+    image: selenium/standalone-chrome:latest
+    ports:
+      - "4446:4444"
+    networks:
+      - captchamonitor_network
+    shm_size: '2gb'
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/bin/check-grid.sh --host 0.0.0.0 --port 4444"]
+      interval: 15s
+      timeout: 30s
+      retries: 5
+    logging:
+      driver: none
 
 networks:
   captchamonitor_network:
