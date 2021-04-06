@@ -22,7 +22,7 @@ class BaseFetcher:
         :type timeout: int, optional
         :param options: Dictionary of options to pass to the fetcher, defaults to None
         :type options: dict, optional
-        :param use_tor: Should I connect the fetcher to Tor?, defaults to True
+        :param use_tor: Should I connect the fetcher to Tor? Has no effect when using Tor Browser, defaults to True
         :type use_tor: bool, optional
         """
         # Public attributes

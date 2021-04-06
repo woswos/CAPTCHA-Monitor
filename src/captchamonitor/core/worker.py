@@ -20,11 +20,16 @@ class Worker:
 
         self.tor_launcher = TorLauncher(self.config)
 
+        options = {"TorBrowserSecurityLevel": "standard"}
         test = TorBrowser(
-            self.config, "https://check.torproject.org/", self.tor_launcher
+            config=self.config,
+            url="https://check.torproject.org/",
+            tor_launcher=self.tor_launcher,
+            options=options,
         )
         test.setup()
         test.connect()
+
         print(worker_id, test.fetch())
 
         # while True:

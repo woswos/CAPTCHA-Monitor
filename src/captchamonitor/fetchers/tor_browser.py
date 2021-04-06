@@ -29,7 +29,23 @@ class TorBrowser(BaseFetcher):
         if not os.path.isdir(profile_location):
             raise TorBrowserProfileLocationError
 
+        # If no security level is provided, default to "standard"
+        security_levels = {"safest": 1, "safer": 2, "standard": 4}
+        if "TorBrowserSecurityLevel" in self.options:
+            security_level = self.options["TorBrowserSecurityLevel"]
+        else:
+            security_level = "standard"
+
+        # Convert security level to integer representation
+        security_level = security_levels[security_level]
+
+        # Obtain the Tor Browser profile
         profile = FirefoxProfile(profile_location)
+
+        # Set security level
+        profile.set_preference(
+            "extensions.torbutton.security_slider", int(security_level)
+        )
 
         # Stop Tor Browser's internal Tor
         profile.set_preference("extensions.torlauncher.start_tor", False)
@@ -86,6 +102,12 @@ class TorBrowser(BaseFetcher):
                 "Could not connect to the Tor Browser Container after many retries"
             )
             raise FetcherConnectionInitError
+
+        # Set driver timeout
+        self.driver.set_page_load_timeout(self.timeout)
+
+        # Log the current status
+        self.logger.info("Connected to the Tor Browser Container")
 
     def fetch(self):
         """
