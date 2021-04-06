@@ -99,9 +99,7 @@ class TorLauncher:
         # Reload container attributes
         self.__container.reload()
         # Now obtain the IP address
-        container_networks = self.__container.attrs["NetworkSettings"][
-            "Networks"
-        ]
+        container_networks = self.__container.attrs["NetworkSettings"]["Networks"]
         self.ip_address = str(list(container_networks.values())[0]["IPAddress"])
 
         self.__logger.debug(
@@ -115,9 +113,7 @@ class TorLauncher:
         """
         Binds Tor Stem to the Tor Container launched earlier
         """
-        self.__tor_password = self.__config[
-            "docker_tor_authentication_password"
-        ]
+        self.__tor_password = self.__config["docker_tor_authentication_password"]
 
         # Try connecting 3 times
         connected = False

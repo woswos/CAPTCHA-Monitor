@@ -38,7 +38,7 @@ class Database:
 
         try:
             if not database_exists(self.engine.url):
-                self.logger.info("Database doesn't exist, now creating it now")
+                self.logger.info("Database doesn't exist, creating it now")
                 create_database(self.engine.url)
             else:
                 self.logger.info("Database exists, skipping creation")

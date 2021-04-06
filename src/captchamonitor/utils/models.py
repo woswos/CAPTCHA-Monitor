@@ -92,11 +92,12 @@ class Fetcher(BaseModel):
     __tablename__ = "fetcher"
 
     # fmt: off
-    method = Column(String)  # Name of the fetchers coded (Tor Browser, Firefox, Chromium, etc.)
-    version = Column(String) # Version of the tool
-    path = Column(String)    # Folder containing the fetcher in the file system
-    options = Column(JSON)   # Options, if there is any
-    comment = Column(String) # Comments, if there is any
+    method = Column(String)    # Name of the fetchers coded (Tor Browser, Firefox, Chromium, etc.)
+    uses_tor = Column(Boolean) # True or False based on whether this fetcher uses Tor or not
+    version = Column(String)   # Version of the tool
+    path = Column(String)      # Folder containing the fetcher in the file system
+    options = Column(JSON)     # Options, if there is any
+    comment = Column(String)   # Comments, if there is any
     # fmt: on
 
     # Relationships

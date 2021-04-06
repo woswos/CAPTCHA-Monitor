@@ -10,7 +10,7 @@ class Worker:
     Keeps doing this until the kill signal is received or the program exits.
     """
 
-    def __init__(self, id, config, db_session):
+    def __init__(self, worker_id, config, db_session):
         """
         Initializes a new worker
         """
@@ -25,7 +25,7 @@ class Worker:
         )
         test.setup()
         test.connect()
-        print(test.fetch())
+        print(worker_id, test.fetch())
 
         # while True:
 

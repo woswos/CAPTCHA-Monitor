@@ -15,7 +15,7 @@ cm = CaptchaMonitor()
 
 # Schedule tasks
 logger.info("Scheduling tasks")
-schedule.every(3).seconds.do(cm.worker)
+schedule.every(30).seconds.do(cm.worker)
 
 # Run jobs
 logger.info("Started running the tasks")

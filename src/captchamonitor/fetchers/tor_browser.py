@@ -1,6 +1,5 @@
 import time
 import os
-import docker
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 from selenium import webdriver
 from captchamonitor.fetchers.base_fetcher import BaseFetcher
@@ -24,9 +23,7 @@ class TorBrowser(BaseFetcher):
         """
         socks_host = self.tor_launcher.ip_address
         socks_port = self.tor_launcher.socks_port
-        profile_location = self.config[
-            "docker_tor_browser_container_profile_location"
-        ]
+        profile_location = self.config["docker_tor_browser_container_profile_location"]
 
         # Check if the profile location makes sense
         if not os.path.isdir(profile_location):
@@ -36,9 +33,7 @@ class TorBrowser(BaseFetcher):
 
         # Stop Tor Browser's internal Tor
         profile.set_preference("extensions.torlauncher.start_tor", False)
-        profile.set_preference(
-            "extensions.torlauncher.prompt_at_startup", False
-        )
+        profile.set_preference("extensions.torlauncher.prompt_at_startup", False)
 
         # Let Tor Button connect us to external Tor
         profile.set_preference("extensions.torbutton.local_tor_check", False)
@@ -52,9 +47,7 @@ class TorBrowser(BaseFetcher):
 
         # Stop updates
         profile.set_preference("app.update.enabled", False)
-        profile.set_preference(
-            "extensions.torbutton.versioncheck_enabled", False
-        )
+        profile.set_preference("extensions.torbutton.versioncheck_enabled", False)
 
         self.selenium_options = webdriver.FirefoxOptions()
         self.selenium_options.profile = profile
@@ -66,9 +59,7 @@ class TorBrowser(BaseFetcher):
         tb_container_host = self.config["docker_tor_browser_container_name"]
         tb_container_port = self.config["docker_tor_browser_container_port"]
 
-        selenium_executor_url = (
-            f"http://{tb_container_host}:{tb_container_port}/wd/hub"
-        )
+        selenium_executor_url = f"http://{tb_container_host}:{tb_container_port}/wd/hub"
 
         # Connect to Tor Browser Container
         connected = False

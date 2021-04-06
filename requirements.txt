@@ -2,13 +2,14 @@
 sqlalchemy<1.4.0
 sqlalchemy-utils
 psycopg2-binary
-selenium-wire
+selenium
 stem>=1.8.0
 schedule
 pytz
 docker
 port_for
 
+# selenium-wire
 #pysocks
 #pycurl
 #requests
@@ -17,8 +18,6 @@ port_for
 #psycopg2-binary
 #numpy
 #scipy
-
-
 
 # dev/tests
 pytest
