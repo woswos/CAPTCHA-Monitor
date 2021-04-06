@@ -40,6 +40,7 @@ class BaseFetcher:
         self.config = config
         self.selenium_options = None
         self.selenium_executor_url = None
+        self.desired_capabilities = None
 
         self.logger = logging.getLogger(__name__)
 
@@ -58,7 +59,11 @@ class BaseFetcher:
         return f"http://{container_host}:{container_port}/wd/hub"
 
     def connect_to_selenium_remote_web_driver(
-        self, container_name, desired_capabilities, command_executor, options
+        self,
+        container_name,
+        desired_capabilities,
+        command_executor,
+        options=None,
     ):
         """
         Connects Selenium remote driver to a browser container
@@ -69,8 +74,8 @@ class BaseFetcher:
         :type desired_capabilities: webdriver.DesiredCapabilities object
         :param command_executor: Command executor URL for Selenium
         :type command_executor: str
-        :param options: webdriver.Options from Selenium
-        :type options: webdriver.Options object
+        :param options: webdriver.Options from Selenium, defaults to None
+        :type options: webdriver.Options object, optional
         :raises FetcherConnectionInitError: If it wasn't able to connect to the webdriver
         """
         # Connect to browser container

@@ -39,6 +39,7 @@ class FirefoxBrowser(BaseFetcher):
             profile.set_preference("network.proxy.socks_port", int(socks_port))
             profile.set_preference("network.proxy.socks_remote_dns", True)
 
+        self.desired_capabilities = webdriver.DesiredCapabilities.FIREFOX
         self.selenium_options = webdriver.FirefoxOptions()
         self.selenium_options.profile = profile
 
@@ -46,10 +47,9 @@ class FirefoxBrowser(BaseFetcher):
         """
         Connects Selenium driver to Firefox Browser Container
         """
-        firefox_browser_desired_capabilities = webdriver.DesiredCapabilities.FIREFOX
         self.connect_to_selenium_remote_web_driver(
             container_name="Firefox Browser",
-            desired_capabilities=firefox_browser_desired_capabilities,
+            desired_capabilities=self.desired_capabilities,
             command_executor=self.selenium_executor_url,
             options=self.selenium_options,
         )

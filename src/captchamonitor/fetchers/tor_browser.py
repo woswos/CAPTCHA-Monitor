@@ -70,6 +70,7 @@ class TorBrowser(BaseFetcher):
         profile.set_preference("app.update.enabled", False)
         profile.set_preference("extensions.torbutton.versioncheck_enabled", False)
 
+        self.desired_capabilities = webdriver.DesiredCapabilities.FIREFOX
         self.selenium_options = webdriver.FirefoxOptions()
         self.selenium_options.profile = profile
 
@@ -77,10 +78,9 @@ class TorBrowser(BaseFetcher):
         """
         Connects Selenium driver to Tor Browser Container
         """
-        tor_browser_desired_capabilities = webdriver.DesiredCapabilities.FIREFOX
         self.connect_to_selenium_remote_web_driver(
             container_name="Tor Browser",
-            desired_capabilities=tor_browser_desired_capabilities,
+            desired_capabilities=self.desired_capabilities,
             command_executor=self.selenium_executor_url,
             options=self.selenium_options,
         )
