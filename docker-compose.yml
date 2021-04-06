@@ -30,6 +30,8 @@ services:
       - CM_DOCKER_TOR_BROWSER_CONTAINER_NAME=tor-browser-container
       - CM_DOCKER_TOR_BROWSER_CONTAINER_PORT=4444
       - CM_DOCKER_TOR_BROWSER_CONTAINER_PROFILE_LOCATION=/TorBrowserProfile
+      - CM_DOCKER_FIREFOX_BROWSER_CONTAINER_NAME=firefox-browser-container
+      - CM_DOCKER_FIREFOX_BROWSER_CONTAINER_PORT=4445
     volumes:
       - ./src:/src
       - ./tests:/tests
@@ -72,13 +74,13 @@ services:
     build:
       context: ./standalone-tor-browser
       dockerfile: Dockerfile
-    ports:
-      - "4444:4444"
     networks:
       - captchamonitor_network
     volumes:
       - tor_browser_profile_volume:/opt/tor-browser_en-US/Browser/TorBrowser/Data/Browser/profile.default
     shm_size: '2gb'
+    environment:
+      SE_OPTS: "-port 4444"
     healthcheck:
       test: ["CMD-SHELL", "/opt/bin/check-grid.sh --host 0.0.0.0 --port 4444"]
       interval: 15s
@@ -89,13 +91,13 @@ services:
 
   firefox-browser-container:
     image: selenium/standalone-firefox:latest
-    ports:
-      - "4445:4444"
     networks:
       - captchamonitor_network
     shm_size: '2gb'
+    environment:
+      SE_OPTS: "-port 4445"
     healthcheck:
-      test: ["CMD-SHELL", "/opt/bin/check-grid.sh --host 0.0.0.0 --port 4444"]
+      test: ["CMD-SHELL", "/opt/bin/check-grid.sh --host 0.0.0.0 --port 4445"]
       interval: 15s
       timeout: 30s
       retries: 5
@@ -104,13 +106,13 @@ services:
 
   chrome-browser-container:
     image: selenium/standalone-chrome:latest
-    ports:
-      - "4446:4444"
     networks:
       - captchamonitor_network
     shm_size: '2gb'
+    environment:
+      SE_OPTS: "-port 4446"
     healthcheck:
-      test: ["CMD-SHELL", "/opt/bin/check-grid.sh --host 0.0.0.0 --port 4444"]
+      test: ["CMD-SHELL", "/opt/bin/check-grid.sh --host 0.0.0.0 --port 4446"]
       interval: 15s
       timeout: 30s
       retries: 5
