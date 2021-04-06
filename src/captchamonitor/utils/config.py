@@ -17,6 +17,8 @@ ENV_VARS = {
     "docker_tor_browser_container_profile_location": "CM_DOCKER_TOR_BROWSER_CONTAINER_PROFILE_LOCATION",
     "docker_firefox_browser_container_name": "CM_DOCKER_FIREFOX_BROWSER_CONTAINER_NAME",
     "docker_firefox_browser_container_port": "CM_DOCKER_FIREFOX_BROWSER_CONTAINER_PORT",
+    "docker_chrome_browser_container_name": "CM_DOCKER_CHROME_BROWSER_CONTAINER_NAME",
+    "docker_chrome_browser_container_port": "CM_DOCKER_CHROME_BROWSER_CONTAINER_PORT",
 }
 
 
