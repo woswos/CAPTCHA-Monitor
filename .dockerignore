@@ -1,0 +1,14 @@
+.git
+.gitignore
+.gitlab-ci-local
+.gitlab-ci.yml
+.pytest_cache
+.vscode
+.coverage
+docs
+standalone-tor-browser
+tor-container
+mypy.ini
+report.xml
+LICENSE
+*.md
