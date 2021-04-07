@@ -3,24 +3,21 @@ FROM selenium/node-base:latest
 
 USER root
 
-# Install requirements
-RUN apt-get update -qqy \
-    && apt-get -qqy --no-install-recommends install firefox libavcodec-extra xz-utils jq \
-    && rm -rf /var/lib/apt/lists/* /var/cache/apt/*
-
 # Tor Browser
 ARG VERSION=latest
 LABEL TOR_BROWSER_VERSION=$VERSION
 ENV TOR_BROWSER_VERSION=$VERSION
 RUN TOR_BROWSER_DOWNLOAD_URL=$(if [ $TOR_BROWSER_VERSION = "latest" ]; then echo $(curl -s "https://aus1.torproject.org/torbrowser/update_3/release/downloads.json" | jq -r '.downloads.linux64."en-US".binary'); else echo "https://archive.torproject.org/tor-package-archive/torbrowser/${TOR_BROWSER_VERSION}/tor-browser-linux64-${TOR_BROWSER_VERSION}_en-US.tar.xz"; fi) \
+    && apt-get update -qqy \
+    && apt-get -qqy --no-install-recommends install firefox libavcodec-extra xz-utils\
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/* \
     && echo "Using Tor Browser version: "$TOR_BROWSER_VERSION \
     && echo "Downloading Tor Browser from: "$TOR_BROWSER_DOWNLOAD_URL \
-    && curl $TOR_BROWSER_DOWNLOAD_URL -o /tmp/torbrowser.tar.xz \
-    && echo "Installing Tor Browser" \
+    && wget --no-verbose -O /tmp/torbrowser.tar.xz $TOR_BROWSER_DOWNLOAD_URL \
+    && apt-get -y purge firefox \
     && tar -C /opt -xf /tmp/torbrowser.tar.xz \
     && rm /tmp/torbrowser.tar.xz \
     && chmod -R 755 /opt/tor-browser_en-US \
-    && apt-get -y purge firefox jq \
     && ln -fs /opt/tor-browser_en-US/Browser/firefox /usr/bin/firefox \
     && ln -fs /opt/tor-browser_en-US/Browser/firefox.real /usr/bin/firefox.real
 
