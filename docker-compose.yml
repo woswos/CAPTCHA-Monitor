@@ -62,7 +62,7 @@ services:
       retries: 5
 
   tor-container:
-    image: captchamonitor-tor-container
+    image: captchamonitor-tor-container:latest
     build:
       context: ./tor-container
       dockerfile: Dockerfile
@@ -72,10 +72,12 @@ services:
       - /bin/sh
 
   tor-browser-container:
-    image: captchamonitor-tor-browser-container
+    image: captchamonitor-tor-browser-container:latest
     build:
       context: ./standalone-tor-browser
       dockerfile: Dockerfile
+      labels:
+        - VERSION=latest
     networks:
       - captchamonitor_network
     volumes:
