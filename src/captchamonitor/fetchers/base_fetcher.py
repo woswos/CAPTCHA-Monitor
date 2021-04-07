@@ -1,7 +1,11 @@
 import time
 import logging
 from selenium import webdriver
-from captchamonitor.utils.exceptions import FetcherConnectionInitError
+from selenium.common.exceptions import WebDriverException
+from captchamonitor.utils.exceptions import (
+    FetcherConnectionInitError,
+    FetcherURLFetchError,
+)
 
 
 class BaseFetcher:
@@ -34,6 +38,9 @@ class BaseFetcher:
         self.timeout = timeout
         self.options = options
         self.driver = None
+        self.page_source = None
+        self.page_cookies = None
+        self.page_title = None
 
         # Other required attributes
         self.tor_launcher = tor_launcher
@@ -116,9 +123,47 @@ class BaseFetcher:
         """
         Fetches the given URL with the remote web driver
         """
-        self.driver.get(self.url)
 
-        return self.driver.page_source
+        try:
+            self.driver.get(self.url)
+
+        except WebDriverException as exception:
+            self.logger.debug(
+                "Unable to fetch %s because of: %s",
+                self.url,
+                exception,
+            )
+            raise FetcherURLFetchError from exception
+
+        self.page_source = self.driver.page_source
+        self.page_cookies = self.driver.get_cookies()
+        self.page_title = self.driver.title
+
+    def get_selenium_logs(self):
+        """
+        Obtains and returns all kinds of available Selenium logs
+
+        :return: Dictionary of logs with different log types
+        :rtype: dict
+        """
+        logs = {}
+        for log_type in self.driver.log_types:
+            logs[log_type] = self.driver.get_log(log_type)
+        return logs
+
+    def get_screenshot_from_selenium_remote_web_driver(self, image_type="base64"):
+        """
+        [summary]
+
+        :param image_type: Type of screenshot to return, defaults to "base64"
+        :type image_type: str, optional
+        :return: Screenshot as png file or base64 encoded depending on selected type]
+        :rtype: png file or str depending on selected type
+        """
+        if image_type == "base64":
+            return self.driver.get_screenshot_as_base64()
+        # else
+        return self.driver.get_screenshot_as_png()
 
     def __del__(self):
         if self.driver is not None:
