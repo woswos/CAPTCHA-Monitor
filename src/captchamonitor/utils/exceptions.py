@@ -40,6 +40,12 @@ class FetcherConnectionInitError(Error):
     """
 
 
+class FetcherURLFetchError(Error):
+    """
+    Fetcher wasn't able to provided URL
+    """
+
+
 class TorBrowserProfileLocationError(Error):
     """
     The provided location is inaccessible or not a valid directory
