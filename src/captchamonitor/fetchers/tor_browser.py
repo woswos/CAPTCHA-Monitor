@@ -56,6 +56,8 @@ class TorBrowser(BaseFetcher):
         profile.set_preference("devtools.netmonitor.har.includeResponseBodies", False)
         profile.set_preference("devtools.netmonitor.har.jsonp", False)
         profile.set_preference("devtools.netmonitor.har.jsonpCallback", False)
+        profile.set_preference("devtools.netmonitor.har.forceExport", False)
+        profile.set_preference("devtools.netmonitor.har.enableAutoExportToFile", False)
         profile.set_preference("devtools.netmonitor.har.pageLoadedTimeout", "2500")
 
         # Set security level
