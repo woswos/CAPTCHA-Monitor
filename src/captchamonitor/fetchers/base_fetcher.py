@@ -1,3 +1,5 @@
+import os
+import shutil
 import time
 import logging
 from selenium import webdriver
@@ -5,6 +7,7 @@ from selenium.common.exceptions import WebDriverException
 from captchamonitor.utils.exceptions import (
     FetcherConnectionInitError,
     FetcherURLFetchError,
+    HarExportExtensionXpiError,
 )
 
 
@@ -15,7 +18,14 @@ class BaseFetcher:
     """
 
     def __init__(
-        self, config, url, tor_launcher, timeout=30, options=None, use_tor=True
+        self,
+        config,
+        url,
+        tor_launcher,
+        page_timeout=30,
+        script_timeout=30,
+        options=None,
+        use_tor=True,
     ):
         """
         Initializes the fetcher with given arguments and tries to fetch the given
@@ -25,8 +35,10 @@ class BaseFetcher:
         :type url: str
         :param tor_launcher: TorLauncher class
         :type tor_launcher: TorLauncher class
-        :param timeout: Maximum time allowed for a web page to load, defaults to 30
-        :type timeout: int, optional
+        :param page_timeout: Maximum time allowed for a web page to load, defaults to 30
+        :type page_timeout: int, optional
+        :param script_timeout: Maximum time allowed for a JS script to respond, defaults to 30
+        :type script_timeout: int, optional
         :param options: Dictionary of options to pass to the fetcher, defaults to None
         :type options: dict, optional
         :param use_tor: Should I connect the fetcher to Tor? Has no effect when using Tor Browser, defaults to True
@@ -35,12 +47,14 @@ class BaseFetcher:
         # Public attributes
         self.url = url
         self.use_tor = use_tor
-        self.timeout = timeout
+        self.page_timeout = page_timeout
+        self.script_timeout = script_timeout
         self.options = options
         self.driver = None
         self.page_source = None
         self.page_cookies = None
         self.page_title = None
+        self.page_har = None
 
         # Other required attributes
         self.tor_launcher = tor_launcher
@@ -50,6 +64,29 @@ class BaseFetcher:
         self.desired_capabilities = None
 
         self.logger = logging.getLogger(__name__)
+
+        # Get the extension path
+        self.har_export_extension_xpi = self.config["asset_har_export_extension_xpi"]
+
+        # Get the extension id
+        self.har_export_extension_xpi_id = self.config[
+            "asset_har_export_extension_xpi_id"
+        ]
+
+        # Check if the har extension path is a file and a xpi file
+        if not os.path.isfile(self.har_export_extension_xpi):
+            self.logger.warning(
+                "Provided extension file doesn't exist: %s",
+                self.har_export_extension_xpi,
+            )
+            raise HarExportExtensionXpiError
+
+        if not self.har_export_extension_xpi.endswith(".xpi"):
+            self.logger.warning(
+                "Provided extension file is not valid: %s",
+                self.har_export_extension_xpi,
+            )
+            raise HarExportExtensionXpiError
 
     @staticmethod
     def get_selenium_executor_url(container_host, container_port):
@@ -114,16 +151,31 @@ class BaseFetcher:
             raise FetcherConnectionInitError
 
         # Set driver timeout
-        self.driver.set_page_load_timeout(self.timeout)
+        self.driver.set_page_load_timeout(self.page_timeout)
+
+        # Set timeout for HAR export trigger
+        self.driver.set_script_timeout(self.script_timeout)
 
         # Log the current status
         self.logger.info("Connected to the %s container", container_name)
+
+    def install_har_export_extension(self, directory):
+        """
+        Installs the HAR Export Trigger extension
+
+        :param directory: Absolute directory path to install the extension
+        :type directory: str
+        """
+        addon_path = os.path.join(directory, self.har_export_extension_xpi_id)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+            os.chmod(directory, 0o755)
+        shutil.copy(self.har_export_extension_xpi, addon_path + ".xpi")
 
     def fetch_with_selenium_remote_web_driver(self):
         """
         Fetches the given URL with the remote web driver
         """
-
         try:
             self.driver.get(self.url)
 
@@ -138,6 +190,12 @@ class BaseFetcher:
         self.page_source = self.driver.page_source
         self.page_cookies = self.driver.get_cookies()
         self.page_title = self.driver.title
+        self.page_har = self.driver.execute_async_script(
+            """
+            var callback = arguments[arguments.length - 1];
+            HAR.triggerExport().then((harLog) => { callback(harLog) });
+            """
+        )
 
     def get_selenium_logs(self):
         """

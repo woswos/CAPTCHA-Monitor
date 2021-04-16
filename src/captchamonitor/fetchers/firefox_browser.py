@@ -28,6 +28,17 @@ class FirefoxBrowser(BaseFetcher):
         # Create new Firefox profile
         profile = FirefoxProfile()
 
+        # Install the extensions
+        self.install_har_export_extension(profile.extensionsDir)
+
+        # Enable the network monitoring tools to record HAR
+        profile.set_preference("devtools.netmonitor.enabled", True)
+        profile.set_preference("devtools.netmonitor.har.compress", False)
+        profile.set_preference("devtools.netmonitor.har.includeResponseBodies", False)
+        profile.set_preference("devtools.netmonitor.har.jsonp", False)
+        profile.set_preference("devtools.netmonitor.har.jsonpCallback", False)
+        profile.set_preference("devtools.netmonitor.har.pageLoadedTimeout", "2500")
+
         # Stop updates
         profile.set_preference("app.update.enabled", False)
 
@@ -42,6 +53,7 @@ class FirefoxBrowser(BaseFetcher):
         self.desired_capabilities = webdriver.DesiredCapabilities.FIREFOX
         self.selenium_options = webdriver.FirefoxOptions()
         self.selenium_options.profile = profile
+        self.selenium_options.add_argument("--devtools")
 
     def connect(self):
         """
@@ -58,4 +70,4 @@ class FirefoxBrowser(BaseFetcher):
         """
         Fetches the given URL using Firefox Browser
         """
-        return self.fetch_with_selenium_remote_web_driver()
+        self.fetch_with_selenium_remote_web_driver()

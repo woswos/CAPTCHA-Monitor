@@ -19,6 +19,8 @@ ENV_VARS = {
     "docker_firefox_browser_container_port": "CM_DOCKER_FIREFOX_BROWSER_CONTAINER_PORT",
     "docker_chrome_browser_container_name": "CM_DOCKER_CHROME_BROWSER_CONTAINER_NAME",
     "docker_chrome_browser_container_port": "CM_DOCKER_CHROME_BROWSER_CONTAINER_PORT",
+    "asset_har_export_extension_xpi": "CM_ASSET_HAR_EXPORT_EXTENSION_XPI",
+    "asset_har_export_extension_xpi_id": "CM_ASSET_HAR_EXPORT_EXTENSION_ID",
 }
 
 

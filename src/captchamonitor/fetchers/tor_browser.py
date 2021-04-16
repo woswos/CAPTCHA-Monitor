@@ -47,6 +47,17 @@ class TorBrowser(BaseFetcher):
         # Obtain the Tor Browser profile
         profile = FirefoxProfile(profile_location)
 
+        # Install the extensions
+        self.install_har_export_extension(profile.extensionsDir)
+
+        # Enable the network monitoring tools to record HAR
+        profile.set_preference("devtools.netmonitor.enabled", True)
+        profile.set_preference("devtools.netmonitor.har.compress", False)
+        profile.set_preference("devtools.netmonitor.har.includeResponseBodies", False)
+        profile.set_preference("devtools.netmonitor.har.jsonp", False)
+        profile.set_preference("devtools.netmonitor.har.jsonpCallback", False)
+        profile.set_preference("devtools.netmonitor.har.pageLoadedTimeout", "2500")
+
         # Set security level
         profile.set_preference(
             "extensions.torbutton.security_slider", int(security_level)
@@ -73,6 +84,7 @@ class TorBrowser(BaseFetcher):
         self.desired_capabilities = webdriver.DesiredCapabilities.FIREFOX
         self.selenium_options = webdriver.FirefoxOptions()
         self.selenium_options.profile = profile
+        self.selenium_options.add_argument("--devtools")
 
     def connect(self):
         """
@@ -89,4 +101,4 @@ class TorBrowser(BaseFetcher):
         """
         Fetches the given URL using Tor Browser
         """
-        return self.fetch_with_selenium_remote_web_driver()
+        self.fetch_with_selenium_remote_web_driver()

@@ -34,6 +34,12 @@ class WorkerInitError(Error):
     """
 
 
+class HarExportExtensionXpiError(Error):
+    """
+    Provided Har Export Trigger extension is not valid
+    """
+
+
 class FetcherConnectionInitError(Error):
     """
     Fetcher wasn't initialized as expected

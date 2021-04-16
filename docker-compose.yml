@@ -34,11 +34,14 @@ services:
       - CM_DOCKER_FIREFOX_BROWSER_CONTAINER_PORT=4445
       - CM_DOCKER_CHROME_BROWSER_CONTAINER_NAME=chrome-browser-container
       - CM_DOCKER_CHROME_BROWSER_CONTAINER_PORT=4446
+      - CM_ASSET_HAR_EXPORT_EXTENSION_XPI=/src/captchamonitor/assets/har_export_trigger-0.6.1.xpi
+      - CM_ASSET_HAR_EXPORT_EXTENSION_ID=harexporttrigger@getfirebug.com
     volumes:
       - ./src:/src
       - ./tests:/tests
       - /var/run/docker.sock:/var/run/docker.sock
       - tor_browser_profile_volume:/TorBrowserProfile
+      - shared_tmp_volume:/tmp
     networks:
       - captchamonitor_network
     entrypoint:
@@ -81,6 +84,7 @@ services:
     networks:
       - captchamonitor_network
     volumes:
+      - shared_tmp_volume:/tmp
       - tor_browser_profile_volume:/opt/tor-browser_en-US/Browser/TorBrowser/Data/Browser/profile.default
     shm_size: '2gb'
     environment:
@@ -95,6 +99,8 @@ services:
 
   firefox-browser-container:
     image: selenium/standalone-firefox:latest
+    volumes:
+      - shared_tmp_volume:/tmp
     networks:
       - captchamonitor_network
     shm_size: '2gb'
@@ -110,6 +116,8 @@ services:
 
   chrome-browser-container:
     image: selenium/standalone-chrome:latest
+    volumes:
+      - shared_tmp_volume:/tmp
     networks:
       - captchamonitor_network
     shm_size: '2gb'
@@ -129,4 +137,6 @@ networks:
 
 volumes:
   tor_browser_profile_volume:
+    external: false
+  shared_tmp_volume:
     external: false
