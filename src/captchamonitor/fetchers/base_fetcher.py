@@ -185,7 +185,7 @@ class BaseFetcher:
                 self.url,
                 exception,
             )
-            raise FetcherURLFetchError from exception
+            raise FetcherURLFetchError(exception) from exception
 
         self.page_source = self.driver.page_source
         self.page_cookies = self.driver.get_cookies()
