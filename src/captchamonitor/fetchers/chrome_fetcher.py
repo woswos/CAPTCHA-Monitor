@@ -10,6 +10,8 @@ class ChromeBrowser(BaseFetcher):
     :type BaseFetcher: BaseFetcher class
     """
 
+    method_name_in_db = "chrome_browser"
+
     def setup(self):
         """
         Prepares and starts the Chrome Browser for fetching

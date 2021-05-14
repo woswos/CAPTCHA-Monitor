@@ -11,6 +11,8 @@ class FirefoxBrowser(BaseFetcher):
     :type BaseFetcher: BaseFetcher class
     """
 
+    method_name_in_db = "firefox_browser"
+
     def setup(self):
         """
         Prepares and starts the Firefox Browser for fetching

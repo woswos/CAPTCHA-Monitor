@@ -13,6 +13,8 @@ class TorBrowser(BaseFetcher):
     :type BaseFetcher: BaseFetcher class
     """
 
+    method_name_in_db = "tor_browser"
+
     def setup(self):
         """
         Prepares and starts the Tor Browser for fetching
@@ -35,9 +37,12 @@ class TorBrowser(BaseFetcher):
             raise TorBrowserProfileLocationError
 
         # If no security level is provided, default to "standard"
+        # TODO: Clean this if else mess
         security_levels = {"safest": 1, "safer": 2, "standard": 4}
-        if "TorBrowserSecurityLevel" in self.options:
-            security_level = self.options["TorBrowserSecurityLevel"]
+        if self.options is not None:
+            security_level = self.options.get("TorBrowserSecurityLevel", "standard")
+            if security_level is None:
+                security_level = "standard"
         else:
             security_level = "standard"
 
