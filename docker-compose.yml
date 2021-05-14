@@ -36,6 +36,7 @@ services:
       - CM_DOCKER_CHROME_BROWSER_CONTAINER_PORT=4446
       - CM_ASSET_HAR_EXPORT_EXTENSION_XPI=/src/captchamonitor/assets/har_export_trigger-0.6.1.xpi
       - CM_ASSET_HAR_EXPORT_EXTENSION_ID=harexporttrigger@getfirebug.com
+      - CM_JOB_QUEUE_DELAY=1
     volumes:
       - ./src:/src
       - ./tests:/tests

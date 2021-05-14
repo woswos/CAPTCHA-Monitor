@@ -1,4 +1,5 @@
 import logging
+import time
 from sqlalchemy import text
 from captchamonitor.utils.models import FetchQueue, FetchFailed, FetchCompleted
 from captchamonitor.utils.tor_launcher import TorLauncher
@@ -24,9 +25,12 @@ class Worker:
         self.db_session = db_session
         self.worker_id = worker_id
         self.tor_launcher = TorLauncher(self.config)
+        self.job_queue_delay = float(self.config["job_queue_delay"])
 
         # Loop over the jobs
-        self.__process_next_job()
+        while True:
+            self.__process_next_job()
+            time.sleep(self.job_queue_delay)
 
     def __process_next_job(self):
         """
