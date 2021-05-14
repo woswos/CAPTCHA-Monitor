@@ -140,7 +140,7 @@ class TorLauncher:
             )
             raise StemConnectionInitError
 
-        self.__logger.info(
+        self.__logger.debug(
             "Connected to the Tor Container, the Tor version running on the container is %s",
             self.__controller.get_version(),
         )

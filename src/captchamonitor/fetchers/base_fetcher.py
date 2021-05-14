@@ -157,7 +157,7 @@ class BaseFetcher:
         self.driver.set_script_timeout(self.script_timeout)
 
         # Log the current status
-        self.logger.info("Connected to the %s container", container_name)
+        self.logger.debug("Connected to the %s container", container_name)
 
     def install_har_export_extension(self, directory):
         """
