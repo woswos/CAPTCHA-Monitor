@@ -14,6 +14,10 @@ temp:
 	docker-compose up
 
 down:
+ifneq ($(shell docker ps -f ancestor="captchamonitor-tor-container" -q),)
+	@echo "Killing captchamonitor-tor-container instances"
+	docker kill $$(docker ps -f ancestor="captchamonitor-tor-container" -q)
+endif
 	docker-compose down --remove-orphans
 
 test: up
