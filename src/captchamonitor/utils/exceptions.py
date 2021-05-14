@@ -5,54 +5,50 @@ class Error(Exception):
 
 
 class DatabaseInitError(Error):
-    """
-    Database initialization error
-    """
+    def __str__(self):
+        return "Database initialization error"
 
 
 class ConfigInitError(Error):
-    """
-    Configuration initialization error
-    """
+    def __str__(self):
+        return "Configuration initialization error"
 
 
 class TorLauncherInitError(Error):
-    """
-    Tor Launcher initialization error
-    """
+    def __str__(self):
+        return "Tor Launcher initialization error"
 
 
 class StemConnectionInitError(Error):
-    """
-    Stem cannot connect to the Tor container
-    """
+    def __str__(self):
+        return "Stem cannot connect to the Tor container"
 
 
 class WorkerInitError(Error):
-    """
-    Worker initialization error
-    """
+    def __str__(self):
+        return "Worker initialization error"
 
 
 class HarExportExtensionXpiError(Error):
-    """
-    Provided Har Export Trigger extension is not valid
-    """
+    def __str__(self):
+        return "Provided Har Export Trigger extension is not valid"
 
 
 class FetcherConnectionInitError(Error):
-    """
-    Fetcher wasn't initialized as expected
-    """
+    def __str__(self):
+        return "Fetcher wasn't initialized as expected"
 
 
 class FetcherURLFetchError(Error):
-    """
-    Fetcher wasn't able to provided URL
-    """
+    def __str__(self):
+        return "Fetcher wasn't able to provided URL"
 
 
 class TorBrowserProfileLocationError(Error):
-    """
-    The provided location is inaccessible or not a valid directory
-    """
+    def __str__(self):
+        return "The provided location is inaccessible or not a valid directory"
+
+
+class FetcherNotFound(Error):
+    def __str__(self):
+        return "The provided fetcher method is not available"
