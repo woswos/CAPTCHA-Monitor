@@ -1,5 +1,6 @@
 import os
 import unittest
+from captchamonitor.version import __version__
 from captchamonitor.utils.config import Config, ENV_VARS
 from captchamonitor.utils.exceptions import ConfigInitError
 
@@ -61,7 +62,7 @@ class TestAttrDict(unittest.TestCase):
         my_dict = Config()
         my_dict["test"] = 123
         my_dict.python = 42
-        self.assertEqual(len(my_dict), 2 + len(ENV_VARS))
+        self.assertEqual(len(my_dict), 3 + len(ENV_VARS))
 
     def test_repr(self):
         my_dict = Config()
@@ -70,6 +71,7 @@ class TestAttrDict(unittest.TestCase):
         real_dict = {}
         for key, value in ENV_VARS.items():
             real_dict[key] = self.env_var_default_value
+        real_dict["version"] = __version__
 
         self.assertEqual(repr(my_dict), repr(real_dict))
 
