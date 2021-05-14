@@ -60,21 +60,21 @@ class Relay(BaseModel):
     __tablename__ = "relay"
 
     # fmt: off
-    fingerprint = Column(String, unique=True, index=True)  # BASE64 encoded SHA256 hash
-    ipv4_address = Column(String, nullable=False)          # IPv4 address of the relay
-    ipv6_address = Column(String)                          # IPv6 address of the relay
-    ipv4_exiting_allowed = Column(Boolean, nullable=False) # True or False based on whether this relay allows IPv4 exits
-    ipv6_exiting_allowed = Column(Boolean, nullable=False) # True or False based on whether this relay allows IPv6 exits
-    country = Column(String)                               # ISO 3166 alpha-2 country code based on GeoIP
-    continent = Column(String)                             # continent based on GeoIP, plain English
-    status = Column(Boolean)                               # True or False based on whether this relay is online or offline
-    nickname = Column(String)                              # Nickname of the relay
-    first_seen = Column(String)                            # Relay's first seen date
-    last_seen = Column(String)                             # Relay's last seen date
-    version = Column(String)                               # The Tor version running on the relay
-    asn = Column(String)                                   # Relay's autonomous system number/code
-    platform = Column(String)                              # The operating system of the relay
-    comment = Column(String)                               # Comments, if there is any
+    fingerprint = Column(String, unique=True, index=True, nullable=False) # BASE64 encoded SHA256 hash
+    ipv4_address = Column(String, nullable=False)                         # IPv4 address of the relay
+    ipv6_address = Column(String)                                         # IPv6 address of the relay
+    ipv4_exiting_allowed = Column(Boolean, nullable=False)                # True or False based on whether this relay allows IPv4 exits
+    ipv6_exiting_allowed = Column(Boolean, nullable=False)                # True or False based on whether this relay allows IPv6 exits
+    country = Column(String)                                              # ISO 3166 alpha-2 country code based on GeoIP
+    continent = Column(String)                                            # continent based on GeoIP, plain English
+    status = Column(Boolean)                                              # True or False based on whether this relay is online or offline
+    nickname = Column(String)                                             # Nickname of the relay
+    first_seen = Column(String)                                           # Relay's first seen date
+    last_seen = Column(String)                                            # Relay's last seen date
+    version = Column(String)                                              # The Tor version running on the relay
+    asn = Column(String)                                                  # Relay's autonomous system number/code
+    platform = Column(String)                                             # The operating system of the relay
+    comment = Column(String)                                              # Comments, if there is any
     # fmt: on
 
 
@@ -115,9 +115,9 @@ class FetchBaseModel(BaseModel):
 
     # pylint: disable=E0213
     @declared_attr
-    def relay_fingerprint(cls):
+    def relay_id(cls):
         # Fingerprint exit node/relay to use, only required when using Tor
-        return Column(String, ForeignKey("relay.fingerprint"))
+        return Column(Integer, ForeignKey("relay.id"))
 
     # fmt: off
     options = Column(JSON)              # Additional options to provide to fetcher in JSON format
