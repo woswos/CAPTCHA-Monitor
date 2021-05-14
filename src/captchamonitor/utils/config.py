@@ -1,5 +1,6 @@
 import os
 import logging
+from captchamonitor.version import __version__
 from captchamonitor.utils.exceptions import ConfigInitError
 
 ENV_VARS = {
@@ -46,6 +47,9 @@ class Config:
                 )
                 raise ConfigInitError
             self.__dict__[key] = temp
+
+        # Add CAPTCHA Monitor version
+        self.__dict__["version"] = __version__
 
     def __getitem__(self, key):
         try:
