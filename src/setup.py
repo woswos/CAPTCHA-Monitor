@@ -1,5 +1,6 @@
 from setuptools import setup
 
+__version__ = None
 exec(open("captchamonitor/version.py").read())
 
 setup(
