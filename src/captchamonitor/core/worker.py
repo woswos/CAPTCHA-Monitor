@@ -61,8 +61,12 @@ class Worker:
         if job is None:
             return
 
-        # Fetch it using a fetcher
         try:
+            # Create a new circuit if we will be using Tor
+            if job.ref_fetcher.uses_tor is True:
+                self.tor_launcher.create_new_circuit_to(job.ref_relay.fingerprint)
+
+            # Fetch it using a fetcher
             if job.ref_fetcher.method == TorBrowser.method_name_in_db:
                 options_dict = {"TorBrowserSecurityLevel": job.tbb_security_level}
                 if job.options is not None:
@@ -110,7 +114,7 @@ class Worker:
                 fail_reason=str(exception),
                 target_fetcher=job.target_fetcher,
                 url_id=job.url_id,
-                relay_fingerprint=job.relay_fingerprint,
+                relay_id=job.relay_id,
             )
             self.db_session.add(failed)
             self.logger.debug(
@@ -131,7 +135,7 @@ class Worker:
                 http_requests=fetcher.page_har,
                 target_fetcher=job.target_fetcher,
                 url_id=job.url_id,
-                relay_fingerprint=job.relay_fingerprint,
+                relay_id=job.relay_id,
             )
             self.db_session.add(completed)
             self.logger.debug(
@@ -142,6 +146,9 @@ class Worker:
             )
 
         finally:
+            # Reset the changes
+            self.tor_launcher.reset_configuration()
+
             # Delete job from the job queue
             self.db_session.delete(job)
 
