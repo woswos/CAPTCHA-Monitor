@@ -24,6 +24,11 @@ class StemConnectionInitError(Error):
         return "Stem cannot connect to the Tor container"
 
 
+class StemDescriptorUnavailableError(Error):
+    def __str__(self):
+        return "Stem cannot get relay descriptors"
+
+
 class WorkerInitError(Error):
     def __str__(self):
         return "Worker initialization error"

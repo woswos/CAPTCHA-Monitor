@@ -1,12 +1,15 @@
 import logging
 import time
+import random
 import docker
 import port_for
 import stem
+import stem.control
 from stem.control import Controller
 from captchamonitor.utils.exceptions import (
     TorLauncherInitError,
     StemConnectionInitError,
+    StemDescriptorUnavailableError,
 )
 
 
@@ -23,9 +26,11 @@ class TorLauncher:
         self.ip_address = None
         self.socks_port = None
         self.control_port = None
+        self.relay_fingerprints = None
 
         self.__logger = logging.getLogger(__name__)
         self.__config = config
+        self.__circuit_id = None
 
         try:
             self.__docker_network_name = self.__config["docker_network"]
@@ -112,6 +117,8 @@ class TorLauncher:
     def __bind_stem_to_tor_container(self):
         """
         Binds Tor Stem to the Tor Container launched earlier
+
+        :raises StemConnectionInitError: If stem wasn't initialized correctly
         """
         self.__tor_password = self.__config["docker_tor_authentication_password"]
 
@@ -144,6 +151,86 @@ class TorLauncher:
             "Connected to the Tor Container, the Tor version running on the container is %s",
             self.__controller.get_version(),
         )
+
+    def update_relay_descriptors(self):
+        """
+        Gets a copy of the current relay descriptors from the Tor Container using
+        stem
+
+        :raises StemDescriptorUnavailableError: If stem wasn't able to get relay descriptors
+        """
+        # Try connecting 3 times
+        connected = False
+        for _ in range(3):
+            try:
+                self.relay_fingerprints = [
+                    desc.fingerprint
+                    for desc in self.__controller.get_network_statuses()
+                ]
+                connected = True
+                break
+
+            except stem.DescriptorUnavailable as exception:
+                self.__logger.debug(
+                    "Unable to get relay descriptors, retrying: %s",
+                    exception,
+                )
+                time.sleep(3)
+
+        # Check if connection was successfull
+        if not connected:
+            self.__logger.warning("Could not get relay descriptors after many retries")
+            raise StemDescriptorUnavailableError
+
+    def __attach_stream(self, stream):
+        """
+        Attaches streams to the circuit id specified
+
+        :param stream: stem.stream
+        :type stream: stem.stream
+        """
+        if stream.status == "NEW":
+            self.__controller.attach_stream(stream.id, self.__circuit_id)
+
+    def create_new_circuit_to(self, exit_relay, guard_relay=None):
+        """
+        Create a two hop circuit between a guard relay and an exit relay. Uses the
+        given exit relay and randomly chooses a guard relay if not provided one.
+
+        :param exit_relay: Fingerprint of the exit relay to use
+        :type exit_relay: str
+        :param guard_relay: Fingerprint of the guard relay to use, defaults to None
+        :type guard_relay: str, optional
+        """
+        # Get a fresh copy of the descriptors
+        self.update_relay_descriptors()
+
+        # Choose a guard relay randomly if not specified
+        if guard_relay is None:
+            while True:
+                guard_relay = random.choice(self.relay_fingerprints)
+                # Make sure the chosen guard relay is not same as the exit relay
+                if guard_relay != exit_relay:
+                    break
+
+        self.__circuit_id = self.__controller.new_circuit(
+            [guard_relay, exit_relay], await_build=True
+        )
+
+        # pylint: disable=E1101
+        self.__controller.add_event_listener(
+            self.__attach_stream, stem.control.EventType.STREAM
+        )
+
+        # leave stream management to us
+        self.__controller.set_conf("__LeaveStreamsUnattached", "1")
+
+    def reset_configuration(self):
+        """
+        Resets stem back to its original state
+        """
+        self.__controller.remove_event_listener(self.__attach_stream)
+        self.__controller.reset_conf("__LeaveStreamsUnattached")
 
     def __del__(self):
         # Close connection
