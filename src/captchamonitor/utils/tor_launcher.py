@@ -5,6 +5,7 @@ import docker
 import port_for
 import stem
 import stem.control
+from stem.util.log import get_logger
 from stem.control import Controller
 from captchamonitor.utils.exceptions import (
     TorLauncherInitError,
@@ -38,6 +39,10 @@ class TorLauncher:
         except Exception as exception:
             self.__logger.warning("Could not connect to Tor:\n %s", exception)
             raise TorLauncherInitError from exception
+
+        # Silence the stem logger
+        stem_logger = get_logger()
+        stem_logger.propagate = False
 
         self.__launch_tor_container()
         self.__bind_stem_to_tor_container()
