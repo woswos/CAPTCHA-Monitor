@@ -1,6 +1,6 @@
-import time
+# import time
+# import schedule
 import logging
-import schedule
 from captchamonitor.cm import CaptchaMonitor
 
 
@@ -12,13 +12,14 @@ logger.setLevel(logging.DEBUG)
 # Create the CAPTCHA Monitor
 logger.info("Intializing CAPTCHA Monitor")
 cm = CaptchaMonitor()
+cm.worker()
 
 # Schedule tasks
-logger.info("Scheduling tasks")
-schedule.every(30).seconds.do(cm.worker)
+# logger.info("Scheduling tasks")
+# schedule.every(0.5).seconds.do(cm.worker)
 
-# Run jobs
-logger.info("Started running the tasks")
-while True:
-    schedule.run_pending()
-    time.sleep(1)
+# # Run jobs
+# logger.info("Started running the tasks")
+# while True:
+#     schedule.run_pending()
+#     time.sleep(1)
