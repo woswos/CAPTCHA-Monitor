@@ -57,6 +57,8 @@ services:
       - POSTGRES_PASSWORD=captchamonitor_test
     ports:
       - "5432:5432"
+    volumes:
+      - ./captchamonitor-db-data:/var/lib/postgresql/data
     networks:
       - captchamonitor_network
     healthcheck:
