@@ -5,7 +5,7 @@ from captchamonitor.utils.models import FetchQueue, FetchFailed, FetchCompleted
 from captchamonitor.utils.tor_launcher import TorLauncher
 from captchamonitor.fetchers.tor_browser import TorBrowser
 from captchamonitor.fetchers.firefox_browser import FirefoxBrowser
-from captchamonitor.fetchers.chrome_fetcher import ChromeBrowser
+from captchamonitor.fetchers.chrome_browser import ChromeBrowser
 from captchamonitor.utils.exceptions import FetcherNotFound
 
 
