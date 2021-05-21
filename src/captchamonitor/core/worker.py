@@ -112,7 +112,7 @@ class Worker:
                 tbb_security_level=job.tbb_security_level,
                 captcha_monitor_version=self.config["version"],
                 fail_reason=str(exception),
-                target_fetcher=job.target_fetcher,
+                fetcher_id=job.fetcher_id,
                 url_id=job.url_id,
                 relay_id=job.relay_id,
             )
@@ -121,7 +121,7 @@ class Worker:
                 "Worker %s wasn't able to fetch URL id %s with %s: %s",
                 self.worker_id,
                 job.url_id,
-                job.target_fetcher,
+                job.fetcher_id,
                 str(exception),
             )
 
@@ -133,7 +133,7 @@ class Worker:
                 captcha_monitor_version=self.config["version"],
                 html_data=fetcher.page_source,
                 http_requests=fetcher.page_har,
-                target_fetcher=job.target_fetcher,
+                fetcher_id=job.fetcher_id,
                 url_id=job.url_id,
                 relay_id=job.relay_id,
             )
@@ -142,7 +142,7 @@ class Worker:
                 "Worker %s successfully fetched URL id %s with %s",
                 self.worker_id,
                 job.url_id,
-                job.target_fetcher,
+                job.fetcher_id,
             )
 
         finally:
