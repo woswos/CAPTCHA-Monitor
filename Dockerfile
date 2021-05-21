@@ -9,5 +9,6 @@ COPY src/ /src/
 RUN pip install -e /src
 COPY tests/ /tests/
 COPY .env /.env
+COPY .env.example /.env.example
 
 WORKDIR /src
