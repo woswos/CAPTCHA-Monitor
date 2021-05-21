@@ -103,7 +103,7 @@ class FetchBaseModel(BaseModel):
 
     # pylint: disable=E0213
     @declared_attr
-    def target_fetcher(cls):
+    def fetcher_id(cls):
         # Name of the desired fetcher to use
         return Column(Integer, ForeignKey("fetcher.id"))
 
