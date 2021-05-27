@@ -3,14 +3,14 @@
 
 image: python:latest
 
-unit-tests:
+tests:
   stage: test
   script:
     - pip install -r requirements.txt
     - pip install -e src/
     - pip install pytest pytest-cov black
     - black --check --line-length 88 .
-    - pytest -v --cov=src/captchamonitor/ --cov-report term-missing --junitxml=report.xml
+    - pytest -v --cov=src/captchamonitor/ --cov-report term-missing --junitxml=report.xml --ignore=tests/integration
     - coverage xml
   artifacts:
     reports:
