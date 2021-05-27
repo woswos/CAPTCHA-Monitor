@@ -8,8 +8,12 @@ def env_setup(monkeypatch):
     # Use if the user specified env file, if exists
     if os.path.isfile("/.env"):
         target_env_file = "/.env"
-    else:
+    elif os.path.isfile("/.env.example"):
         target_env_file = "/.env.example"
+    elif os.path.isfile(".env"):
+        target_env_file = ".env"
+    else:
+        target_env_file = ".env.example"
 
     # Read .env file
     with open(target_env_file) as f:
