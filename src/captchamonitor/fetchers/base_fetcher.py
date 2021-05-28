@@ -103,11 +103,7 @@ class BaseFetcher:
         return f"http://{container_host}:{container_port}/wd/hub"
 
     def connect_to_selenium_remote_web_driver(
-        self,
-        container_name,
-        desired_capabilities,
-        command_executor,
-        options=None,
+        self, container_name, desired_capabilities, command_executor, options=None
     ):
         """
         Connects Selenium remote driver to a browser container
@@ -180,11 +176,7 @@ class BaseFetcher:
             self.driver.get(self.url)
 
         except WebDriverException as exception:
-            self.logger.debug(
-                "Unable to fetch %s because of: %s",
-                self.url,
-                exception,
-            )
+            self.logger.debug("Unable to fetch %s because of: %s", self.url, exception)
             raise FetcherURLFetchError(exception) from exception
 
         self.page_source = self.driver.page_source

@@ -32,7 +32,7 @@ init: check_root
 check: check_non_root
 	pip3 install -q -r requirements.txt
 	black --line-length 88 $$(find * -name '*.py')
-	pylint -v --disable=C0301,R0903,R0913,C0114,R0902,W0511 --docstring-min-length=10 --min-similarity-lines=10 $$(find * -name '*.py' -not -path "tests/*")
+	pylint -v --disable=C0301,R0903,R0913,C0114,R0902,W0511,C0103,C0330 --docstring-min-length=10 --min-similarity-lines=10 $$(find * -name '*.py' -not -path "tests/*")
 
 check_non_root:
 ifeq ($(shell id -u), 0)

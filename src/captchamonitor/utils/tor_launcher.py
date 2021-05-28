@@ -140,8 +140,7 @@ class TorLauncher:
 
             except stem.SocketError as exception:
                 self.__logger.debug(
-                    "Unable to connect to the Tor Container, retrying: %s",
-                    exception,
+                    "Unable to connect to the Tor Container, retrying: %s", exception
                 )
                 time.sleep(3)
 
@@ -177,8 +176,7 @@ class TorLauncher:
 
             except stem.DescriptorUnavailable as exception:
                 self.__logger.debug(
-                    "Unable to get relay descriptors, retrying: %s",
-                    exception,
+                    "Unable to get relay descriptors, retrying: %s", exception
                 )
                 time.sleep(3)
 
