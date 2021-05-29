@@ -53,3 +53,4 @@ def wipe_test_db_tables(monkeypatch):
 
     # Commit the changes
     db_session.commit()
+    db_session.close()
