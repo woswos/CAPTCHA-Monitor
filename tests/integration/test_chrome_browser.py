@@ -5,7 +5,7 @@ from captchamonitor.utils.tor_launcher import TorLauncher
 from captchamonitor.fetchers.chrome_browser import ChromeBrowser
 
 
-class TestFirefoxBrowser(unittest.TestCase):
+class TestChromeBrowser(unittest.TestCase):
     def setUp(self):
         self.config = Config()
         self.tor_launcher = TorLauncher(self.config)
