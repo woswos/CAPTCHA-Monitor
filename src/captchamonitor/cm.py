@@ -54,7 +54,7 @@ class CaptchaMonitor:
             sys.exit(1)
 
         # Obtain the session from database module
-        self.session = self.database.session()
+        self.db_session = self.database.session()
 
     def add_jobs(self):
         """
@@ -69,7 +69,7 @@ class CaptchaMonitor:
         """
         self.logger.debug("Running worker")
 
-        Worker(worker_id="0", config=self.config, db_session=self.session)
+        Worker(worker_id="0", config=self.config, db_session=self.db_session)
 
     def update_urls(self):
         """
@@ -82,3 +82,9 @@ class CaptchaMonitor:
         Analyses the data recorded in the database
         """
         self.logger.debug("Started data analysis")
+
+    def __del__(self):
+        """
+        Do cleaning before going out of scope
+        """
+        self.db_session.close()
