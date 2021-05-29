@@ -16,7 +16,7 @@ class Worker:
     Keeps doing this until the kill signal is received or the program exits.
     """
 
-    def __init__(self, worker_id, config, db_session):
+    def __init__(self, worker_id, config, db_session, loop=True):
         """
         Initializes a new worker
         """
@@ -28,11 +28,11 @@ class Worker:
         self.job_queue_delay = float(self.config["job_queue_delay"])
 
         # Loop over the jobs
-        while True:
-            self.__process_next_job()
+        while loop:
+            self.process_next_job()
             time.sleep(self.job_queue_delay)
 
-    def __process_next_job(self):
+    def process_next_job(self):
         """
         Processes the next available job in the job queue. Claims the job, tries
         fetching the URL specified in the job with the specified fetcher. If
