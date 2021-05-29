@@ -44,11 +44,12 @@ def wipe_test_db_tables(monkeypatch):
         config["db_user"],
         config["db_password"],
     )
+    db_session = database.session()
 
-    session = database.session()
-
-    # Wipe the database tables
+    # Wipe the database tables and reset the autoincrement counters
     meta = database.model.metadata
-    for table in reversed(meta.sorted_tables):
-        session.execute(table.delete())
-    session.commit()
+    for table in meta.tables.keys():
+        db_session.execute(f"TRUNCATE TABLE {table.lower()} RESTART IDENTITY CASCADE;")
+
+    # Commit the changes
+    db_session.commit()
