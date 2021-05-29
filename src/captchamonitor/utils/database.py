@@ -47,8 +47,10 @@ class Database:
             self.logger.warning("Could not connect to the database:\n %s", exception)
             raise DatabaseInitError from exception
 
+        self.model = Model
+
         # Process models
-        Model.metadata.create_all(self.engine)
+        self.model.metadata.create_all(self.engine)
 
         # Create session
         self.session = sessionmaker(bind=self.engine)
