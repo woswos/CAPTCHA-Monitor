@@ -3,6 +3,8 @@ import unittest
 from captchamonitor.utils.config import Config
 from captchamonitor.utils.tor_launcher import TorLauncher
 from captchamonitor.fetchers.tor_browser import TorBrowser
+from captchamonitor.utils.exceptions import TorBrowserProfileLocationError
+from captchamonitor.utils.small_scripts import deep_copy
 
 
 class TestTorBrowser(unittest.TestCase):
@@ -28,6 +30,52 @@ class TestTorBrowser(unittest.TestCase):
             "Congratulations. This browser is configured to use Tor.",
             tor_browser.page_source,
         )
+
+    def test_tor_browser_wrong_profile_location(self):
+        test_config = deep_copy(self.config)
+
+        # Modify the profile directory
+        test_config[
+            "docker_tor_browser_container_profile_location"
+        ] = "obviously_wrong_directory"
+
+        tor_browser = TorBrowser(
+            config=test_config,
+            url=self.target_url,
+            tor_launcher=self.tor_launcher,
+            options={"TorBrowserSecurityLevel": "standard"},
+            use_tor=True,
+        )
+
+        # Try to setup the browser
+        with pytest.raises(TorBrowserProfileLocationError) as pytest_wrapped_e:
+            tor_browser.setup()
+
+        # Check if the exception is correct
+        self.assertEqual(pytest_wrapped_e.type, TorBrowserProfileLocationError)
+
+    def test_tor_browser_with_wrong_security_option(self):
+        tor_browser = TorBrowser(
+            config=self.config,
+            url=self.target_url,
+            tor_launcher=self.tor_launcher,
+            options={"TorBrowserSecurityLevel": None},
+            use_tor=True,
+        )
+
+        # Try to setup the browser
+        tor_browser.setup()
+
+    def test_tor_browser_with_no_option(self):
+        tor_browser = TorBrowser(
+            config=self.config,
+            url=self.target_url,
+            tor_launcher=self.tor_launcher,
+            use_tor=True,
+        )
+
+        # Try to setup the browser
+        tor_browser.setup()
 
     def test_tor_browser_security_level_safer(self):
         tor_browser = TorBrowser(

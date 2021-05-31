@@ -242,8 +242,9 @@ class TorLauncher:
         self.__controller.reset_conf("__LeaveStreamsUnattached")
 
     def __del__(self) -> None:
-        # Close connection
-        self.__controller.close()
+        if hasattr(self, "__controller"):
+            # Close connection
+            self.__controller.close()
 
-        # Kill the container
-        self.__container.kill()
+            # Kill the container
+            self.__container.kill()

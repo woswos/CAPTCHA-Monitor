@@ -43,9 +43,9 @@ class Database:
             f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{db_name}"
         )
 
-        self.engine = create_engine(self.connection_string, echo=verbose)
-
         try:
+            self.engine = create_engine(self.connection_string, echo=verbose)
+
             if not database_exists(self.engine.url):
                 self.logger.info("Database doesn't exist, creating it now")
                 create_database(self.engine.url)

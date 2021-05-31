@@ -225,5 +225,5 @@ class BaseFetcher:
         return self.driver.get_screenshot_as_png()
 
     def __del__(self) -> None:
-        if self.driver is not None:
+        if hasattr(self, "driver"):
             self.driver.quit()
