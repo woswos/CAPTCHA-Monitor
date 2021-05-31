@@ -87,4 +87,5 @@ class CaptchaMonitor:
         """
         Do cleaning before going out of scope
         """
-        self.db_session.close()
+        if hasattr(self, "db_session"):
+            self.db_session.close()
