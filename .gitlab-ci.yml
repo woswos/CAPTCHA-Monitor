@@ -10,7 +10,7 @@ tests:
     - pip install -e src/
     - pip install pytest pytest-cov black
     - black --check --line-length 88 .
-    - pytest -v --cov=src/captchamonitor/ --cov-report term-missing --junitxml=report.xml --ignore=tests/integration
+    - pytest -v --cov=src/captchamonitor/ --cov-report term-missing --junitxml=report.xml --ci-mode --ignore=tests/integration
     - coverage xml
   artifacts:
     reports:
