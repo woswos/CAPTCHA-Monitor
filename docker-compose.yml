@@ -1,7 +1,7 @@
 version: "2.2"
 
 services:
-  captchamonitor:
+  captchamonitor: &captchamonitor_base_service
     image: captchamonitor
     build:
       context: .
@@ -28,16 +28,21 @@ services:
       - shared_tmp_volume:/tmp
     networks:
       - captchamonitor_network
+
+  cm-worker:
+    <<: *captchamonitor_base_service
+    restart: always
     entrypoint:
       - python
       - -m
       - captchamonitor
-
+      - --worker
+      
   postgres:
     image: postgres:9.6
     environment:
-      - POSTGRES_USER=captchamonitor_user
-      - POSTGRES_PASSWORD=captchamonitor_test
+      POSTGRES_USER: ${CM_DB_USER}
+      POSTGRES_PASSWORD: ${CM_DB_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
@@ -45,7 +50,7 @@ services:
     networks:
       - captchamonitor_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U captchamonitor_user"]
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -80,8 +85,6 @@ services:
       interval: 15s
       timeout: 30s
       retries: 5
-    # logging:
-    #   driver: none
 
   firefox-browser-container:
     image: selenium/standalone-firefox:latest
@@ -97,8 +100,6 @@ services:
       interval: 15s
       timeout: 30s
       retries: 5
-    # logging:
-    #   driver: none
 
   chrome-browser-container:
     image: selenium/standalone-chrome:latest
@@ -114,8 +115,6 @@ services:
       interval: 15s
       timeout: 30s
       retries: 5
-    # logging:
-    #   driver: none
 
 networks:
   captchamonitor_network:

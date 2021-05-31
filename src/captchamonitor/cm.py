@@ -6,6 +6,7 @@ from captchamonitor.utils.config import Config
 from captchamonitor.utils.database import Database
 from captchamonitor.utils.exceptions import DatabaseInitError, ConfigInitError
 from captchamonitor.core.worker import Worker
+from captchamonitor.utils.small_scripts import node_id
 
 
 class CaptchaMonitor:
@@ -21,6 +22,7 @@ class CaptchaMonitor:
         :type verbose: bool, optional
         """
         self.logger = logging.getLogger(__name__)
+        self.node_id = str(node_id())
 
         try:
             self.config = Config()
@@ -68,9 +70,13 @@ class CaptchaMonitor:
         Fetches a job from the database and processes it using Tor Browser or
         other specified browsers. Inserts the result back into the database.
         """
-        self.logger.debug("Running worker")
+        self.logger.debug("Running worker %s", self.node_id)
 
-        Worker(worker_id="0", config=self.config, db_session=self.db_session)
+        Worker(
+            worker_id=self.node_id,
+            config=self.config,
+            db_session=self.db_session,
+        )
 
     def update_urls(self) -> None:
         """
