@@ -1,4 +1,5 @@
 import os
+from typing import Any
 from selenium import webdriver
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 from captchamonitor.fetchers.base_fetcher import BaseFetcher
@@ -15,7 +16,7 @@ class TorBrowser(BaseFetcher):
 
     method_name_in_db = "tor_browser"
 
-    def setup(self):
+    def setup(self) -> None:
         """
         Prepares and starts the Tor Browser for fetching
 
@@ -93,7 +94,7 @@ class TorBrowser(BaseFetcher):
         self.selenium_options.profile = profile
         self.selenium_options.add_argument("--devtools")
 
-    def connect(self):
+    def connect(self) -> None:
         """
         Connects Selenium driver to Tor Browser Container
         """
@@ -104,7 +105,7 @@ class TorBrowser(BaseFetcher):
             options=self.selenium_options,
         )
 
-    def fetch(self):
+    def fetch(self) -> Any:
         """
         Fetches the given URL using Tor Browser
         """

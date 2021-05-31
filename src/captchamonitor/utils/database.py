@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy_utils import database_exists, create_database
@@ -11,7 +12,15 @@ class Database:
     Communicates with the database using SQLAlchemy
     """
 
-    def __init__(self, host, port, db_name, user, password, verbose=False):
+    def __init__(
+        self,
+        host: str,
+        port: str,
+        db_name: str,
+        user: str,
+        password: str,
+        verbose: Optional[bool] = False,
+    ) -> None:
         """
         Prepares the database connection and tables in the database
 

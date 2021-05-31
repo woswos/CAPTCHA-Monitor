@@ -1,3 +1,4 @@
+from typing import Any
 from selenium import webdriver
 from captchamonitor.fetchers.base_fetcher import BaseFetcher
 
@@ -12,7 +13,7 @@ class ChromeBrowser(BaseFetcher):
 
     method_name_in_db = "chrome_browser"
 
-    def setup(self):
+    def setup(self) -> None:
         """
         Prepares and starts the Chrome Browser for fetching
         """
@@ -34,7 +35,7 @@ class ChromeBrowser(BaseFetcher):
             proxy = f"socks5://{socks_host}:{socks_port}"
             self.selenium_options.add_argument(f"--proxy-server={proxy}")
 
-    def connect(self):
+    def connect(self) -> None:
         """
         Connects Selenium driver to Chrome Browser Container
         """
@@ -45,7 +46,7 @@ class ChromeBrowser(BaseFetcher):
             options=self.selenium_options,
         )
 
-    def fetch(self):
+    def fetch(self) -> Any:
         """
         Fetches the given URL using Chrome Browser
         """

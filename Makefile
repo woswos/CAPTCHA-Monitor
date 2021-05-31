@@ -15,7 +15,7 @@ temp:
 
 down:
 ifneq ($(shell docker ps -f ancestor="captchamonitor-tor-container" -q),)
-	@echo "Killing captchamonitor-tor-container instances"
+	@echo "\n>> Killing captchamonitor-tor-container instances"
 	docker kill $$(docker ps -f ancestor="captchamonitor-tor-container" -q)
 endif
 	docker-compose down --remove-orphans
@@ -30,18 +30,23 @@ init: check_root
 	apt install black pylint
 	
 check: check_non_root
+	@echo "\n>> Installing requirements"
 	pip3 install -q -r requirements.txt
-	black --line-length 88 $$(find * -name '*.py')
-	pylint -v --disable=C0301,R0903,R0913,C0114,R0902,W0511,C0103,C0330 --docstring-min-length=10 --min-similarity-lines=10 $$(find * -name '*.py' -not -path "tests/*")
+	@echo "\n>> Running black"
+	black --line-length 88 $$(find * -name '*.py' 2>&1 | grep -v 'Permission denied')
+	@echo "\n>> Running mypy"
+	mypy ./src
+	@echo "\n>> Running pylint"
+	pylint -v --disable=C0301,R0903,R0913,C0114,R0902,W0511,C0103,C0330 --docstring-min-length=10 --min-similarity-lines=10 $$(find * -name '*.py' -not -path "tests/*" 2>&1 | grep -v 'Permission denied')
 
 check_non_root:
 ifeq ($(shell id -u), 0)
-	@echo "Please run this command without sudo"
+	@echo "\n>> Please run this command without sudo"
 	exit 1
 endif
 
 check_root:
 ifneq ($(shell id -u), 0)
-	@echo "Please run this command with sudo"
+	@echo "\n>> Please run this command with sudo"
 	exit 1
 endif

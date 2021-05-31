@@ -1,5 +1,6 @@
 import os
 import logging
+from typing import Any, Optional
 from captchamonitor.version import __version__
 from captchamonitor.utils.exceptions import ConfigInitError
 
@@ -34,7 +35,7 @@ class Config:
     Based on: https://gist.github.com/turicas/1510860
     """
 
-    def __init__(self, init=None):
+    def __init__(self, init: Optional[dict] = None) -> None:
         # Add if initial values are passed
         if init is not None:
             self.__dict__.update(init)
@@ -52,7 +53,7 @@ class Config:
         # Add CAPTCHA Monitor version
         self.__dict__["version"] = __version__
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: Any) -> Any:
         try:
             return self.__dict__[key]
         except (KeyError, AttributeError) as exception:
@@ -61,17 +62,17 @@ class Config:
             )
             raise exception
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: Any, value: Any) -> None:
         self.__dict__[key] = value
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: Any) -> None:
         del self.__dict__[key]
 
-    def __contains__(self, key):
+    def __contains__(self, key: Any) -> bool:
         return key in self.__dict__
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.__dict__)
 
-    def __repr__(self):
+    def __repr__(self) -> Any:
         return repr(self.__dict__)

@@ -1,12 +1,14 @@
 import logging
 import time
 import random
+from typing import Optional, Any, List
 import docker
 import port_for
 import stem
 import stem.control
 from stem.util.log import get_logger
 from stem.control import Controller
+from captchamonitor.utils.config import Config
 from captchamonitor.utils.exceptions import (
     TorLauncherInitError,
     StemConnectionInitError,
@@ -19,19 +21,19 @@ class TorLauncher:
     Launch Tor with given configuration values
     """
 
-    def __init__(self, config):
+    def __init__(self, config: Config) -> None:
         """
         Initialize Tor Launcher
         """
         # Public class attributes
-        self.ip_address = None
-        self.socks_port = None
-        self.control_port = None
-        self.relay_fingerprints = None
+        self.ip_address: str
+        self.socks_port: str
+        self.control_port: str
+        self.relay_fingerprints: List[Any]
 
         self.__logger = logging.getLogger(__name__)
         self.__config = config
-        self.__circuit_id = None
+        self.__circuit_id: Controller.new_circuit
 
         try:
             self.__docker_network_name = self.__config["docker_network"]
@@ -47,7 +49,7 @@ class TorLauncher:
         self.__launch_tor_container()
         self.__bind_stem_to_tor_container()
 
-    def __launch_tor_container(self):
+    def __launch_tor_container(self) -> None:
         """
         Launches a new Tor container with the given configuration
 
@@ -119,7 +121,7 @@ class TorLauncher:
             self.control_port,
         )
 
-    def __bind_stem_to_tor_container(self):
+    def __bind_stem_to_tor_container(self) -> None:
         """
         Binds Tor Stem to the Tor Container launched earlier
 
@@ -140,7 +142,8 @@ class TorLauncher:
 
             except stem.SocketError as exception:
                 self.__logger.debug(
-                    "Unable to connect to the Tor Container, retrying: %s", exception
+                    "Unable to connect to the Tor Container, retrying: %s",
+                    exception,
                 )
                 time.sleep(3)
 
@@ -156,7 +159,7 @@ class TorLauncher:
             self.__controller.get_version(),
         )
 
-    def update_relay_descriptors(self):
+    def update_relay_descriptors(self) -> None:
         """
         Gets a copy of the current relay descriptors from the Tor Container using
         stem
@@ -185,17 +188,20 @@ class TorLauncher:
             self.__logger.warning("Could not get relay descriptors after many retries")
             raise StemDescriptorUnavailableError
 
-    def __attach_stream(self, stream):
+    # pylint: disable=E1101
+    def __attach_stream(self, stream: stem.control.EventType.STREAM) -> None:
         """
         Attaches streams to the circuit id specified
 
-        :param stream: stem.stream
-        :type stream: stem.stream
+        :param stream: stem.control.EventType.STREAM
+        :type stream: stem.control.EventType.STREAM
         """
         if stream.status == "NEW":
             self.__controller.attach_stream(stream.id, self.__circuit_id)
 
-    def create_new_circuit_to(self, exit_relay, guard_relay=None):
+    def create_new_circuit_to(
+        self, exit_relay: str, guard_relay: Optional[str] = None
+    ) -> None:
         """
         Create a two hop circuit between a guard relay and an exit relay. Uses the
         given exit relay and randomly chooses a guard relay if not provided one.
@@ -228,14 +234,14 @@ class TorLauncher:
         # leave stream management to us
         self.__controller.set_conf("__LeaveStreamsUnattached", "1")
 
-    def reset_configuration(self):
+    def reset_configuration(self) -> None:
         """
         Resets stem back to its original state
         """
         self.__controller.remove_event_listener(self.__attach_stream)
         self.__controller.reset_conf("__LeaveStreamsUnattached")
 
-    def __del__(self):
+    def __del__(self) -> None:
         # Close connection
         self.__controller.close()
 

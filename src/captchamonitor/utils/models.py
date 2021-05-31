@@ -16,7 +16,7 @@ import pytz
 Model = declarative_base()
 
 
-class BaseModel(Model):
+class BaseModel(Model):  # type: ignore
     """
     Base model for decreasing repetition in all models
 
@@ -103,19 +103,19 @@ class FetchBaseModel(BaseModel):
 
     # pylint: disable=E0213
     @declared_attr
-    def fetcher_id(cls):
+    def fetcher_id(cls) -> Column:
         # Name of the desired fetcher to use
         return Column(Integer, ForeignKey("fetcher.id"))
 
     # pylint: disable=E0213
     @declared_attr
-    def url_id(cls):
+    def url_id(cls) -> Column:
         # Complete URL including the http/https prefix
         return Column(Integer, ForeignKey("url.id"))
 
     # pylint: disable=E0213
     @declared_attr
-    def relay_id(cls):
+    def relay_id(cls) -> Column:
         # Fingerprint exit node/relay to use, only required when using Tor
         return Column(Integer, ForeignKey("relay.id"))
 

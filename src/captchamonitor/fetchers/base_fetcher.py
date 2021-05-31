@@ -2,8 +2,11 @@ import os
 import shutil
 import time
 import logging
+from typing import Optional, Union, Any
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
+from captchamonitor.utils.config import Config
+from captchamonitor.utils.tor_launcher import TorLauncher
 from captchamonitor.utils.exceptions import (
     FetcherConnectionInitError,
     FetcherURLFetchError,
@@ -19,14 +22,14 @@ class BaseFetcher:
 
     def __init__(
         self,
-        config,
-        url,
-        tor_launcher,
-        page_timeout=30,
-        script_timeout=30,
-        options=None,
-        use_tor=True,
-    ):
+        config: Config,
+        url: str,
+        tor_launcher: TorLauncher,
+        page_timeout: int = 30,
+        script_timeout: int = 30,
+        options: Optional[dict] = None,
+        use_tor: bool = True,
+    ) -> None:
         """
         Initializes the fetcher with given arguments and tries to fetch the given
         URL
@@ -50,18 +53,18 @@ class BaseFetcher:
         self.page_timeout = page_timeout
         self.script_timeout = script_timeout
         self.options = options
-        self.driver = None
-        self.page_source = None
-        self.page_cookies = None
-        self.page_title = None
-        self.page_har = None
+        self.driver: webdriver.Remote
+        self.page_source: str
+        self.page_cookies: str
+        self.page_title: str
+        self.page_har: str
 
         # Other required attributes
         self.tor_launcher = tor_launcher
         self.config = config
-        self.selenium_options = None
-        self.selenium_executor_url = None
-        self.desired_capabilities = None
+        self.selenium_options: Any
+        self.selenium_executor_url: str
+        self.desired_capabilities: webdriver.DesiredCapabilities
 
         self.logger = logging.getLogger(__name__)
 
@@ -89,7 +92,7 @@ class BaseFetcher:
             raise HarExportExtensionXpiError
 
     @staticmethod
-    def get_selenium_executor_url(container_host, container_port):
+    def get_selenium_executor_url(container_host: str, container_port: str) -> str:
         """
         Returns the command executor URL that will be used by Selenium remote webdriver
 
@@ -103,8 +106,12 @@ class BaseFetcher:
         return f"http://{container_host}:{container_port}/wd/hub"
 
     def connect_to_selenium_remote_web_driver(
-        self, container_name, desired_capabilities, command_executor, options=None
-    ):
+        self,
+        container_name: str,
+        desired_capabilities: webdriver.DesiredCapabilities,
+        command_executor: str,
+        options: Optional[list] = None,
+    ) -> None:
         """
         Connects Selenium remote driver to a browser container
 
@@ -155,7 +162,7 @@ class BaseFetcher:
         # Log the current status
         self.logger.debug("Connected to the %s container", container_name)
 
-    def install_har_export_extension(self, directory):
+    def install_har_export_extension(self, directory: str) -> None:
         """
         Installs the HAR Export Trigger extension
 
@@ -168,7 +175,7 @@ class BaseFetcher:
             os.chmod(directory, 0o755)
         shutil.copy(self.har_export_extension_xpi, addon_path + ".xpi")
 
-    def fetch_with_selenium_remote_web_driver(self):
+    def fetch_with_selenium_remote_web_driver(self) -> None:
         """
         Fetches the given URL with the remote web driver
         """
@@ -189,7 +196,7 @@ class BaseFetcher:
             """
         )
 
-    def get_selenium_logs(self):
+    def get_selenium_logs(self) -> dict:
         """
         Obtains and returns all kinds of available Selenium logs
 
@@ -201,7 +208,9 @@ class BaseFetcher:
             logs[log_type] = self.driver.get_log(log_type)
         return logs
 
-    def get_screenshot_from_selenium_remote_web_driver(self, image_type="base64"):
+    def get_screenshot_from_selenium_remote_web_driver(
+        self, image_type: Optional[str] = "base64"
+    ) -> Union[str, bytes]:
         """
         [summary]
 
@@ -215,6 +224,6 @@ class BaseFetcher:
         # else
         return self.driver.get_screenshot_as_png()
 
-    def __del__(self):
+    def __del__(self) -> None:
         if self.driver is not None:
             self.driver.quit()

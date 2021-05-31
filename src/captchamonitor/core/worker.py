@@ -1,12 +1,15 @@
 import logging
 import time
+from typing import Optional, Union
 from sqlalchemy import text
+from sqlalchemy.orm import sessionmaker
 from captchamonitor.utils.models import FetchQueue, FetchFailed, FetchCompleted
 from captchamonitor.utils.tor_launcher import TorLauncher
 from captchamonitor.fetchers.tor_browser import TorBrowser
 from captchamonitor.fetchers.firefox_browser import FirefoxBrowser
 from captchamonitor.fetchers.chrome_browser import ChromeBrowser
 from captchamonitor.utils.exceptions import FetcherNotFound
+from captchamonitor.utils.config import Config
 
 
 class Worker:
@@ -16,7 +19,13 @@ class Worker:
     Keeps doing this until the kill signal is received or the program exits.
     """
 
-    def __init__(self, worker_id, config, db_session, loop=True):
+    def __init__(
+        self,
+        worker_id: str,
+        config: Config,
+        db_session: sessionmaker,
+        loop: Optional[bool] = True,
+    ) -> None:
         """
         Initializes a new worker
         """
@@ -26,13 +35,14 @@ class Worker:
         self.worker_id = worker_id
         self.tor_launcher = TorLauncher(self.config)
         self.job_queue_delay = float(self.config["job_queue_delay"])
+        self.fetcher: Union[TorBrowser, FirefoxBrowser, ChromeBrowser]
 
         # Loop over the jobs
         while loop:
             self.process_next_job()
             time.sleep(self.job_queue_delay)
 
-    def process_next_job(self):
+    def process_next_job(self) -> None:
         """
         Processes the next available job in the job queue. Claims the job, tries
         fetching the URL specified in the job with the specified fetcher. If
@@ -71,7 +81,7 @@ class Worker:
                 options_dict = {"TorBrowserSecurityLevel": job.tbb_security_level}
                 if job.options is not None:
                     options_dict.update(job.options)
-                fetcher = TorBrowser(
+                self.fetcher = TorBrowser(
                     config=self.config,
                     url=job.ref_url.url,
                     tor_launcher=self.tor_launcher,
@@ -80,7 +90,7 @@ class Worker:
                 )
 
             elif job.ref_fetcher.method == FirefoxBrowser.method_name_in_db:
-                fetcher = FirefoxBrowser(
+                self.fetcher = FirefoxBrowser(
                     config=self.config,
                     url=job.ref_url.url,
                     tor_launcher=self.tor_launcher,
@@ -89,7 +99,7 @@ class Worker:
                 )
 
             elif job.ref_fetcher.method == ChromeBrowser.method_name_in_db:
-                fetcher = ChromeBrowser(
+                self.fetcher = ChromeBrowser(
                     config=self.config,
                     url=job.ref_url.url,
                     tor_launcher=self.tor_launcher,
@@ -100,9 +110,9 @@ class Worker:
             else:
                 raise FetcherNotFound
 
-            fetcher.setup()
-            fetcher.connect()
-            fetcher.fetch()
+            self.fetcher.setup()
+            self.fetcher.connect()
+            self.fetcher.fetch()
 
         # pylint: disable=W0703
         except Exception as exception:
@@ -131,8 +141,8 @@ class Worker:
                 options=job.options,
                 tbb_security_level=job.tbb_security_level,
                 captcha_monitor_version=self.config["version"],
-                html_data=fetcher.page_source,
-                http_requests=fetcher.page_har,
+                html_data=self.fetcher.page_source,
+                http_requests=self.fetcher.page_har,
                 fetcher_id=job.fetcher_id,
                 url_id=job.url_id,
                 relay_id=job.relay_id,

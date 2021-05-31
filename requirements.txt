@@ -9,16 +9,6 @@ pytz
 docker
 port_for
 
-# selenium-wire
-#pysocks
-#pycurl
-#requests
-#maxminddb
-#pyvirtualdisplay
-#psycopg2-binary
-#numpy
-#scipy
-
 # dev/tests
 pytest
 pytest-rerunfailures
@@ -26,5 +16,3 @@ pytest-icdiff
 pytest-cov
 mypy
 pylint
-requests
-tenacity
