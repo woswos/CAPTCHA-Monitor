@@ -16,3 +16,4 @@ pytest-icdiff
 pytest-cov
 mypy
 pylint
+black

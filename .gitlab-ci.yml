@@ -8,8 +8,9 @@ tests:
   script:
     - pip install -r requirements.txt
     - pip install -e src/
-    - pip install pytest pytest-cov black
     - black --check --line-length 88 .
+    - mypy ./src
+    - pylint -v ./src
     - pytest -v --cov=src/captchamonitor/ --cov-report term-missing --junitxml=report.xml --ci-mode --ignore=tests/integration
     - coverage xml
   artifacts:

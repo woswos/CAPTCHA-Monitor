@@ -29,35 +29,40 @@ class FirefoxBrowser(BaseFetcher):
         )
 
         # Create new Firefox profile
-        profile = FirefoxProfile()
+        ff_profile = FirefoxProfile()
 
         # Install the extensions
-        self.install_har_export_extension(profile.extensionsDir)
+        self.install_har_export_extension(ff_profile.extensionsDir)
 
-        # Enable the network monitoring tools to record HAR
-        profile.set_preference("devtools.netmonitor.enabled", True)
-        profile.set_preference("devtools.netmonitor.har.compress", False)
-        profile.set_preference("devtools.netmonitor.har.includeResponseBodies", False)
-        profile.set_preference("devtools.netmonitor.har.jsonp", False)
-        profile.set_preference("devtools.netmonitor.har.jsonpCallback", False)
-        profile.set_preference("devtools.netmonitor.har.forceExport", False)
-        profile.set_preference("devtools.netmonitor.har.enableAutoExportToFile", False)
-        profile.set_preference("devtools.netmonitor.har.pageLoadedTimeout", "2500")
+        # Enable the network monitoring tools to record HAR in Firefox Browser
+        ff_profile.set_preference("devtools.netmonitor.enabled", True)
+        ff_profile.set_preference("devtools.netmonitor.har.compress", False)
+        ff_profile.set_preference(
+            "devtools.netmonitor.har.includeResponseBodies", False
+        )
+        ff_profile.set_preference("devtools.netmonitor.har.jsonp", False)
+        ff_profile.set_preference("devtools.netmonitor.har.jsonpCallback", False)
+        ff_profile.set_preference("devtools.netmonitor.har.forceExport", False)
+        ff_profile.set_preference(
+            "devtools.netmonitor.har.enableAutoExportToFile", False
+        )
+        ff_profile.set_preference("devtools.netmonitor.har.pageLoadedTimeout", "2500")
 
         # Stop updates
-        profile.set_preference("app.update.enabled", False)
+        ff_profile.set_preference("app.update.enabled", False)
 
         # Set connections to Tor if we need to use Tor
         if self.use_tor:
-            profile.set_preference("network.proxy.type", 1)
-            profile.set_preference("network.proxy.socks_version", 5)
-            profile.set_preference("network.proxy.socks", str(socks_host))
-            profile.set_preference("network.proxy.socks_port", int(socks_port))
-            profile.set_preference("network.proxy.socks_remote_dns", True)
+            ff_profile.set_preference("network.proxy.type", 1)
+            ff_profile.set_preference("network.proxy.socks_version", 5)
+            ff_profile.set_preference("network.proxy.socks", str(socks_host))
+            ff_profile.set_preference("network.proxy.socks_port", int(socks_port))
+            ff_profile.set_preference("network.proxy.socks_remote_dns", True)
 
+        # Set selenium related options for Firefox Browser
         self.desired_capabilities = webdriver.DesiredCapabilities.FIREFOX
         self.selenium_options = webdriver.FirefoxOptions()
-        self.selenium_options.profile = profile
+        self.selenium_options.profile = ff_profile
         self.selenium_options.add_argument("--devtools")
 
     def connect(self) -> None:

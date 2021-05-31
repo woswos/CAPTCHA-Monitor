@@ -37,7 +37,7 @@ check: check_non_root
 	@echo "\n>> Running mypy"
 	mypy ./src
 	@echo "\n>> Running pylint"
-	pylint -v --disable=C0301,R0903,R0913,C0114,R0902,W0511,C0103,C0330 --docstring-min-length=10 --min-similarity-lines=10 $$(find * -name '*.py' -not -path "tests/*" 2>&1 | grep -v 'Permission denied')
+	pylint -v ./src
 
 check_non_root:
 ifeq ($(shell id -u), 0)

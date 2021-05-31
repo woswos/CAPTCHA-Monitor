@@ -51,47 +51,52 @@ class TorBrowser(BaseFetcher):
         security_level = security_levels[security_level]
 
         # Obtain the Tor Browser profile
-        profile = FirefoxProfile(profile_location)
+        tb_profile = FirefoxProfile(profile_location)
 
         # Install the extensions
-        self.install_har_export_extension(profile.extensionsDir)
+        self.install_har_export_extension(tb_profile.extensionsDir)
 
-        # Enable the network monitoring tools to record HAR
-        profile.set_preference("devtools.netmonitor.enabled", True)
-        profile.set_preference("devtools.netmonitor.har.compress", False)
-        profile.set_preference("devtools.netmonitor.har.includeResponseBodies", False)
-        profile.set_preference("devtools.netmonitor.har.jsonp", False)
-        profile.set_preference("devtools.netmonitor.har.jsonpCallback", False)
-        profile.set_preference("devtools.netmonitor.har.forceExport", False)
-        profile.set_preference("devtools.netmonitor.har.enableAutoExportToFile", False)
-        profile.set_preference("devtools.netmonitor.har.pageLoadedTimeout", "2500")
+        # Enable the network monitoring tools to record HAR in Tor Browser
+        tb_profile.set_preference("devtools.netmonitor.enabled", True)
+        tb_profile.set_preference("devtools.netmonitor.har.compress", False)
+        tb_profile.set_preference(
+            "devtools.netmonitor.har.includeResponseBodies", False
+        )
+        tb_profile.set_preference("devtools.netmonitor.har.jsonp", False)
+        tb_profile.set_preference("devtools.netmonitor.har.jsonpCallback", False)
+        tb_profile.set_preference("devtools.netmonitor.har.forceExport", False)
+        tb_profile.set_preference(
+            "devtools.netmonitor.har.enableAutoExportToFile", False
+        )
+        tb_profile.set_preference("devtools.netmonitor.har.pageLoadedTimeout", "2500")
 
         # Set security level
-        profile.set_preference(
+        tb_profile.set_preference(
             "extensions.torbutton.security_slider", int(security_level)
         )
 
         # Stop Tor Browser's internal Tor
-        profile.set_preference("extensions.torlauncher.start_tor", False)
-        profile.set_preference("extensions.torlauncher.prompt_at_startup", False)
+        tb_profile.set_preference("extensions.torlauncher.start_tor", False)
+        tb_profile.set_preference("extensions.torlauncher.prompt_at_startup", False)
 
         # Let Tor Button connect us to external Tor
-        profile.set_preference("extensions.torbutton.local_tor_check", False)
-        profile.set_preference("extensions.torbutton.launch_warning", False)
-        profile.set_preference("extensions.torbutton.display_circuit", False)
-        profile.set_preference("extensions.torbutton.use_nontor_proxy", True)
+        tb_profile.set_preference("extensions.torbutton.local_tor_check", False)
+        tb_profile.set_preference("extensions.torbutton.launch_warning", False)
+        tb_profile.set_preference("extensions.torbutton.display_circuit", False)
+        tb_profile.set_preference("extensions.torbutton.use_nontor_proxy", True)
 
         # Set the details for the external Tor
-        profile.set_preference("network.proxy.socks", str(socks_host))
-        profile.set_preference("network.proxy.socks_port", int(socks_port))
+        tb_profile.set_preference("network.proxy.socks", str(socks_host))
+        tb_profile.set_preference("network.proxy.socks_port", int(socks_port))
 
         # Stop updates
-        profile.set_preference("app.update.enabled", False)
-        profile.set_preference("extensions.torbutton.versioncheck_enabled", False)
+        tb_profile.set_preference("app.update.enabled", False)
+        tb_profile.set_preference("extensions.torbutton.versioncheck_enabled", False)
 
+        # Set selenium related options for Tor Browser
         self.desired_capabilities = webdriver.DesiredCapabilities.FIREFOX
         self.selenium_options = webdriver.FirefoxOptions()
-        self.selenium_options.profile = profile
+        self.selenium_options.profile = tb_profile
         self.selenium_options.add_argument("--devtools")
 
     def connect(self) -> None:
