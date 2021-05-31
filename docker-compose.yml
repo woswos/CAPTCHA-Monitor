@@ -50,7 +50,7 @@ services:
     networks:
       - captchamonitor_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
+      test: ["CMD-SHELL", "pg_isready -U $CM_DB_USER"]
       interval: 10s
       timeout: 5s
       retries: 5

@@ -23,9 +23,16 @@ def node_id() -> int:
     :return: Node id of the current container
     :rtype: int
     """
-    received_id = docker.from_env().containers.get(hostname()).name.split("_")[-1]
+    id_value = 0
 
-    if not received_id.isnumeric():
-        return 0
+    try:
+        received_id = docker.from_env().containers.get(hostname()).name.split("_")[-1]
 
-    return int(received_id)
+        if received_id.isnumeric():
+            id_value = int(received_id)
+
+    except docker.errors.NotFound:
+        # If we don't have access to Docker, assume we are running in CI
+        pass
+
+    return id_value
