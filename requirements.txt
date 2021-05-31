@@ -21,6 +21,7 @@ port_for
 
 # dev/tests
 pytest
+pytest-rerunfailures
 pytest-icdiff
 pytest-cov
 mypy
