@@ -19,6 +19,16 @@ class TorLauncherInitError(Error):
         return "TorLauncherInitError: Tor Launcher initialization error"
 
 
+class OnionooConnectionError(Error):
+    def __str__(self) -> str:
+        return "OnionooConnectionError: Onionoo API connection error"
+
+
+class OnionooMissingRelay(Error):
+    def __str__(self) -> str:
+        return "OnionooMissingRelay: Given relay does not exist on Onionoo yet"
+
+
 class StemConnectionInitError(Error):
     def __str__(self) -> str:
         return "StemConnectionInitError: Stem cannot connect to the Tor container"

@@ -22,7 +22,7 @@ endif
 
 test: down
 	docker-compose up -d --scale cm-worker=0
-	docker-compose run --rm --no-deps --entrypoint="pytest -v -s --reruns 3 --reruns-delay 1 --cov=/src/captchamonitor/ --cov-report term-missing" captchamonitor /tests
+	docker-compose run --rm --no-deps --entrypoint="pytest -v --reruns 3 --reruns-delay 1 --cov=/src/captchamonitor/ --cov-report term-missing" captchamonitor /tests
 
 logs:
 	docker-compose logs --tail=100 captchamonitor cm-worker

@@ -61,18 +61,20 @@ class Relay(BaseModel):
 
     # fmt: off
     fingerprint = Column(String, unique=True, index=True, nullable=False) # BASE64 encoded SHA256 hash
-    ipv4_address = Column(String, nullable=False)                         # IPv4 address of the relay
+    ipv4_address = Column(String)                                         # IPv4 address of the relay
     ipv6_address = Column(String)                                         # IPv6 address of the relay
-    ipv4_exiting_allowed = Column(Boolean, nullable=False)                # True or False based on whether this relay allows IPv4 exits
-    ipv6_exiting_allowed = Column(Boolean, nullable=False)                # True or False based on whether this relay allows IPv6 exits
+    ipv4_exiting_allowed = Column(Boolean)                                # True or False based on whether this relay allows IPv4 exits
+    ipv6_exiting_allowed = Column(Boolean)                                # True or False based on whether this relay allows IPv6 exits
     country = Column(String)                                              # ISO 3166 alpha-2 country code based on GeoIP
-    continent = Column(String)                                            # continent based on GeoIP, plain English
+    country_name = Column(String)                                         # Complete country name based on GeoIP, plain English
+    continent = Column(String)                                            # Continent based on GeoIP, plain English
     status = Column(Boolean)                                              # True or False based on whether this relay is online or offline
     nickname = Column(String)                                             # Nickname of the relay
-    first_seen = Column(String)                                           # Relay's first seen date
-    last_seen = Column(String)                                            # Relay's last seen date
+    first_seen = Column(DateTime(timezone=True))                          # Relay's first seen date
+    last_seen = Column(DateTime(timezone=True))                           # Relay's last seen date
     version = Column(String)                                              # The Tor version running on the relay
     asn = Column(String)                                                  # Relay's autonomous system number/code
+    asn_name = Column(String)                                             # Relay's autonomous system name
     platform = Column(String)                                             # The operating system of the relay
     comment = Column(String)                                              # Comments, if there is any
     # fmt: on

@@ -8,6 +8,7 @@ schedule
 pytz
 docker
 port_for
+country_converter
 
 # dev/tests
 pytest
