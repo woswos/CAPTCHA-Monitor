@@ -18,13 +18,13 @@ class FirefoxBrowser(BaseFetcher):
         """
         Prepares and starts the Firefox Browser for fetching
         """
-        socks_host = self.tor_launcher.ip_address
-        socks_port = self.tor_launcher.socks_port
+        socks_host = self._tor_launcher.ip_address
+        socks_port = self._tor_launcher.socks_port
 
-        container_host = self.config["docker_firefox_browser_container_name"]
-        container_port = self.config["docker_firefox_browser_container_port"]
+        container_host = self._config["docker_firefox_browser_container_name"]
+        container_port = self._config["docker_firefox_browser_container_port"]
 
-        self.selenium_executor_url = self.get_selenium_executor_url(
+        self._selenium_executor_url = self._get_selenium_executor_url(
             container_host, container_port
         )
 
@@ -32,7 +32,7 @@ class FirefoxBrowser(BaseFetcher):
         ff_profile = FirefoxProfile()
 
         # Install the extensions
-        self.install_har_export_extension(ff_profile.extensionsDir)
+        self._install_har_export_extension(ff_profile.extensionsDir)
 
         # Enable the network monitoring tools to record HAR in Firefox Browser
         ff_profile.set_preference("devtools.netmonitor.enabled", True)
@@ -60,24 +60,24 @@ class FirefoxBrowser(BaseFetcher):
             ff_profile.set_preference("network.proxy.socks_remote_dns", True)
 
         # Set selenium related options for Firefox Browser
-        self.desired_capabilities = webdriver.DesiredCapabilities.FIREFOX
-        self.selenium_options = webdriver.FirefoxOptions()
-        self.selenium_options.profile = ff_profile
-        self.selenium_options.add_argument("--devtools")
+        self._desired_capabilities = webdriver.DesiredCapabilities.FIREFOX
+        self._selenium_options = webdriver.FirefoxOptions()
+        self._selenium_options.profile = ff_profile
+        self._selenium_options.add_argument("--devtools")
 
     def connect(self) -> None:
         """
         Connects Selenium driver to Firefox Browser Container
         """
-        self.connect_to_selenium_remote_web_driver(
+        self._connect_to_selenium_remote_web_driver(
             container_name="Firefox Browser",
-            desired_capabilities=self.desired_capabilities,
-            command_executor=self.selenium_executor_url,
-            options=self.selenium_options,
+            desired_capabilities=self._desired_capabilities,
+            command_executor=self._selenium_executor_url,
+            options=self._selenium_options,
         )
 
     def fetch(self) -> Any:
         """
         Fetches the given URL using Firefox Browser
         """
-        self.fetch_with_selenium_remote_web_driver()
+        self._fetch_with_selenium_remote_web_driver()

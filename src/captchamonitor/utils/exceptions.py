@@ -24,9 +24,9 @@ class OnionooConnectionError(Error):
         return "OnionooConnectionError: Onionoo API connection error"
 
 
-class OnionooMissingRelay(Error):
+class OnionooMissingRelayError(Error):
     def __str__(self) -> str:
-        return "OnionooMissingRelay: Given relay does not exist on Onionoo yet"
+        return "OnionooMissingRelayError: Given relay does not exist on Onionoo yet"
 
 
 class StemConnectionInitError(Error):

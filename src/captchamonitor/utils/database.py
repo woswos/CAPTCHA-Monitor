@@ -36,26 +36,28 @@ class Database:
         :type password: str
         :param verbose: Print the generated SQL queries or not, defaults to False
         :type verbose: bool, optional
+        :raises DatabaseInitError: If it cannot connect to the database
         """
-        self.logger = logging.getLogger(__name__)
-
-        self.connection_string = (
+        # Private class attributes
+        self.__logger = logging.getLogger(__name__)
+        self.__connection_string: str = (
             f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{db_name}"
         )
 
         try:
-            self.engine = create_engine(self.connection_string, echo=verbose)
+            self.engine = create_engine(self.__connection_string, echo=verbose)
 
             if not database_exists(self.engine.url):
-                self.logger.info("Database doesn't exist, creating it now")
+                self.__logger.info("Database doesn't exist, creating it now")
                 create_database(self.engine.url)
             else:
-                self.logger.info("Database exists, skipping creation")
+                self.__logger.info("Database exists, skipping creation")
 
         except Exception as exception:
-            self.logger.warning("Could not connect to the database:\n %s", exception)
+            self.__logger.warning("Could not connect to the database:\n %s", exception)
             raise DatabaseInitError from exception
 
+        # Public class attributes
         self.model = Model
 
         # Process models

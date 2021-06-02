@@ -48,51 +48,52 @@ class BaseFetcher:
         :type use_tor: bool, optional
         """
         # Public attributes
-        self.url = url
-        self.use_tor = use_tor
-        self.page_timeout = page_timeout
-        self.script_timeout = script_timeout
-        self.options = options
+        self.url: str = url
+        self.use_tor: bool = use_tor
+        self.page_timeout: int = page_timeout
+        self.script_timeout: int = script_timeout
+        self.options: Optional[dict] = options
         self.driver: webdriver.Remote
         self.page_source: str
         self.page_cookies: str
         self.page_title: str
         self.page_har: str
 
-        # Other required attributes
-        self.tor_launcher = tor_launcher
-        self.config = config
-        self.selenium_options: Any
-        self.selenium_executor_url: str
-        self.desired_capabilities: webdriver.DesiredCapabilities
-
-        self.logger = logging.getLogger(__name__)
+        # Protected class attributes
+        self._logger = logging.getLogger(__name__)
+        self._tor_launcher: TorLauncher = tor_launcher
+        self._config: Config = config
+        self._selenium_options: Any
+        self._selenium_executor_url: str
+        self._desired_capabilities: webdriver.DesiredCapabilities
+        self._num_retries_on_fail: int = 3
+        self._delay_in_seconds_between_retries: int = 3
 
         # Get the extension path
-        self.har_export_extension_xpi = self.config["asset_har_export_extension_xpi"]
+        self._har_export_extension_xpi = self._config["asset_har_export_extension_xpi"]
 
         # Get the extension id
-        self.har_export_extension_xpi_id = self.config[
+        self._har_export_extension_xpi_id = self._config[
             "asset_har_export_extension_xpi_id"
         ]
 
         # Check if the har extension path is a file and a xpi file
-        if not os.path.isfile(self.har_export_extension_xpi):
-            self.logger.warning(
+        if not os.path.isfile(self._har_export_extension_xpi):
+            self._logger.warning(
                 "Provided extension file doesn't exist: %s",
-                self.har_export_extension_xpi,
+                self._har_export_extension_xpi,
             )
             raise HarExportExtensionXpiError
 
-        if not self.har_export_extension_xpi.endswith(".xpi"):
-            self.logger.warning(
+        if not self._har_export_extension_xpi.endswith(".xpi"):
+            self._logger.warning(
                 "Provided extension file is not valid: %s",
-                self.har_export_extension_xpi,
+                self._har_export_extension_xpi,
             )
             raise HarExportExtensionXpiError
 
     @staticmethod
-    def get_selenium_executor_url(container_host: str, container_port: str) -> str:
+    def _get_selenium_executor_url(container_host: str, container_port: str) -> str:
         """
         Returns the command executor URL that will be used by Selenium remote webdriver
 
@@ -105,7 +106,7 @@ class BaseFetcher:
         """
         return f"http://{container_host}:{container_port}/wd/hub"
 
-    def connect_to_selenium_remote_web_driver(
+    def _connect_to_selenium_remote_web_driver(
         self,
         container_name: str,
         desired_capabilities: webdriver.DesiredCapabilities,
@@ -127,7 +128,7 @@ class BaseFetcher:
         """
         # Connect to browser container
         connected = False
-        for _ in range(3):
+        for _ in range(self._num_retries_on_fail):
             try:
                 self.driver = webdriver.Remote(
                     desired_capabilities=desired_capabilities,
@@ -138,16 +139,16 @@ class BaseFetcher:
                 break
 
             except ConnectionRefusedError as exception:
-                self.logger.debug(
+                self._logger.debug(
                     "Unable to connect to the %s container, retrying: %s",
                     container_name,
                     exception,
                 )
-                time.sleep(3)
+                time.sleep(self._delay_in_seconds_between_retries)
 
-        # Check if connection was successfull
+        # Check if connection to selenium container was successfull
         if not connected:
-            self.logger.warning(
+            self._logger.warning(
                 "Could not connect to the %s container after many retries",
                 container_name,
             )
@@ -160,22 +161,22 @@ class BaseFetcher:
         self.driver.set_script_timeout(self.script_timeout)
 
         # Log the current status
-        self.logger.debug("Connected to the %s container", container_name)
+        self._logger.debug("Connected to the %s container", container_name)
 
-    def install_har_export_extension(self, directory: str) -> None:
+    def _install_har_export_extension(self, directory: str) -> None:
         """
         Installs the HAR Export Trigger extension
 
         :param directory: Absolute directory path to install the extension
         :type directory: str
         """
-        addon_path = os.path.join(directory, self.har_export_extension_xpi_id)
+        addon_path = os.path.join(directory, self._har_export_extension_xpi_id)
         if not os.path.exists(directory):
             os.makedirs(directory)
             os.chmod(directory, 0o755)
-        shutil.copy(self.har_export_extension_xpi, addon_path + ".xpi")
+        shutil.copy(self._har_export_extension_xpi, addon_path + ".xpi")
 
-    def fetch_with_selenium_remote_web_driver(self) -> None:
+    def _fetch_with_selenium_remote_web_driver(self) -> None:
         """
         Fetches the given URL with the remote web driver
         """
@@ -183,7 +184,7 @@ class BaseFetcher:
             self.driver.get(self.url)
 
         except WebDriverException as exception:
-            self.logger.debug("Unable to fetch %s because of: %s", self.url, exception)
+            self._logger.debug("Unable to fetch %s because of: %s", self.url, exception)
             raise FetcherURLFetchError(exception) from exception
 
         self.page_source = self.driver.page_source
@@ -212,7 +213,7 @@ class BaseFetcher:
         self, image_type: Optional[str] = "base64"
     ) -> Union[str, bytes]:
         """
-        [summary]
+        Takes a screenshot of the current page
 
         :param image_type: Type of screenshot to return, defaults to "base64"
         :type image_type: str, optional

@@ -2,7 +2,7 @@ import pytest
 import unittest
 from captchamonitor.utils.onionoo import Onionoo
 from captchamonitor.utils.exceptions import (
-    OnionooMissingRelay,
+    OnionooMissingRelayError,
     OnionooConnectionError,
 )
 
@@ -25,11 +25,11 @@ class TestOnionoo(unittest.TestCase):
 
     def test_invalid_fingerprint(self):
         # Try intializing
-        with pytest.raises(OnionooMissingRelay) as pytest_wrapped_e:
+        with pytest.raises(OnionooMissingRelayError) as pytest_wrapped_e:
             Onionoo(self.invalid_fingerprint)
 
         # Check if the exception is correct
-        self.assertEqual(pytest_wrapped_e.type, OnionooMissingRelay)
+        self.assertEqual(pytest_wrapped_e.type, OnionooMissingRelayError)
 
     def test_is_exiting_allowed(self):
         onionoo = Onionoo(self.valid_fingerprint)

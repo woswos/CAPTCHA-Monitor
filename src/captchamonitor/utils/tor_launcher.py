@@ -24,6 +24,10 @@ class TorLauncher:
     def __init__(self, config: Config) -> None:
         """
         Initialize Tor Launcher
+
+        :param config: The config class instance that contains global configuration values
+        :type config: Config
+        :raises TorLauncherInitError: If Tor launcher wasn't able connect to the Tor container
         """
         # Public class attributes
         self.ip_address: str
@@ -31,9 +35,12 @@ class TorLauncher:
         self.control_port: str
         self.relay_fingerprints: List[Any]
 
+        # Private class attributes
         self.__logger = logging.getLogger(__name__)
-        self.__config = config
+        self.__config: Config = config
         self.__circuit_id: Controller.new_circuit
+        self.__num_retries_on_fail: int = 3
+        self.__delay_in_seconds_between_retries: int = 3
 
         try:
             self.__docker_network_name = self.__config["docker_network"]
@@ -46,6 +53,7 @@ class TorLauncher:
         stem_logger = get_logger()
         stem_logger.propagate = False
 
+        # Execute the private methods
         self.__launch_tor_container()
         self.__bind_stem_to_tor_container()
 
@@ -110,6 +118,7 @@ class TorLauncher:
 
         # Reload container attributes
         self.__container.reload()
+
         # Now obtain the IP address
         container_networks = self.__container.attrs["NetworkSettings"]["Networks"]
         self.ip_address = str(list(container_networks.values())[0]["IPAddress"])
@@ -129,9 +138,9 @@ class TorLauncher:
         """
         self.__tor_password = self.__config["docker_tor_authentication_password"]
 
-        # Try connecting 3 times
+        # Try connecting multiple times
         connected = False
-        for _ in range(3):
+        for _ in range(self.__num_retries_on_fail):
             try:
                 self.__controller = Controller.from_port(
                     address=str(self.ip_address), port=int(self.control_port)
@@ -145,7 +154,7 @@ class TorLauncher:
                     "Unable to connect to the Tor Container, retrying: %s",
                     exception,
                 )
-                time.sleep(3)
+                time.sleep(self.__delay_in_seconds_between_retries)
 
         # Check if connection was successfull
         if not connected:
@@ -166,9 +175,9 @@ class TorLauncher:
 
         :raises StemDescriptorUnavailableError: If stem wasn't able to get relay descriptors
         """
-        # Try connecting 3 times
+        # Try connecting multiple times
         connected = False
-        for _ in range(3):
+        for _ in range(self.__num_retries_on_fail):
             try:
                 self.relay_fingerprints = [
                     desc.fingerprint
@@ -181,7 +190,7 @@ class TorLauncher:
                 self.__logger.debug(
                     "Unable to get relay descriptors, retrying: %s", exception
                 )
-                time.sleep(3)
+                time.sleep(self.__delay_in_seconds_between_retries)
 
         # Check if connection was successfull
         if not connected:
@@ -242,6 +251,9 @@ class TorLauncher:
         self.__controller.reset_conf("__LeaveStreamsUnattached")
 
     def __del__(self) -> None:
+        """
+        Perform cleanup before going out of scope
+        """
         if hasattr(self, "__controller"):
             # Close connection
             self.__controller.close()

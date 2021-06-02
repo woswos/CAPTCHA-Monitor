@@ -17,37 +17,37 @@ class ChromeBrowser(BaseFetcher):
         """
         Prepares and starts the Chrome Browser for fetching
         """
-        socks_host = self.tor_launcher.ip_address
-        socks_port = self.tor_launcher.socks_port
+        socks_host = self._tor_launcher.ip_address
+        socks_port = self._tor_launcher.socks_port
 
-        container_host = self.config["docker_chrome_browser_container_name"]
-        container_port = self.config["docker_chrome_browser_container_port"]
+        container_host = self._config["docker_chrome_browser_container_name"]
+        container_port = self._config["docker_chrome_browser_container_port"]
 
-        self.selenium_executor_url = self.get_selenium_executor_url(
+        self._selenium_executor_url = self._get_selenium_executor_url(
             container_host, container_port
         )
 
-        self.desired_capabilities = webdriver.DesiredCapabilities.CHROME
-        self.selenium_options = webdriver.ChromeOptions()
+        self._desired_capabilities = webdriver.DesiredCapabilities.CHROME
+        self._selenium_options = webdriver.ChromeOptions()
 
         # Set connections to Tor if we need to use Tor
         if self.use_tor:
             proxy = f"socks5://{socks_host}:{socks_port}"
-            self.selenium_options.add_argument(f"--proxy-server={proxy}")
+            self._selenium_options.add_argument(f"--proxy-server={proxy}")
 
     def connect(self) -> None:
         """
         Connects Selenium driver to Chrome Browser Container
         """
-        self.connect_to_selenium_remote_web_driver(
+        self._connect_to_selenium_remote_web_driver(
             container_name="Chrome Browser",
-            desired_capabilities=self.desired_capabilities,
-            command_executor=self.selenium_executor_url,
-            options=self.selenium_options,
+            desired_capabilities=self._desired_capabilities,
+            command_executor=self._selenium_executor_url,
+            options=self._selenium_options,
         )
 
     def fetch(self) -> Any:
         """
         Fetches the given URL using Chrome Browser
         """
-        return self.fetch_with_selenium_remote_web_driver()
+        return self._fetch_with_selenium_remote_web_driver()

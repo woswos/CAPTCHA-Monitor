@@ -6,7 +6,7 @@ import requests
 import country_converter as coco
 from captchamonitor.utils.exceptions import (
     OnionooConnectionError,
-    OnionooMissingRelay,
+    OnionooMissingRelayError,
 )
 
 
@@ -49,6 +49,7 @@ class Onionoo:
         self.__onionoo_datetime_format: str = "%Y-%m-%d %H:%M:%S"
         self.__exit_ports: List[int] = [80, 443]
 
+        # Execute the private methods
         self.__get_details()
         self.__parse_details()
 
@@ -68,7 +69,7 @@ class Onionoo:
                 "Upps, this relay does not exist on Onionoo yet: %s",
                 self.fingerprint,
             )
-            raise OnionooMissingRelay from exception
+            raise OnionooMissingRelayError from exception
 
         except Exception as exception:
             self.__logger.debug("Could not connect to Onionoo: %s", exception)

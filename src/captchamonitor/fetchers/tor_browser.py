@@ -22,14 +22,14 @@ class TorBrowser(BaseFetcher):
 
         :raises TorBrowserProfileLocationError: If provided Tor Browser location is not valid
         """
-        socks_host = self.tor_launcher.ip_address
-        socks_port = self.tor_launcher.socks_port
-        profile_location = self.config["docker_tor_browser_container_profile_location"]
+        socks_host = self._tor_launcher.ip_address
+        socks_port = self._tor_launcher.socks_port
+        profile_location = self._config["docker_tor_browser_container_profile_location"]
 
-        container_host = self.config["docker_tor_browser_container_name"]
-        container_port = self.config["docker_tor_browser_container_port"]
+        container_host = self._config["docker_tor_browser_container_name"]
+        container_port = self._config["docker_tor_browser_container_port"]
 
-        self.selenium_executor_url = self.get_selenium_executor_url(
+        self._selenium_executor_url = self._get_selenium_executor_url(
             container_host, container_port
         )
 
@@ -54,7 +54,7 @@ class TorBrowser(BaseFetcher):
         tb_profile = FirefoxProfile(profile_location)
 
         # Install the extensions
-        self.install_har_export_extension(tb_profile.extensionsDir)
+        self._install_har_export_extension(tb_profile.extensionsDir)
 
         # Enable the network monitoring tools to record HAR in Tor Browser
         tb_profile.set_preference("devtools.netmonitor.enabled", True)
@@ -94,24 +94,24 @@ class TorBrowser(BaseFetcher):
         tb_profile.set_preference("extensions.torbutton.versioncheck_enabled", False)
 
         # Set selenium related options for Tor Browser
-        self.desired_capabilities = webdriver.DesiredCapabilities.FIREFOX
-        self.selenium_options = webdriver.FirefoxOptions()
-        self.selenium_options.profile = tb_profile
-        self.selenium_options.add_argument("--devtools")
+        self._desired_capabilities = webdriver.DesiredCapabilities.FIREFOX
+        self._selenium_options = webdriver.FirefoxOptions()
+        self._selenium_options.profile = tb_profile
+        self._selenium_options.add_argument("--devtools")
 
     def connect(self) -> None:
         """
         Connects Selenium driver to Tor Browser Container
         """
-        self.connect_to_selenium_remote_web_driver(
+        self._connect_to_selenium_remote_web_driver(
             container_name="Tor Browser",
-            desired_capabilities=self.desired_capabilities,
-            command_executor=self.selenium_executor_url,
-            options=self.selenium_options,
+            desired_capabilities=self._desired_capabilities,
+            command_executor=self._selenium_executor_url,
+            options=self._selenium_options,
         )
 
     def fetch(self) -> Any:
         """
         Fetches the given URL using Tor Browser
         """
-        self.fetch_with_selenium_remote_web_driver()
+        self._fetch_with_selenium_remote_web_driver()
