@@ -2,7 +2,7 @@
 export COMPOSE_DOCKER_CLI_BUILD=1
 export DOCKER_BUILDKIT=1
 
-all: down build up
+all: init down build up
 
 build:
 	docker-compose build
@@ -28,7 +28,7 @@ logs:
 	docker-compose logs --tail=100 captchamonitor cm-worker
 
 init: check_root
-	apt install black pylint
+	apt install python3-pip black mypy pylint
 	
 check: check_non_root
 	@echo "\n>> Installing requirements"
