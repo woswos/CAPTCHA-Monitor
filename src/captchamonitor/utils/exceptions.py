@@ -44,6 +44,11 @@ class ConsensusParserFileNotFoundError(Error):
         return "ConsensusParserFileNotFoundError: Given consensus file doesn't exist"
 
 
+class RelayDescriptorParserFileNotFoundError(Error):
+    def __str__(self) -> str:
+        return "RelayDescriptorParserFileNotFoundError: Given descriptor file doesn't exist"
+
+
 class ConsensusParserInvalidDocument(Error):
     def __str__(self) -> str:
         return "ConsensusParserInvalidDocument: Given consensus file is not valid"
