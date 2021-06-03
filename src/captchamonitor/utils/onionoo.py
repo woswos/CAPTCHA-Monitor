@@ -59,8 +59,8 @@ class Onionoo:
         """
         Performs a request to Onioon API
 
-        :raises OnionooMissingRelay: Given relay is missing on Onionoo
-        :raises OnionooConnectionError: Cannot connect to the API
+        :raises OnionooMissingRelayError: If given relay is missing on Onionoo
+        :raises OnionooConnectionError: If cannot connect to the API
         """
         try:
             response = json.loads(requests.get(self.__lookup_url).text)

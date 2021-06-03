@@ -33,21 +33,23 @@ class BaseFetcher:
         use_tor: bool = True,
     ) -> None:
         """
-        Initializes the fetcher with given arguments and tries to fetch the given
-        URL
+        Initializes the fetcher with given arguments and tries to fetch the given URL
 
+        :param config: Config class
+        :type config: Config
         :param url: The URL to fetch
         :type url: str
         :param tor_launcher: TorLauncher class
-        :type tor_launcher: TorLauncher class
+        :type tor_launcher: TorLauncher
         :param page_timeout: Maximum time allowed for a web page to load, defaults to 30
-        :type page_timeout: int, optional
+        :type page_timeout: int
         :param script_timeout: Maximum time allowed for a JS script to respond, defaults to 30
-        :type script_timeout: int, optional
+        :type script_timeout: int
         :param options: Dictionary of options to pass to the fetcher, defaults to None
-        :type options: dict, optional
+        :type options: Optional[dict], optional
         :param use_tor: Should I connect the fetcher to Tor? Has no effect when using Tor Browser, defaults to True
-        :type use_tor: bool, optional
+        :type use_tor: bool
+        :raises HarExportExtensionXpiError: If HAR export extension cannot be used
         """
         # Public attributes
         self.url: str = url
@@ -181,6 +183,8 @@ class BaseFetcher:
     def _fetch_with_selenium_remote_web_driver(self) -> None:
         """
         Fetches the given URL with the remote web driver
+
+        :raises FetcherURLFetchError: If given URL wasn't fetched
         """
         try:
             self.driver.get(self.url)

@@ -92,6 +92,7 @@ class ConsensusV3Parser:
 
         :param consensus_file: The absolute path to the consensus file
         :type consensus_file: str
+        :raises ConsensusParserFileNotFoundError: If given file does not exist
         """
         # Public class attributes
         self.valid_after: datetime
@@ -128,6 +129,7 @@ class ConsensusV3Parser:
 
         :param consensus_lines: Rows of the consensus
         :type consensus_lines: List
+        :raises ConsensusParserInvalidDocument: If given file is invalid
         :return: "valid-after" timestamp
         :rtype: datetime
         """
@@ -145,6 +147,7 @@ class ConsensusV3Parser:
 
         :param consensus_lines: Rows of the consensus
         :type consensus_lines: List
+        :raises ConsensusParserInvalidDocument: If given file is invalid
         :return: "fresh-until" timestamp
         :rtype: datetime
         """

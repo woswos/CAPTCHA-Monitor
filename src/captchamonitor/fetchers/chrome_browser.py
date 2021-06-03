@@ -1,5 +1,3 @@
-from typing import Any
-
 from selenium import webdriver
 
 from captchamonitor.fetchers.base_fetcher import BaseFetcher
@@ -48,8 +46,8 @@ class ChromeBrowser(BaseFetcher):
             options=self._selenium_options,
         )
 
-    def fetch(self) -> Any:
+    def fetch(self) -> None:
         """
         Fetches the given URL using Chrome Browser
         """
-        return self._fetch_with_selenium_remote_web_driver()
+        self._fetch_with_selenium_remote_web_driver()

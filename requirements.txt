@@ -19,3 +19,4 @@ mypy
 pylint
 black
 isort
+darglint

@@ -12,6 +12,7 @@ tests:
     - black --check --line-length 88 .
     - mypy ./src
     - pylint -v ./src
+    - darglint -s sphinx -v 2 ./src
     - pytest -v --cov=src/captchamonitor/ --cov-report term-missing --junitxml=report.xml --ci-mode --ignore=tests/integration
     - coverage xml
   artifacts:

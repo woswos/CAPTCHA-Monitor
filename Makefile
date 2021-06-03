@@ -29,18 +29,22 @@ logs:
 
 init: check_root
 	apt install python3-pip black mypy pylint isort
+	pip3 install darglint
 	
 check: check_non_root
-	@echo "\n>> Installing requirements"
+	@echo "\n\e[93m>> Installing requirements\e[0m"
 	pip3 install -q -r requirements.txt
-	@echo "\n>> Running isort"
+	@echo "\n\e[93m>> Running isort\e[0m"
 	isort --profile black .
-	@echo "\n>> Running black"
+	@echo "\n\e[93m>> Running black\e[0m"
 	black --line-length 88 $$(find * -name '*.py' 2>&1 | grep -v 'Permission denied')
-	@echo "\n>> Running mypy"
+	@echo "\n\e[93m>> Running mypy\e[0m"
 	mypy ./src
-	@echo "\n>> Running pylint"
+	@echo "\n\e[93m>> Running pylint\e[0m"
 	pylint -v ./src
+	@echo "\n\e[93m>> Running darglint\e[0m"
+	darglint -s sphinx -v 2 ./src
+	@echo "\n\e[92m>> Everything seems all right!\e[0m"
 
 check_non_root:
 ifeq ($(shell id -u), 0)

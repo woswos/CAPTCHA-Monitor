@@ -175,6 +175,7 @@ class Collector:
 
         :param consensus_date: The date for valid-after timestamp of the consensus document
         :type consensus_date: datetime
+        :raises CollectorConnectionError: If cannot connect to Collector
         """
         date_str = self.__get_date_str(consensus_date)
 
@@ -198,8 +199,8 @@ class Collector:
         """
         Finds the consensus document that was published at given date and deletes it
 
-        :param date: the date for valid-after timestamp of the consensus document
-        :type date: datetime
+        :param consensus_date: the date for valid-after timestamp of the consensus document
+        :type consensus_date: datetime
         """
         date_str = self.__get_date_str(consensus_date)
 

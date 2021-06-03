@@ -61,6 +61,8 @@ class Worker:
         successfull, inserts the results into the FetchCompleted table. Otherwise,
         inserts the results into the FetchFailed table. Finally, removes the
         claimed job from the queue.
+
+        :raises FetcherNotFound: If requested fetcher is not available
         """
         # Get claimed jobs by this worker
         db_job = self.__db_session.query(FetchQueue).filter(

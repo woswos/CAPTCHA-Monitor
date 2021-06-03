@@ -1,5 +1,3 @@
-from typing import Any
-
 from selenium import webdriver
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 
@@ -78,7 +76,7 @@ class FirefoxBrowser(BaseFetcher):
             options=self._selenium_options,
         )
 
-    def fetch(self) -> Any:
+    def fetch(self) -> None:
         """
         Fetches the given URL using Firefox Browser
         """
