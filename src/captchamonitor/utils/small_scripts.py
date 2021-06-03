@@ -1,5 +1,6 @@
 import os
 import pickle
+
 import docker
 
 # Deep copies objects

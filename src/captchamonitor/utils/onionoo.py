@@ -1,9 +1,11 @@
 import json
 import logging
-from typing import Optional, Dict, List
+from typing import Dict, List, Optional
 from datetime import datetime, timezone
+
 import requests
 import country_converter as coco
+
 from captchamonitor.utils.exceptions import (
     OnionooConnectionError,
     OnionooMissingRelayError,

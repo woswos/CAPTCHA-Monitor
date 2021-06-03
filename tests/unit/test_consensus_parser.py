@@ -1,11 +1,10 @@
-import pytest
 import unittest
 from datetime import datetime, timedelta
+
+import pytest
+
 from captchamonitor.utils.collector import Collector
-from captchamonitor.utils.consensus_parser import (
-    ConsensusV3Parser,
-    ConsensusRelayEntry,
-)
+from captchamonitor.utils.consensus_parser import ConsensusV3Parser, ConsensusRelayEntry
 
 
 class TestConsensusParser(unittest.TestCase):

@@ -1,4 +1,5 @@
 import unittest
+
 from captchamonitor.utils.config import Config
 from captchamonitor.utils.tor_launcher import TorLauncher
 from captchamonitor.fetchers.firefox_browser import FirefoxBrowser

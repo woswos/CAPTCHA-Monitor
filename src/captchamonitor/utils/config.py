@@ -1,6 +1,7 @@
 import os
 import logging
 from typing import Any, Optional
+
 from captchamonitor.version import __version__
 from captchamonitor.utils.exceptions import ConfigInitError
 

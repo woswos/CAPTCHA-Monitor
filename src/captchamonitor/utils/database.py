@@ -1,8 +1,10 @@
 import logging
 from typing import Optional
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy_utils import database_exists, create_database
+from sqlalchemy_utils import create_database, database_exists
+
 from captchamonitor.utils.models import Model
 from captchamonitor.utils.exceptions import DatabaseInitError
 

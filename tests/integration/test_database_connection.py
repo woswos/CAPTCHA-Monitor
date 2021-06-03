@@ -1,5 +1,7 @@
-import pytest
 import unittest
+
+import pytest
+
 from captchamonitor.utils.config import Config
 from captchamonitor.utils.database import Database
 from captchamonitor.utils.exceptions import DatabaseInitError

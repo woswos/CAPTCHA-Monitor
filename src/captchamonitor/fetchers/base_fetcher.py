@@ -1,17 +1,19 @@
 import os
-import shutil
 import time
+import shutil
 import logging
-from typing import Optional, Union, Any
+from typing import Any, Union, Optional
+
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
+
 from captchamonitor.utils.config import Config
-from captchamonitor.utils.tor_launcher import TorLauncher
 from captchamonitor.utils.exceptions import (
-    FetcherConnectionInitError,
     FetcherURLFetchError,
+    FetcherConnectionInitError,
     HarExportExtensionXpiError,
 )
+from captchamonitor.utils.tor_launcher import TorLauncher
 
 
 class BaseFetcher:

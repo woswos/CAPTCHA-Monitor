@@ -1,13 +1,15 @@
-import logging
 import time
 import random
-from typing import Optional, Any, List
+import logging
+from typing import Any, List, Optional
+
 import docker
 import port_for
-import stem
 import stem.control
-from stem.util.log import get_logger
+from stem import SocketError, DescriptorUnavailable
 from stem.control import Controller
+from stem.util.log import get_logger
+
 from captchamonitor.utils.config import Config
 from captchamonitor.utils.exceptions import (
     TorLauncherInitError,
@@ -149,7 +151,7 @@ class TorLauncher:
                 connected = True
                 break
 
-            except stem.SocketError as exception:
+            except SocketError as exception:
                 self.__logger.debug(
                     "Unable to connect to the Tor Container, retrying: %s",
                     exception,
@@ -186,7 +188,7 @@ class TorLauncher:
                 connected = True
                 break
 
-            except stem.DescriptorUnavailable as exception:
+            except DescriptorUnavailable as exception:
                 self.__logger.debug(
                     "Unable to get relay descriptors, retrying: %s", exception
                 )

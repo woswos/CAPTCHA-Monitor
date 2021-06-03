@@ -1,10 +1,12 @@
-import pytest
 import unittest
+
+import pytest
+
 from captchamonitor.utils.config import Config
-from captchamonitor.utils.tor_launcher import TorLauncher
-from captchamonitor.fetchers.tor_browser import TorBrowser
 from captchamonitor.utils.exceptions import TorBrowserProfileLocationError
+from captchamonitor.utils.tor_launcher import TorLauncher
 from captchamonitor.utils.small_scripts import deep_copy
+from captchamonitor.fetchers.tor_browser import TorBrowser
 
 
 class TestTorBrowser(unittest.TestCase):

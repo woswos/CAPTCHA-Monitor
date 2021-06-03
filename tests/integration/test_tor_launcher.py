@@ -1,9 +1,11 @@
-import pytest
 import unittest
-from captchamonitor.utils.tor_launcher import TorLauncher
+
+import pytest
+
 from captchamonitor.utils.config import Config
-from captchamonitor.utils.small_scripts import deep_copy
 from captchamonitor.utils.exceptions import TorLauncherInitError
+from captchamonitor.utils.tor_launcher import TorLauncher
+from captchamonitor.utils.small_scripts import deep_copy
 
 
 class TestTorLauncher(unittest.TestCase):

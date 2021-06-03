@@ -1,5 +1,7 @@
 from typing import Any
+
 from selenium import webdriver
+
 from captchamonitor.fetchers.base_fetcher import BaseFetcher
 
 

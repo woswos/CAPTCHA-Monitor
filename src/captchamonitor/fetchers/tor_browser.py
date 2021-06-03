@@ -1,9 +1,11 @@
 import os
 from typing import Any
+
 from selenium import webdriver
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
-from captchamonitor.fetchers.base_fetcher import BaseFetcher
+
 from captchamonitor.utils.exceptions import TorBrowserProfileLocationError
+from captchamonitor.fetchers.base_fetcher import BaseFetcher
 
 
 class TorBrowser(BaseFetcher):

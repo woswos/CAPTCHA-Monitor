@@ -1,7 +1,8 @@
 import os
 import unittest
+
 from captchamonitor.version import __version__
-from captchamonitor.utils.config import Config, ENV_VARS
+from captchamonitor.utils.config import ENV_VARS, Config
 from captchamonitor.utils.exceptions import ConfigInitError
 
 

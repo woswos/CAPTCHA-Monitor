@@ -1,12 +1,14 @@
 import os
 import time
-import tempfile
-import logging
-import tarfile
 import shutil
 import fnmatch
+import logging
+import tarfile
+import tempfile
 from datetime import datetime
+
 import requests
+
 from captchamonitor.utils.exceptions import (
     CollectorDownloadError,
     CollectorConnectionError,

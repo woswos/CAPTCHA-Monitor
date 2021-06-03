@@ -1,8 +1,10 @@
 import os
-import pytest
 import unittest
-from captchamonitor.utils.config import ENV_VARS
+
+import pytest
+
 from captchamonitor.cm import CaptchaMonitor
+from captchamonitor.utils.config import ENV_VARS
 
 
 class TestAttrDict(unittest.TestCase):

@@ -1,8 +1,9 @@
-import pytest
 import unittest
-from captchamonitor.utils.config import Config
+
+import pytest
+
 from captchamonitor.core.worker import Worker
-from captchamonitor.utils.database import Database
+from captchamonitor.utils.config import Config
 from captchamonitor.utils.models import (
     URL,
     Relay,
@@ -11,6 +12,7 @@ from captchamonitor.utils.models import (
     FetchFailed,
     FetchCompleted,
 )
+from captchamonitor.utils.database import Database
 
 
 class TestWorker(unittest.TestCase):

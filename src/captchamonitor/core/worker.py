@@ -1,15 +1,17 @@
-import logging
 import time
-from typing import Optional, Union
+import logging
+from typing import Union, Optional
+
 from sqlalchemy import text
 from sqlalchemy.orm import sessionmaker
+
+from captchamonitor.utils.config import Config
 from captchamonitor.utils.models import FetchQueue, FetchFailed, FetchCompleted
+from captchamonitor.utils.exceptions import FetcherNotFound
 from captchamonitor.utils.tor_launcher import TorLauncher
 from captchamonitor.fetchers.tor_browser import TorBrowser
-from captchamonitor.fetchers.firefox_browser import FirefoxBrowser
 from captchamonitor.fetchers.chrome_browser import ChromeBrowser
-from captchamonitor.utils.exceptions import FetcherNotFound
-from captchamonitor.utils.config import Config
+from captchamonitor.fetchers.firefox_browser import FirefoxBrowser
 
 
 class Worker:

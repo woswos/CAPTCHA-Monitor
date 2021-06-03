@@ -1,5 +1,7 @@
-import pytest
 import unittest
+
+import pytest
+
 from captchamonitor.utils.config import Config
 from captchamonitor.utils.tor_launcher import TorLauncher
 from captchamonitor.fetchers.chrome_browser import ChromeBrowser

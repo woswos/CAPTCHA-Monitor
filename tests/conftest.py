@@ -1,6 +1,8 @@
 import os.path
 import configparser
+
 import pytest
+
 from captchamonitor.utils.config import Config
 from captchamonitor.utils.database import Database
 

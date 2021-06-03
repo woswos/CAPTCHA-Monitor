@@ -1,9 +1,11 @@
-import pytest
 import unittest
+
+import pytest
+
 from captchamonitor.utils.onionoo import Onionoo
 from captchamonitor.utils.exceptions import (
-    OnionooMissingRelayError,
     OnionooConnectionError,
+    OnionooMissingRelayError,
 )
 
 

@@ -1,17 +1,18 @@
 from datetime import datetime
-from sqlalchemy.ext.declarative import declarative_base, declared_attr
-from sqlalchemy.orm import relationship
-from sqlalchemy import (
-    ForeignKey,
-    Column,
-    Integer,
-    String,
-    DateTime,
-    Unicode,
-    JSON,
-    Boolean,
-)
+
 import pytz
+from sqlalchemy import (
+    JSON,
+    Column,
+    String,
+    Boolean,
+    Integer,
+    Unicode,
+    DateTime,
+    ForeignKey,
+)
+from sqlalchemy.orm import relationship
+from sqlalchemy.ext.declarative import declared_attr, declarative_base
 
 Model = declarative_base()
 

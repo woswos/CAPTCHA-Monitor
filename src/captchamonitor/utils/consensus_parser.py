@@ -1,11 +1,13 @@
 import logging
+from typing import Dict, List, Optional
 from datetime import datetime
 from dataclasses import dataclass
-from typing import List, Dict, Optional
+
 import stem.descriptor
+
 from captchamonitor.utils.exceptions import (
-    ConsensusParserFileNotFoundError,
     ConsensusParserInvalidDocument,
+    ConsensusParserFileNotFoundError,
 )
 
 

@@ -2,10 +2,11 @@ import sys
 import time
 import logging
 from typing import Optional
+
+from captchamonitor.core.worker import Worker
 from captchamonitor.utils.config import Config
 from captchamonitor.utils.database import Database
-from captchamonitor.utils.exceptions import DatabaseInitError, ConfigInitError
-from captchamonitor.core.worker import Worker
+from captchamonitor.utils.exceptions import ConfigInitError, DatabaseInitError
 from captchamonitor.utils.small_scripts import node_id
 
 

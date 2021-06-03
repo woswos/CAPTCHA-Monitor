@@ -1,6 +1,8 @@
 from typing import Any
+
 from selenium import webdriver
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
+
 from captchamonitor.fetchers.base_fetcher import BaseFetcher
 
 

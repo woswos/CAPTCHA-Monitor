@@ -1,8 +1,10 @@
 import os
 import shutil
-from datetime import datetime, timedelta
-import pytest
 import unittest
+from datetime import datetime, timedelta
+
+import pytest
+
 from captchamonitor.utils.collector import Collector
 
 

@@ -2,6 +2,7 @@
 # import schedule
 import logging
 import argparse
+
 from captchamonitor.cm import CaptchaMonitor
 
 parser = argparse.ArgumentParser(description="CAPTCHA Monitor")
