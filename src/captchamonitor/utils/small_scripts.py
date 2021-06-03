@@ -1,6 +1,16 @@
 import os
 import pickle
+from typing import cast, Any
 import docker
+import tenacity
+
+# Add typing to tenacity functions
+Retrying = cast(Any, tenacity.Retrying)
+retry = cast(Any, tenacity.retry)
+stop_after_attempt = cast(Any, tenacity.stop_after_attempt)
+wait_fixed = cast(Any, tenacity.wait_fixed)
+retry_if_exception_type = cast(Any, tenacity.retry_if_exception_type)
+after_log = cast(Any, tenacity.after_log)
 
 # Deep copies objects
 deep_copy = lambda obj: pickle.loads(pickle.dumps(obj))

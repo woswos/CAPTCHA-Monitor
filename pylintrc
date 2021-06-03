@@ -474,7 +474,7 @@ ignore-comments=no
 ignore-docstrings=no
 
 # Ignore imports when computing similarities.
-ignore-imports=no
+ignore-imports=yes
 
 
 [VARIABLES]

@@ -9,6 +9,7 @@ pytz
 docker
 port_for
 country_converter
+tenacity
 
 # dev/tests
 pytest

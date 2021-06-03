@@ -1,12 +1,18 @@
 import os
 import shutil
-import time
 import logging
 from typing import Optional, Union, Any
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
 from captchamonitor.utils.config import Config
 from captchamonitor.utils.tor_launcher import TorLauncher
+from captchamonitor.utils.small_scripts import (
+    Retrying,
+    stop_after_attempt,
+    wait_fixed,
+    retry_if_exception_type,
+    after_log,
+)
 from captchamonitor.utils.exceptions import (
     FetcherConnectionInitError,
     FetcherURLFetchError,
@@ -68,6 +74,13 @@ class BaseFetcher:
         self._desired_capabilities: webdriver.DesiredCapabilities
         self._num_retries_on_fail: int = 3
         self._delay_in_seconds_between_retries: int = 3
+        self._retryer: Retrying = Retrying(
+            stop=stop_after_attempt(3),
+            wait=wait_fixed(3),
+            retry=(retry_if_exception_type(ConnectionRefusedError)),
+            after=after_log(self._logger, logging.DEBUG),
+            reraise=True,
+        )
 
         # Get the extension path
         self._har_export_extension_xpi = self._config["asset_har_export_extension_xpi"]
@@ -127,32 +140,21 @@ class BaseFetcher:
         :raises FetcherConnectionInitError: If it wasn't able to connect to the webdriver
         """
         # Connect to browser container
-        connected = False
-        for _ in range(self._num_retries_on_fail):
-            try:
-                self.driver = webdriver.Remote(
-                    desired_capabilities=desired_capabilities,
-                    command_executor=command_executor,
-                    options=options,
-                )
-                connected = True
-                break
-
-            except ConnectionRefusedError as exception:
-                self._logger.debug(
-                    "Unable to connect to the %s container, retrying: %s",
-                    container_name,
-                    exception,
-                )
-                time.sleep(self._delay_in_seconds_between_retries)
-
-        # Check if connection to selenium container was successfull
-        if not connected:
-            self._logger.warning(
-                "Could not connect to the %s container after many retries",
-                container_name,
+        try:
+            self.driver = self._retryer(
+                webdriver.Remote,
+                desired_capabilities=desired_capabilities,
+                command_executor=command_executor,
+                options=options,
             )
-            raise FetcherConnectionInitError
+
+        except ConnectionRefusedError as exception:
+            self._logger.warning(
+                "Could not connect to the %s container after many retries: %s",
+                container_name,
+                exception,
+            )
+            raise FetcherConnectionInitError from exception
 
         # Set driver timeout
         self.driver.set_page_load_timeout(self.page_timeout)

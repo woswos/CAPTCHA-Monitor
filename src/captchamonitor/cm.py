@@ -1,5 +1,4 @@
 import sys
-import time
 import logging
 from typing import Optional
 from captchamonitor.utils.config import Config
@@ -7,6 +6,13 @@ from captchamonitor.utils.database import Database
 from captchamonitor.utils.exceptions import DatabaseInitError, ConfigInitError
 from captchamonitor.core.worker import Worker
 from captchamonitor.utils.small_scripts import node_id
+from captchamonitor.utils.small_scripts import (
+    Retrying,
+    stop_after_attempt,
+    wait_fixed,
+    retry_if_exception_type,
+    after_log,
+)
 
 
 class CaptchaMonitor:
@@ -24,35 +30,39 @@ class CaptchaMonitor:
         # Private class attributes
         self.__logger = logging.getLogger(__name__)
         self.__node_id: str = str(node_id())
+        self.__database: Database
+        self.__config: Config
+        self.__retryer: Retrying = Retrying(
+            stop=stop_after_attempt(3),
+            wait=wait_fixed(3),
+            retry=(retry_if_exception_type(DatabaseInitError)),
+            after=after_log(self.__logger, logging.DEBUG),
+            reraise=True,
+        )
 
         try:
-            self.__config: Config = Config()
+            self.__config = Config()
 
         except ConfigInitError:
-            self.__logger.warning(
+            self.__logger.critical(
                 "Could not initialize CAPTCHA Monitor since some configuration values are missing, exitting"
             )
             sys.exit(1)
 
-        # Try connecting to the database 3 times
-        for _ in range(3):
-            try:
-                self.__database: Database = Database(
-                    self.__config["db_host"],
-                    self.__config["db_port"],
-                    self.__config["db_name"],
-                    self.__config["db_user"],
-                    self.__config["db_password"],
-                    verbose,
-                )
-                break
-            except DatabaseInitError:
-                self.__logger.warning("Could not connect to the database, retrying")
-                time.sleep(3)
+        # Try connecting to the database
+        try:
+            self.__database = self.__retryer(
+                Database,
+                self.__config["db_host"],
+                self.__config["db_port"],
+                self.__config["db_name"],
+                self.__config["db_user"],
+                self.__config["db_password"],
+                verbose,
+            )
 
-        # Check if database connection was made
-        if not hasattr(self, "__database"):
-            self.__logger.warning(
+        except DatabaseInitError:
+            self.__logger.critical(
                 "Could not initialize CAPTCHA Monitor since I couldn't connect to the database, exitting"
             )
             sys.exit(1)

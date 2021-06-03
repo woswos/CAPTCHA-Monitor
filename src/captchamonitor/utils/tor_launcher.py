@@ -1,5 +1,4 @@
 import logging
-import time
 import random
 from typing import Optional, Any, List
 import docker
@@ -9,6 +8,14 @@ import stem.control
 from stem.util.log import get_logger
 from stem.control import Controller
 from captchamonitor.utils.config import Config
+from captchamonitor.utils.small_scripts import (
+    retry,
+    Retrying,
+    stop_after_attempt,
+    wait_fixed,
+    retry_if_exception_type,
+    after_log,
+)
 from captchamonitor.utils.exceptions import (
     TorLauncherInitError,
     StemConnectionInitError,
@@ -39,8 +46,16 @@ class TorLauncher:
         self.__logger = logging.getLogger(__name__)
         self.__config: Config = config
         self.__circuit_id: Controller.new_circuit
-        self.__num_retries_on_fail: int = 3
-        self.__delay_in_seconds_between_retries: int = 3
+        self.__retryer: Retrying = Retrying(
+            stop=stop_after_attempt(3),
+            wait=wait_fixed(3),
+            retry=(
+                retry_if_exception_type(stem.SocketError)
+                | retry_if_exception_type(stem.DescriptorUnavailable)
+            ),
+            after=after_log(self.__logger, logging.DEBUG),
+            reraise=True,
+        )
 
         try:
             self.__docker_network_name = self.__config["docker_network"]
@@ -130,43 +145,53 @@ class TorLauncher:
             self.control_port,
         )
 
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_fixed(3),
+        retry=retry_if_exception_type(stem.SocketError),
+        reraise=True,
+    )
+    def __get_stem_controller_from_port(self) -> Controller:
+        return Controller.from_port(
+            address=str(self.ip_address), port=int(self.control_port)
+        )
+
     def __bind_stem_to_tor_container(self) -> None:
         """
         Binds Tor Stem to the Tor Container launched earlier
 
         :raises StemConnectionInitError: If stem wasn't initialized correctly
         """
+
         self.__tor_password = self.__config["docker_tor_authentication_password"]
 
-        # Try connecting multiple times
-        connected = False
-        for _ in range(self.__num_retries_on_fail):
-            try:
-                self.__controller = Controller.from_port(
-                    address=str(self.ip_address), port=int(self.control_port)
-                )
-                self.__controller.authenticate(password=self.__tor_password)
-                connected = True
-                break
+        # Try connecting to the Tor container
+        try:
+            self.__controller = self.__get_stem_controller_from_port()
 
-            except stem.SocketError as exception:
-                self.__logger.debug(
-                    "Unable to connect to the Tor Container, retrying: %s",
-                    exception,
-                )
-                time.sleep(self.__delay_in_seconds_between_retries)
-
-        # Check if connection was successfull
-        if not connected:
+        except stem.SocketError as exception:
             self.__logger.warning(
-                "Could not connect to the Tor Container after many retries"
+                "Could not connect to the Tor Container after many retries: %s",
+                exception,
             )
-            raise StemConnectionInitError
+            raise StemConnectionInitError from exception
+
+        # Authenticate
+        self.__controller.authenticate(password=self.__tor_password)
 
         self.__logger.debug(
             "Connected to the Tor Container, the Tor version running on the container is %s",
             self.__controller.get_version(),
         )
+
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_fixed(3),
+        retry=retry_if_exception_type(stem.DescriptorUnavailable),
+        reraise=True,
+    )
+    def __get_network_statuse_from_stem(self) -> List[object]:
+        return self.__controller.get_network_statuses
 
     def update_relay_descriptors(self) -> None:
         """
@@ -175,27 +200,18 @@ class TorLauncher:
 
         :raises StemDescriptorUnavailableError: If stem wasn't able to get relay descriptors
         """
-        # Try connecting multiple times
-        connected = False
-        for _ in range(self.__num_retries_on_fail):
-            try:
-                self.relay_fingerprints = [
-                    desc.fingerprint
-                    for desc in self.__controller.get_network_statuses()
-                ]
-                connected = True
-                break
+        # Try retrieving the descriptors
+        try:
+            network_statuses = self.__get_network_statuse_from_stem()
 
-            except stem.DescriptorUnavailable as exception:
-                self.__logger.debug(
-                    "Unable to get relay descriptors, retrying: %s", exception
-                )
-                time.sleep(self.__delay_in_seconds_between_retries)
+        except stem.DescriptorUnavailable as exception:
+            self.__logger.warning(
+                "Could not get relay descriptors after many retries: %s",
+                exception,
+            )
+            raise StemDescriptorUnavailableError from exception
 
-        # Check if connection was successfull
-        if not connected:
-            self.__logger.warning("Could not get relay descriptors after many retries")
-            raise StemDescriptorUnavailableError
+        self.relay_fingerprints = [desc.fingerprint for desc in network_statuses]
 
     # pylint: disable=E1101
     def __attach_stream(self, stream: stem.control.EventType.STREAM) -> None:
