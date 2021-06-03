@@ -3,8 +3,8 @@ import unittest
 from datetime import datetime, timedelta
 from captchamonitor.utils.collector import Collector
 from captchamonitor.utils.consensus_parser import (
-    ParseConsensusV3,
-    ConsensusRouterEntryV3,
+    ConsensusV3Parser,
+    ConsensusRelayEntry,
 )
 
 
@@ -15,10 +15,10 @@ class TestConsensusParser(unittest.TestCase):
         self.valid_fingerprint = "A53C46F5B157DD83366D45A8E99A244934A14C46"
 
     def test_consensus_parser_init(self):
-        result = ParseConsensusV3(self.consensus_file)
+        result = ConsensusV3Parser(self.consensus_file)
 
         self.assertGreater(len(result.relay_entries), 0)
-        self.assertEqual(type(result.relay_entries[0]), ConsensusRouterEntryV3)
+        self.assertEqual(type(result.relay_entries[0]), ConsensusRelayEntry)
 
         # Check if a well know relay is in the list
         found = False

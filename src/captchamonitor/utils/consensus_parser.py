@@ -10,9 +10,9 @@ from captchamonitor.utils.exceptions import (
 
 
 @dataclass
-class ConsensusRouterEntryV3:
+class ConsensusRelayEntry:
     """
-    Stores a v3 type router/relay/node entry
+    Stores a router/relay/node entry
     See https://gitweb.torproject.org/torspec.git/tree/dir-spec.txt#n2337 for
     exact details
 
@@ -51,7 +51,7 @@ class ConsensusRouterEntryV3:
     :param consensus_weight_fraction: relay's consensus weight fraction
     :type consensus_weight_fraction: float, optional
 
-    :returns: ConsensusRouterEntry object
+    :returns: ConsensusRelayEntry object
     """
 
     nickname: str
@@ -79,7 +79,7 @@ class ConsensusRouterEntryV3:
         )
 
 
-class ParseConsensusV3:
+class ConsensusV3Parser:
     """
     Parses a given V3 consensus file
     """
@@ -95,7 +95,7 @@ class ParseConsensusV3:
         self.valid_after: datetime
         self.fresh_until: datetime
         self.bandwidth_weights: Dict
-        self.relay_entries: List[ConsensusRouterEntryV3]
+        self.relay_entries: List[ConsensusRelayEntry]
 
         # Private class attributes
         self.__logger = logging.getLogger(__name__)
@@ -178,15 +178,16 @@ class ParseConsensusV3:
     @staticmethod
     def __parse_relay_entries(
         consensus_lines: List,
-    ) -> List[ConsensusRouterEntryV3]:
+    ) -> List[ConsensusRelayEntry]:
         """
         Parses relay entries in the consensus
 
         :param consensus_lines: Rows of the consensus
         :type consensus_lines: List
-        :return: A list of ConsensusRouterEntry objects
-        :rtype: List[ConsensusRouterEntry]
+        :return: A list of ConsensusRelayEntry objects
+        :rtype: List[ConsensusRelayEntry]
         """
+        # TODO: Please refactor me into smaller functions
         # pylint: disable=R0914
         relays = []
 
@@ -236,7 +237,7 @@ class ParseConsensusV3:
 
                 # Add relay to the list
                 relays.append(
-                    ConsensusRouterEntryV3(
+                    ConsensusRelayEntry(
                         nickname=nickname,
                         identity=identity,
                         digest=digest,
@@ -255,9 +256,9 @@ class ParseConsensusV3:
 
     @staticmethod
     def __calculate_path_selection_probabilities(
-        relay_entries: List[ConsensusRouterEntryV3],
+        relay_entries: List[ConsensusRelayEntry],
         bandwidth_weights: Dict,
-    ) -> List[ConsensusRouterEntryV3]:
+    ) -> List[ConsensusRelayEntry]:
         """
         Calculates guard, middle, and exit probabilities for relays
 
@@ -266,12 +267,13 @@ class ParseConsensusV3:
 
 
         :param relay_entries: List of relay entries
-        :type relay_entries: List[ConsensusRouterEntryV3]
+        :type relay_entries: List[ConsensusRelayEntry]
         :param bandwidth_weights: A dictionary of bandwidth weights parsed from consensus
         :type bandwidth_weights: Dict
         :return: List of relay entry objects
-        :rtype: List[ConsensusRouterEntryV3]
+        :rtype: List[ConsensusRelayEntry]
         """
+        # TODO: Please refactor me into smaller functions
         # pylint: disable=R0914
         # pylint: disable=R0915
         wgg = bandwidth_weights["Wgg"] / 10000.0
