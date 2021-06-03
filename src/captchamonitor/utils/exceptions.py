@@ -29,6 +29,26 @@ class OnionooMissingRelayError(Error):
         return "OnionooMissingRelayError: Given relay does not exist on Onionoo yet"
 
 
+class CollectorDownloadError(Error):
+    def __str__(self) -> str:
+        return "CollectorDownloadError: Cannot download requested consensus file from Collector"
+
+
+class CollectorConnectionError(Error):
+    def __str__(self) -> str:
+        return "CollectorConnectionError: Cannot connect to Collector API"
+
+
+class ConsensusParserFileNotFoundError(Error):
+    def __str__(self) -> str:
+        return "ConsensusParserFileNotFoundError: Given consensus file doesn't exist"
+
+
+class ConsensusParserInvalidDocument(Error):
+    def __str__(self) -> str:
+        return "ConsensusParserInvalidDocument: Given consensus file is not valid"
+
+
 class StemConnectionInitError(Error):
     def __str__(self) -> str:
         return "StemConnectionInitError: Stem cannot connect to the Tor container"
