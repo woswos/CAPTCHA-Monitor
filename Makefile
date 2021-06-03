@@ -28,11 +28,13 @@ logs:
 	docker-compose logs --tail=100 captchamonitor cm-worker
 
 init: check_root
-	apt install python3-pip black mypy pylint
+	apt install python3-pip black mypy pylint isort
 	
 check: check_non_root
 	@echo "\n>> Installing requirements"
 	pip3 install -q -r requirements.txt
+	@echo "\n>> Running isort"
+	isort --profile black .
 	@echo "\n>> Running black"
 	black --line-length 88 $$(find * -name '*.py' 2>&1 | grep -v 'Permission denied')
 	@echo "\n>> Running mypy"
