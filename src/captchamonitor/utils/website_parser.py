@@ -48,7 +48,8 @@ class WebsiteParser:
             )
             return BeautifulSoup("", "html.parser")
 
-    def __cleaning_website(self, url: str) -> str:
+    @staticmethod
+    def __cleaning_website(url: str) -> str:
         """
         Cleans the urls, removing `www., http://, https://` from anywhere in the url to unify all the websites and return in lowercase
 
@@ -57,12 +58,11 @@ class WebsiteParser:
         :return: The clean url after processing
         :rtype: str
         """
-        try:
+        if url is not None:
             url = url.replace("www.", "").replace("http://", "").replace("https://", "")
-            return "http://" + url.lower()
-        except AttributeError as exception:
-            self.__logger.debug("Website can't be unified because: [%s]", exception)
-            return ""
+            return url.lower()
+        # If url is None it returns str "None"
+        return "None"
 
     def get_moz_top_500(self) -> List[str]:
         """
@@ -79,9 +79,10 @@ class WebsiteParser:
             length = len(info)
             for _ in range(1, length, 4):
                 site = info[_].a.get("href")
-                self.website_list.append(self.__cleaning_website(site))
-                self.uniq_website_list.add(self.__cleaning_website(site))
-
+                # Checks if the url parsed is not None
+                if self.__cleaning_website(site) != "None":
+                    self.website_list.append(self.__cleaning_website(site))
+                    self.uniq_website_list.add(self.__cleaning_website(site))
         except AttributeError as exception:
             self.__logger.debug(
                 "Moz 500 website returns None in website url. More details are: [%s]",
@@ -92,7 +93,6 @@ class WebsiteParser:
                 "Moz 500 website returns None in the information. More details are: [%s]",
                 exception,
             )
-
         self.number_of_websites = +len(self.website_list)
         return self.website_list
 
@@ -111,9 +111,10 @@ class WebsiteParser:
             self.number_of_websites = +length
             for _ in range(0, length):
                 site = info[_].a.text
-                self.website_list.append(self.__cleaning_website(site))
-                self.uniq_website_list.add(self.__cleaning_website(site))
-
+                # Checks if the url parsed is not None
+                if self.__cleaning_website(site) != "None":
+                    self.website_list.append(self.__cleaning_website(site))
+                    self.uniq_website_list.add(self.__cleaning_website(site))
         except AttributeError as exception:
             self.__logger.debug(
                 "Alexa Topsite returns None in website url. More details are: [%s]",

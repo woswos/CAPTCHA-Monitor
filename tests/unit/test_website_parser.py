@@ -7,12 +7,12 @@ from captchamonitor.utils.website_parser import WebsiteParser
 
 class TestWebsiteParser(unittest.TestCase):
     def setUp(self):
-        self.valid_website_alexa = "http://baidu.com"
-        self.invalid_website_alexa = "http://www.ogl.com"
+        self.valid_website_alexa = "baidu.com"
+        self.invalid_website_alexa = "ogl.com"
         self.get_alexa_top_50_number = 50
 
-        self.valid_website_moz = "http://google.com"
-        self.invalid_website_moz = "http://www.ogl.com"
+        self.valid_website_moz = "google.com"
+        self.invalid_website_moz = "ogl.com"
         self.get_moz_top_500_number = 500
 
         self.get_total_website_number = 550
