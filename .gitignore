@@ -148,3 +148,6 @@ report.xml
 .vscode/
 
 .captchamonitor-db-data/
+
+public
+_build

@@ -28,11 +28,11 @@ logs:
 	docker-compose logs --tail=100 captchamonitor cm-worker
 
 init: check_root
-	apt install python3-pip
-	pip3 install darglint black mypy pylint isort sphinx
+	apt install python3-pip mypy
+	pip3 install darglint black pylint isort sphinx
 
-docs:
-	sphinx-build -b html . public
+docs: FORCE
+	sphinx-build -b html ./docs/sphinx/ public
 
 check: check_non_root
 	@echo "\n\e[93m>> Installing requirements\e[0m"
@@ -60,3 +60,5 @@ ifneq ($(shell id -u), 0)
 	@echo "\n>> Please run this command with sudo"
 	exit 1
 endif
+
+FORCE: ;

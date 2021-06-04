@@ -19,3 +19,14 @@ tests:
     reports:
       cobertura: coverage.xml
       junit: report.xml
+
+pages:
+  stage: deploy
+  script:
+  - pip install -U sphinx
+  - sphinx-build -b html ./docs/sphinx/ public
+  artifacts:
+    paths:
+    - public
+  only:
+  - master
