@@ -23,10 +23,12 @@ tests:
 pages:
   stage: deploy
   script:
-  - pip install -U sphinx
-  - sphinx-build -b html ./docs/sphinx/ public
+    - pip install -U sphinx
+    - pip install -e src/
+    - sphinx-apidoc -o ./docs/sphinx/ ./src/captchamonitor/
+    - sphinx-build -b html ./docs/sphinx/ public
   artifacts:
     paths:
-    - public
+      - public
   only:
-  - master
+    - master

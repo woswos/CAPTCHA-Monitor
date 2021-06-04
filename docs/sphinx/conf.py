@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.abspath("../../src/captchamonitor/"))
 # -- Project information -----------------------------------------------------
 
 project = "CAPTCHA Monitor"
-copyright = "2021, Barkin Simsek"
+copyright = "2021, CAPTCHA Monitor"
 author = "Barkin Simsek"
 
 # The short X.Y version
@@ -41,12 +41,28 @@ release = "1.0.0"
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.intersphinx",
     "sphinx.ext.doctest",
     "sphinx.ext.todo",
     "sphinx.ext.coverage",
     "sphinx.ext.mathjax",
     "sphinx.ext.viewcode",
 ]
+
+# Mappings for sphinx.ext.intersphinx. Projects have to have Sphinx-generated doc! (.inv file)
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3/", None),
+}
+
+autosummary_generate = True  # Turn on sphinx.ext.autosummary
+autoclass_content = "both"  # Add __init__ doc (ie. params) to class summaries
+autodoc_inherit_docstrings = True  # If no docstring, inherit from base class
+set_type_checking_flag = (
+    True  # Enable 'expensive' imports for sphinx_autodoc_typehints
+)
+# autodoc_typehints = "description" # Sphinx-native method. Not as good as sphinx_autodoc_typehints
+add_module_names = False  # Remove namespaces from class/method signatures
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -81,7 +97,7 @@ pygments_style = "sphinx"
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "alabaster"
+html_theme = "haiku"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the

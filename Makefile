@@ -29,9 +29,11 @@ logs:
 
 init: check_root
 	apt install python3-pip mypy
-	pip3 install darglint black pylint isort sphinx
+	pip3 install darglint black pylint isort sphinx sphinx-autodoc-typehints
 
-docs: FORCE
+docs: check_non_root FORCE
+	pip3 install -e src/
+	sphinx-apidoc -o ./docs/sphinx/ ./src/captchamonitor/
 	sphinx-build -b html ./docs/sphinx/ public
 
 check: check_non_root
