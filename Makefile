@@ -28,9 +28,12 @@ logs:
 	docker-compose logs --tail=100 captchamonitor cm-worker
 
 init: check_root
-	apt install python3-pip black mypy pylint isort
-	pip3 install darglint
-	
+	apt install python3-pip
+	pip3 install darglint black mypy pylint isort sphinx
+
+docs:
+	sphinx-build -b html . public
+
 check: check_non_root
 	@echo "\n\e[93m>> Installing requirements\e[0m"
 	pip3 install -q -r requirements.txt
