@@ -2,6 +2,7 @@ import logging
 from typing import Dict, List
 from datetime import datetime
 
+import pytz
 from sqlalchemy.orm import sessionmaker
 
 from captchamonitor.utils.config import Config
@@ -40,8 +41,6 @@ class UpdateRelays:
         self.__collector: Collector = Collector()
         self.__datetime_format: str = "%Y-%m-%d-%H-00-00"
 
-        self.__check_last_relay_update()
-
         if auto_update:
             if self.__hours_since_last_update() >= 1:
                 self.__logger.info("Updating the relay list using the latest consensus")
@@ -74,20 +73,27 @@ class UpdateRelays:
 
         query = self.__db_session.query(MetaData).filter(MetaData.key == metadata_key)
 
+        current_datetime = datetime.now()
+        current_datetime_str = current_datetime.strftime(self.__datetime_format)
+
         # Check if it exists in the database
         if query.count() == 0:
             # Create a new one if it doesn't exist
-            current_datetime = datetime.now()
-            current_datetime_str = current_datetime.strftime(self.__datetime_format)
             metadata = MetaData(
                 key=metadata_key,
                 value=current_datetime_str,
             )
             self.__db_session.add(metadata)
+            self.__db_session.commit()
             return datetime.strptime(current_datetime_str, self.__datetime_format)
 
         # Get and return the existing value
         date_from_db = query.one().value
+
+        # Update the db
+        query.one().value = current_datetime_str
+        self.__db_session.commit()
+
         return datetime.strptime(date_from_db, self.__datetime_format)
 
     def __insert_batch_into_db(
@@ -105,33 +111,61 @@ class UpdateRelays:
         """
         # Iterate over the relays in consensus file
         for onionoo_relay in onionoo_relay_data:
-
-            db_relay = Relay(
-                fingerprint=onionoo_relay.fingerprint,
-                ipv4_address=parsed_consensus[onionoo_relay.fingerprint].IP,
-                ipv6_address=parsed_consensus[onionoo_relay.fingerprint].IPv6,
-                ipv4_exiting_allowed=onionoo_relay.ipv4_exiting_allowed,
-                ipv6_exiting_allowed=onionoo_relay.ipv6_exiting_allowed,
-                country=onionoo_relay.country,
-                country_name=onionoo_relay.country_name,
-                continent=onionoo_relay.continent,
-                status=True,
-                nickname=onionoo_relay.nickname,
-                first_seen=onionoo_relay.first_seen,
-                last_seen=onionoo_relay.last_seen,
-                version=onionoo_relay.version,
-                asn=onionoo_relay.asn,
-                asn_name=onionoo_relay.asn_name,
-                platform=onionoo_relay.platform,
+            # Check if the relay already exists
+            query = self.__db_session.query(Relay).filter(
+                Relay.fingerprint == onionoo_relay.fingerprint
             )
 
-            # Add to the database
-            self.__db_session.add(db_relay)
+            if query.count() == 0:
+                # Add new relay
+                db_relay = Relay(
+                    fingerprint=onionoo_relay.fingerprint,
+                    ipv4_address=parsed_consensus[onionoo_relay.fingerprint].IP,
+                    ipv6_address=parsed_consensus[onionoo_relay.fingerprint].IPv6,
+                    ipv4_exiting_allowed=onionoo_relay.ipv4_exiting_allowed,
+                    ipv6_exiting_allowed=onionoo_relay.ipv6_exiting_allowed,
+                    country=onionoo_relay.country,
+                    country_name=onionoo_relay.country_name,
+                    continent=onionoo_relay.continent,
+                    status=True,
+                    nickname=onionoo_relay.nickname,
+                    first_seen=onionoo_relay.first_seen,
+                    last_seen=onionoo_relay.last_seen,
+                    version=onionoo_relay.version,
+                    asn=onionoo_relay.asn,
+                    asn_name=onionoo_relay.asn_name,
+                    platform=onionoo_relay.platform,
+                )
+
+                # Add to the database
+                self.__db_session.add(db_relay)
+
+            else:
+                # Update the existing relay
+                db_relay = query.first()
+                db_relay.updated_at = datetime.now(pytz.utc)
+                db_relay.ipv4_address = parsed_consensus[onionoo_relay.fingerprint].IP
+                db_relay.ipv6_address = parsed_consensus[onionoo_relay.fingerprint].IPv6
+                db_relay.ipv4_exiting_allowed = onionoo_relay.ipv4_exiting_allowed
+                db_relay.ipv6_exiting_allowed = onionoo_relay.ipv6_exiting_allowed
+                db_relay.country = onionoo_relay.country
+                db_relay.country_name = onionoo_relay.country_name
+                db_relay.continent = onionoo_relay.continent
+                db_relay.status = True
+                db_relay.nickname = onionoo_relay.nickname
+                db_relay.first_seen = onionoo_relay.first_seen
+                db_relay.last_seen = onionoo_relay.last_seen
+                db_relay.version = onionoo_relay.version
+                db_relay.asn = onionoo_relay.asn
+                db_relay.asn_name = onionoo_relay.asn_name
+                db_relay.platform = onionoo_relay.platform
 
         # Commit changes to the database
         self.__db_session.commit()
 
-    def update(self, batch_size: int = 30) -> None:
+        self.__logger.debug("Inserted a batch of relays into the database")
+
+    def update(self, batch_size: int = 40) -> None:
         """
         Gets the latest consensus and parses the list of relays in the consensus.
         Later, adds the relays to the database. Performs this operation in batches
@@ -152,6 +186,13 @@ class UpdateRelays:
 
         relay_fingerprints = list(parsed_consensus.keys())
 
+        # Set all relays as offline
+        # TODO: Yes, the following is a bad practice, please use an ORM statement instead
+        table = Relay.__tablename__.lower()
+        query = f"UPDATE {table} SET status = false"
+        self.__db_session.execute(query)
+        self.__db_session.commit()
+
         # Get relay information in chunks to not overwhelm Onionoo API
         for i in range(0, len(relay_fingerprints), batch_size):
             relay_batch = relay_fingerprints[i : i + batch_size]
@@ -160,3 +201,7 @@ class UpdateRelays:
             onionoo_relay_data = Onionoo(relay_batch).relay_entries
 
             self.__insert_batch_into_db(onionoo_relay_data, parsed_consensus)
+
+        self.__logger.info(
+            "Done with updating the relay list using the latest consensus"
+        )

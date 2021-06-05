@@ -52,7 +52,6 @@ class TestUpdateRelays(unittest.TestCase):
             config=self.config, db_session=self.db_session, auto_update=False
         )
 
-        self.assertEqual(self.db_metadata_query.count(), 1)
         self.assertEqual(update_relays._UpdateRelays__hours_since_last_update(), 0)
 
         # Call again in the simulated future
@@ -80,5 +79,28 @@ class TestUpdateRelays(unittest.TestCase):
         )
 
         # Check if the relay table was populated with correct data
+        self.assertEqual(self.db_relay_query.count(), 1)
+        self.assertEqual(self.db_relay_query.first().fingerprint, self.csailmitexit_fpr)
+
+    def test_update_relays_init_with_already_populated_table(self):
+        # Prepopulate the table
+        update_relays = UpdateRelays(
+            config=self.config, db_session=self.db_session, auto_update=False
+        )
+        onionoo_relay_data = Onionoo([self.csailmitexit_fpr]).relay_entries
+        parsed_consensus = {self.csailmitexit_fpr: self.consensus_relay_entry}
+        self.assertEqual(self.db_relay_query.count(), 0)
+        update_relays._UpdateRelays__insert_batch_into_db(
+            onionoo_relay_data, parsed_consensus
+        )
+        self.assertEqual(self.db_relay_query.count(), 1)
+        self.assertEqual(self.db_relay_query.first().fingerprint, self.csailmitexit_fpr)
+
+        # Try inserting the same relay again with different details
+        update_relays._UpdateRelays__insert_batch_into_db(
+            onionoo_relay_data, parsed_consensus
+        )
+
+        # Make sure there still only one relay
         self.assertEqual(self.db_relay_query.count(), 1)
         self.assertEqual(self.db_relay_query.first().fingerprint, self.csailmitexit_fpr)

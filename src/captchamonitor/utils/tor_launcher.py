@@ -256,7 +256,7 @@ class TorLauncher:
         """
         Perform cleanup before going out of scope
         """
-        if hasattr(self, "__controller"):
+        if hasattr(self, f"_{self.__class__.__name__}__controller"):
             # Close connection
             self.__controller.close()
 
