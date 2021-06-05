@@ -38,6 +38,15 @@ services:
       - captchamonitor
       - --worker
       
+  cm-update:
+    <<: *captchamonitor_base_service
+    restart: always
+    entrypoint:
+      - python
+      - -m
+      - captchamonitor
+      - --update
+
   postgres:
     image: postgres:9.6
     environment:

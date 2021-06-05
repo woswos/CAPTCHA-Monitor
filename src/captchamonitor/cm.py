@@ -7,6 +7,7 @@ from captchamonitor.core.worker import Worker
 from captchamonitor.utils.config import Config
 from captchamonitor.utils.database import Database
 from captchamonitor.utils.exceptions import ConfigInitError, DatabaseInitError
+from captchamonitor.core.update_relays import UpdateRelays
 from captchamonitor.utils.small_scripts import node_id
 
 
@@ -52,7 +53,7 @@ class CaptchaMonitor:
                 time.sleep(3)
 
         # Check if database connection was made
-        if not hasattr(self, "__database"):
+        if not hasattr(self, f"_{self.__class__.__name__}__database"):
             self.__logger.warning(
                 "Could not initialize CAPTCHA Monitor since I couldn't connect to the database, exitting"
             )
@@ -65,14 +66,14 @@ class CaptchaMonitor:
         """
         Adds new jobs to the database
         """
-        self.__logger.debug("Adding new jobs")
+        self.__logger.info("Adding new jobs")
 
     def worker(self) -> None:
         """
         Fetches a job from the database and processes it using Tor Browser or
         other specified browsers. Inserts the result back into the database.
         """
-        self.__logger.debug("Running worker %s", self.__node_id)
+        self.__logger.info("Running worker %s", self.__node_id)
 
         Worker(
             worker_id=self.__node_id,
@@ -84,7 +85,15 @@ class CaptchaMonitor:
         """
         Updates the list of URLs in the database
         """
-        self.__logger.debug("Started updating URLs")
+        self.__logger.info("Started updating URLs")
+
+    def update_relays(self) -> None:
+        """
+        Updates the list of relays in the database
+        """
+        self.__logger.info("Started updating relays")
+
+        UpdateRelays(config=self.__config, db_session=self.__db_session)
 
     def analyze(self) -> None:
         """

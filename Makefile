@@ -8,10 +8,10 @@ build:
 	docker-compose build
 
 up:
-	docker-compose up -d --scale cm-worker=5
+	docker-compose up -d --scale cm-worker=5 --scale cm-update=1
 
 temp:
-	docker-compose up --scale cm-worker=5
+	docker-compose up --scale cm-worker=5 --scale cm-update=1
 
 down:
 ifneq ($(shell docker ps -f ancestor="captchamonitor-tor-container" -q),)
@@ -21,11 +21,11 @@ endif
 	docker-compose down --remove-orphans
 
 test: down
-	docker-compose up -d --scale cm-worker=0
+	docker-compose up -d --scale cm-worker=0 --scale cm-update=0
 	docker-compose run --rm --no-deps --entrypoint="pytest -v --reruns 3 --reruns-delay 3 --cov=/src/captchamonitor/ --cov-report term-missing" captchamonitor /tests
 
 logs:
-	docker-compose logs --tail=100 captchamonitor cm-worker
+	docker-compose logs --tail=100 captchamonitor cm-worker cm-update
 
 init: check_root
 	apt install python3-pip mypy
