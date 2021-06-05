@@ -1,40 +1,32 @@
 import unittest
 
-import pytest
-
 from captchamonitor.utils.onionoo import Onionoo
-from captchamonitor.utils.exceptions import (
-    OnionooConnectionError,
-    OnionooMissingRelayError,
-)
 
 
 class TestOnionoo(unittest.TestCase):
     def setUp(self):
-        self.valid_fingerprint = "A53C46F5B157DD83366D45A8E99A244934A14C46"
-        self.invalid_fingerprint = "2222222222222222222222222222222222222222"
+        self.csailmitexit_fpr = "A53C46F5B157DD83366D45A8E99A244934A14C46"
+        self.csailmitnoexit_fpr = "9715C81BA8C5B0C698882035F75C67D6D643DBE3"
         self.exit_ports = [80, 443]
 
-    def test_init(self):
-        onionoo = Onionoo(self.valid_fingerprint)
+    def test_onionoo_init(self):
+        onionoo = Onionoo([self.csailmitexit_fpr])
+        relay = onionoo.relay_entries[0]
 
-        self.assertEqual(onionoo.fingerprint, self.valid_fingerprint)
-        self.assertEqual(onionoo.country.upper(), "US")
-        self.assertEqual(onionoo.continent, "America")
-        self.assertEqual(onionoo.nickname, "csailmitexit")
-        self.assertTrue(onionoo.ipv4_exiting_allowed)
-        self.assertFalse(onionoo.ipv6_exiting_allowed)
+        self.assertEqual(relay.fingerprint, self.csailmitexit_fpr)
+        self.assertEqual(relay.country.upper(), "US")
+        self.assertEqual(relay.continent, "America")
+        self.assertEqual(relay.nickname, "csailmitexit")
+        self.assertTrue(relay.ipv4_exiting_allowed)
+        self.assertFalse(relay.ipv6_exiting_allowed)
 
-    def test_invalid_fingerprint(self):
-        # Try intializing
-        with pytest.raises(OnionooMissingRelayError) as pytest_wrapped_e:
-            Onionoo(self.invalid_fingerprint)
+    def test_onionoo_init_multiple_relays(self):
+        onionoo = Onionoo([self.csailmitexit_fpr, self.csailmitnoexit_fpr])
 
-        # Check if the exception is correct
-        self.assertEqual(pytest_wrapped_e.type, OnionooMissingRelayError)
+        self.assertEqual(len(onionoo.relay_entries), 2)
 
     def test_is_exiting_allowed(self):
-        onionoo = Onionoo(self.valid_fingerprint)
+        onionoo = Onionoo([self.csailmitexit_fpr])
 
         self.assertFalse(onionoo._Onionoo__is_exiting_allowed({}, self.exit_ports))
 
@@ -65,7 +57,7 @@ class TestOnionoo(unittest.TestCase):
         )
 
     def test_is_in_range(self):
-        onionoo = Onionoo(self.valid_fingerprint)
+        onionoo = Onionoo([self.csailmitexit_fpr])
 
         port_list = ["22", "4661-4666", "6881-6999"]
 

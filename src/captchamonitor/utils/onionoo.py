@@ -2,14 +2,35 @@ import json
 import logging
 from typing import Dict, List, Optional
 from datetime import datetime, timezone
+from dataclasses import dataclass
 
 import requests
 import country_converter as coco
 
-from captchamonitor.utils.exceptions import (
-    OnionooConnectionError,
-    OnionooMissingRelayError,
-)
+from captchamonitor.utils.exceptions import OnionooConnectionError
+
+
+@dataclass
+class OnionooRelayEntry:
+    """
+    Stores a Onionoo relay entry
+    """
+
+    fingerprint: str
+    ipv4_exiting_allowed: bool
+    ipv6_exiting_allowed: bool
+    country: Optional[str]
+    country_name: Optional[str]
+    continent: Optional[str]
+    nickname: Optional[str]
+    first_seen: Optional[datetime]
+    last_seen: Optional[datetime]
+    version: Optional[str]
+    asn: Optional[str]
+    asn_name: Optional[str]
+    platform: Optional[str]
+    exit_policy_summary: Optional[dict]
+    exit_policy_v6_summary: Optional[dict]
 
 
 class Onionoo:
@@ -17,96 +38,85 @@ class Onionoo:
     Uses Onionoo to get the details of the given relay
     """
 
-    def __init__(self, fingerprint: str) -> None:
+    def __init__(self, fingerprints: List[str]) -> None:
         """
         Initialize, fetch, and parse the details
 
-        :param fingerprint: BASE64 encoded SHA256 hash of the relay
-        :type fingerprint: str
+        :param fingerprints: List of BASE64 encoded SHA256 hash of the relays
+        :type fingerprints: List[str]
         """
         # Public class attributes
-        self.fingerprint: str = fingerprint
-        self.relay_data: Dict
-        self.ipv4_exiting_allowed: bool
-        self.ipv6_exiting_allowed: bool
-        self.country: Optional[str]
-        self.country_name: Optional[str]
-        self.continent: Optional[str]
-        self.nickname: Optional[str]
-        self.first_seen: Optional[datetime]
-        self.last_seen: Optional[datetime]
-        self.version: Optional[str]
-        self.asn: Optional[str]
-        self.asn_name: Optional[str]
-        self.platform: Optional[str]
-        self.exit_policy_summary: Optional[dict]
-        self.exit_policy_v6_summary: Optional[dict]
+        self.fingerprint_list: List[str] = fingerprints
+        self.relay_entries: List[OnionooRelayEntry] = []
 
         # Private class attributes
         self.__logger = logging.getLogger(__name__)
-        self.__lookup_fields: str = f"fingerprint,nickname,exit_policy_summary,exit_policy_v6_summary,first_seen,last_seen,country,country_name,as,as_name,version,platform&lookup={fingerprint}"
+        self.__fingerprint_list_str: str = "".join(
+            f"{str(fpr)}," for fpr in self.fingerprint_list
+        )[:-1]
+        self.__lookup_fields: str = f"fingerprint,nickname,exit_policy_summary,exit_policy_v6_summary,first_seen,last_seen,country,country_name,as,as_name,version,platform&lookup={self.__fingerprint_list_str}"
         self.__lookup_url: str = (
             f"https://onionoo.torproject.org/details?fields={self.__lookup_fields}"
         )
+        self.__relay_data: Dict
         self.__onionoo_datetime_format: str = "%Y-%m-%d %H:%M:%S"
         self.__exit_ports: List[int] = [80, 443]
 
         # Execute the private methods
         self.__get_details()
-        self.__parse_details()
+        for relay in self.__relay_data:
+            self.relay_entries.append(self.__parse_details_of_relay(relay))
 
     def __get_details(self) -> None:
         """
         Performs a request to Onioon API
 
-        :raises OnionooMissingRelayError: If given relay is missing on Onionoo
         :raises OnionooConnectionError: If cannot connect to the API
         """
         try:
             response = json.loads(requests.get(self.__lookup_url).text)
-            self.relay_data = response["relays"][0]
-
-        except IndexError as exception:
-            self.__logger.debug(
-                "Upps, this relay does not exist on Onionoo yet: %s",
-                self.fingerprint,
-            )
-            raise OnionooMissingRelayError from exception
+            self.__relay_data = response["relays"]
 
         except Exception as exception:
             self.__logger.debug("Could not connect to Onionoo: %s", exception)
             raise OnionooConnectionError from exception
 
-    def __parse_details(self) -> None:
+    def __parse_details_of_relay(self, relay_data: Dict) -> OnionooRelayEntry:
         """
-        Parses the JSON response
+        Parses given Onionoo JSON response
+
+        :param relay_data: JSON data
+        :type relay_data: Dict
+        :return: OnionooRelayEntry object
+        :rtype: OnionooRelayEntry
         """
+        # TODO: Please refactor me into smaller functions
+        # pylint: disable=R0914
         # Parse metadata
-        self.country = self.relay_data.get("country", None)
-        self.country_name = self.relay_data.get("country_name", None)
-        self.continent = coco.convert(names=self.country, to="continent")
-        self.nickname = self.relay_data.get("nickname", None)
-        self.version = self.relay_data.get("version", None)
-        self.asn = self.relay_data.get("as", None)
-        self.asn_name = self.relay_data.get("as_name", None)
-        self.platform = self.relay_data.get("platform", None)
+        fingerprint = relay_data.get("fingerprint", None)
+        country = relay_data.get("country", None)
+        country_name = relay_data.get("country_name", None)
+        continent = coco.convert(names=country, to="continent")
+        nickname = relay_data.get("nickname", None)
+        version = relay_data.get("version", None)
+        asn = relay_data.get("as", None)
+        asn_name = relay_data.get("as_name", None)
+        platform = relay_data.get("platform", None)
 
         # Parse exit polices
-        self.exit_policy_summary = self.relay_data.get("exit_policy_summary", None)
-        self.exit_policy_v6_summary = self.relay_data.get(
-            "exit_policy_v6_summary", None
-        )
+        exit_policy_summary = relay_data.get("exit_policy_summary", None)
+        exit_policy_v6_summary = relay_data.get("exit_policy_v6_summary", None)
 
-        self.ipv4_exiting_allowed = self.__is_exiting_allowed(
-            self.exit_policy_summary, self.__exit_ports
+        ipv4_exiting_allowed = self.__is_exiting_allowed(
+            exit_policy_summary, self.__exit_ports
         )
-        self.ipv6_exiting_allowed = self.__is_exiting_allowed(
-            self.exit_policy_v6_summary, self.__exit_ports
+        ipv6_exiting_allowed = self.__is_exiting_allowed(
+            exit_policy_v6_summary, self.__exit_ports
         )
 
         # Parse first and last seen fields
-        first_seen = self.relay_data.get("first_seen", None)
-        last_seen = self.relay_data.get("last_seen", None)
+        first_seen = relay_data.get("first_seen", None)
+        last_seen = relay_data.get("last_seen", None)
         if first_seen is not None:
             first_seen = datetime.strptime(
                 first_seen, self.__onionoo_datetime_format
@@ -115,8 +125,24 @@ class Onionoo:
             last_seen = datetime.strptime(
                 last_seen, self.__onionoo_datetime_format
             ).replace(tzinfo=timezone.utc)
-        self.first_seen = first_seen
-        self.last_seen = last_seen
+
+        return OnionooRelayEntry(
+            fingerprint=fingerprint,
+            ipv4_exiting_allowed=ipv4_exiting_allowed,
+            ipv6_exiting_allowed=ipv6_exiting_allowed,
+            country=country,
+            country_name=country_name,
+            continent=continent,
+            nickname=nickname,
+            first_seen=first_seen,
+            last_seen=last_seen,
+            version=version,
+            asn=asn,
+            asn_name=asn_name,
+            platform=platform,
+            exit_policy_summary=exit_policy_summary,
+            exit_policy_v6_summary=exit_policy_v6_summary,
+        )
 
     def __is_exiting_allowed(
         self, exit_policy_summary: Optional[Dict], exit_ports: List[int]
