@@ -96,7 +96,10 @@ class Onionoo:
         fingerprint = relay_data.get("fingerprint", None)
         country = relay_data.get("country", None)
         country_name = relay_data.get("country_name", None)
-        continent = coco.convert(names=country, to="continent")
+        if country_name is not None:
+            continent = coco.convert(names=country, to="continent")
+        else:
+            continent = None
         nickname = relay_data.get("nickname", None)
         version = relay_data.get("version", None)
         asn = relay_data.get("as", None)

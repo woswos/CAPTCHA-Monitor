@@ -33,6 +33,20 @@ class BaseModel(Model):  # type: ignore
     # fmt: on
 
 
+class MetaData(BaseModel):
+    """
+    Stores metadata related to CAPTCHA Monitor's progress accross runs
+    Uses Key:Value pairs for each metadata
+    """
+
+    __tablename__ = "metadata"
+
+    # fmt: off
+    key = Column(String, unique=True, nullable=False) # Key for the metadata
+    value = Column(String)                            # Value for the metadata
+    # fmt: on
+
+
 class URL(BaseModel):
     """
     Stores list of tracked URLs and metadata related to them

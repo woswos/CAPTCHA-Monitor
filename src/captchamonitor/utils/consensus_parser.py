@@ -68,6 +68,7 @@ class ConsensusRelayEntry:
     DirPort: int
     bandwidth: float
     flags: List
+    fingerprint: Optional[str] = None
     guard_probability: float = 0.0
     middle_probability: float = 0.0
     exit_probability: float = 0.0

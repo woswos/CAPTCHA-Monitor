@@ -16,6 +16,8 @@ pytest
 pytest-rerunfailures
 pytest-icdiff
 pytest-cov
+pytest-mock
+freezegun
 mypy
 pylint
 black
