@@ -171,7 +171,7 @@ class UpdateRelays:
         Later, adds the relays to the database. Performs this operation in batches
         to not to overwhelm the Onionoo API.
 
-        :param batch_size: Number of relays to process in a single batch, defaults to 30
+        :param batch_size: Number of relays to process in a single batch, defaults to 40
         :type batch_size: int
         """
         # Download the latest consensus
