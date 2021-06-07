@@ -22,12 +22,16 @@ class TestWebsiteParser(unittest.TestCase):
         website.get_alexa_top_50()
         self.assertEqual(website.number_of_websites, self.get_alexa_top_50_number)
         self.assertIn(self.valid_website_alexa, website.website_list)
+        with self.assertRaises(AssertionError):
+            self.assertIn(self.invalid_website_alexa, website.website_list)
 
     def test_get_moz_top_500(self):
         website = WebsiteParser()
         website.get_moz_top_500()
         self.assertEqual(website.number_of_websites, self.get_moz_top_500_number)
         self.assertIn(self.valid_website_moz, website.website_list)
+        with self.assertRaises(AssertionError):
+            self.assertIn(self.invalid_website_moz, website.website_list)
 
     def test_get_all_website(self):
         website = WebsiteParser()
@@ -36,4 +40,11 @@ class TestWebsiteParser(unittest.TestCase):
         self.assertEqual(website.number_of_websites, self.get_total_website_number)
         self.assertIn(self.valid_website_moz, website.uniq_website_list)
         self.assertIn(self.valid_website_alexa, website.uniq_website_list)
-        self.assertTrue(len(website.uniq_website_list) >= 500)
+        self.assertTrue(
+            len(website.uniq_website_list) >= 500
+            and len(website.uniq_website_list) <= 550
+        )
+        with self.assertRaises(AssertionError):
+            self.assertIn(self.invalid_website_alexa, website.website_list)
+        with self.assertRaises(AssertionError):
+            self.assertIn(self.invalid_website_moz, website.website_list)

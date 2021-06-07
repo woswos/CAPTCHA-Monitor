@@ -12,7 +12,7 @@ from captchamonitor.utils.website_parser import WebsiteParser
 
 class UpdateWebsite:
     """
-    FFetches alexa topsites and moz500 website and parses the list of urls in the website and inserts the urls listed there into the
+    Fetches Alexa topsites and Moz500 website and parses the list of urls in the website and inserts the urls listed there into the
     database
     """
 
@@ -87,7 +87,7 @@ class UpdateWebsite:
 
     def update(self) -> None:
         """
-        Fetches alexa topsites and moz500 website and parses the list of urls in the website.
+        Fetches Alexa topsites and Moz500 website and parses the list of urls in the website.
         Later, adds the websites to the database.
         """
         website = WebsiteParser()
@@ -96,5 +96,5 @@ class UpdateWebsite:
         website_list = list(website.uniq_website_list)
         self.__insert_website_into_db(website_list)
         self.__logger.info(
-            "Done with updating the unique website list of both moz and alexa sites"
+            "Done with updating the unique website list of both Moz and Alexa sites"
         )
