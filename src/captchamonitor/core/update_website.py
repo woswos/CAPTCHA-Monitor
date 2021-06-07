@@ -42,10 +42,6 @@ class UpdateWebsite:
                 "Updating the website list using the latest version of the topsites"
             )
             self.update()
-        else:
-            self.__logger.info(
-                "Did not update the website list since less than a day passed since last update"
-            )
 
     def __insert_website_into_db(self, website_list: List[str]) -> None:
         """
