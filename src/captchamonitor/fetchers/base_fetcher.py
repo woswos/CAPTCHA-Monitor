@@ -10,15 +10,15 @@ from selenium.common.exceptions import WebDriverException
 from captchamonitor.utils.config import Config
 from captchamonitor.utils.exceptions import (
     FetcherURLFetchError,
+    HarExportExtensionError,
     FetcherConnectionInitError,
-    HarExportExtensionXpiError,
 )
 from captchamonitor.utils.tor_launcher import TorLauncher
 
 
 class BaseFetcher:
     """
-    Base fetcher class that will inherited by the actual fetchers, used to unify
+    Base fetcher class that will be inherited by the actual fetchers, used to unify
     the fetcher interfaces
     """
 
@@ -49,7 +49,6 @@ class BaseFetcher:
         :type options: Optional[dict], optional
         :param use_tor: Should I connect the fetcher to Tor? Has no effect when using Tor Browser, defaults to True
         :type use_tor: bool
-        :raises HarExportExtensionXpiError: If HAR export extension cannot be used
         """
         # Public attributes
         self.url: str = url
@@ -73,28 +72,23 @@ class BaseFetcher:
         self._num_retries_on_fail: int = 3
         self._delay_in_seconds_between_retries: int = 3
 
-        # Get the extension path
-        self._har_export_extension_xpi = self._config["asset_har_export_extension_xpi"]
+        # Get the extension path for xpi
+        self._har_export_extension_xpi: str = self._config[
+            "asset_har_export_extension_xpi"
+        ]
 
-        # Get the extension id
-        self._har_export_extension_xpi_id = self._config[
+        # Get the extension id for xpi
+        self._har_export_extension_xpi_id: str = self._config[
             "asset_har_export_extension_xpi_id"
         ]
 
-        # Check if the har extension path is a file and a xpi file
-        if not os.path.isfile(self._har_export_extension_xpi):
-            self._logger.warning(
-                "Provided extension file doesn't exist: %s",
-                self._har_export_extension_xpi,
-            )
-            raise HarExportExtensionXpiError
+        # Get the extension path for crx
+        self._har_export_extension_crx: str = self._config[
+            "asset_har_export_extension_crx"
+        ]
 
-        if not self._har_export_extension_xpi.endswith(".xpi"):
-            self._logger.warning(
-                "Provided extension file is not valid: %s",
-                self._har_export_extension_xpi,
-            )
-            raise HarExportExtensionXpiError
+        self._check_extension_validity(self._har_export_extension_xpi, ".xpi")
+        self._check_extension_validity(self._har_export_extension_crx, ".crx")
 
     @staticmethod
     def _get_selenium_executor_url(container_host: str, container_port: str) -> str:
@@ -161,15 +155,39 @@ class BaseFetcher:
         # Set driver timeout
         self.driver.set_page_load_timeout(self.page_timeout)
 
-        # Set timeout for HAR export trigger
+        # Set timeout for HAR export trigger extension
         self.driver.set_script_timeout(self.script_timeout)
 
         # Log the current status
         self._logger.debug("Connected to the %s container", container_name)
 
-    def _install_har_export_extension(self, directory: str) -> None:
+    def _check_extension_validity(self, extension: str, endswith: str) -> None:
         """
-        Installs the HAR Export Trigger extension
+        Checks if given extension file exists and is valid
+
+        :param extension: Absolute path to the extension file
+        :type extension: str
+        :param endswith: The file extension for the browser extension
+        :type endswith: str
+        :raises HarExportExtensionError: If given extension is not valid
+        """
+        if not os.path.isfile(extension):
+            self._logger.warning(
+                "Provided extension file doesn't exist: %s",
+                extension,
+            )
+            raise HarExportExtensionError
+
+        if not extension.endswith(endswith):
+            self._logger.warning(
+                "Provided extension file is not valid: %s",
+                extension,
+            )
+            raise HarExportExtensionError
+
+    def _install_har_export_extension_xpi(self, directory: str) -> None:
+        """
+        Installs the HAR Export Trigger extension to Firefox based browsers
 
         :param directory: Absolute directory path to install the extension
         :type directory: str
@@ -179,6 +197,17 @@ class BaseFetcher:
             os.makedirs(directory)
             os.chmod(directory, 0o755)
         shutil.copy(self._har_export_extension_xpi, addon_path + ".xpi")
+
+    def _install_har_export_extension_crx(
+        self, chrome_options: webdriver.ChromeOptions
+    ) -> None:
+        """
+        Installs the HAR Export Trigger extension to Chromium based browsers
+
+        :param chrome_options: webdriver.ChromeOptions from the Selenium driver
+        :type chrome_options: webdriver.ChromeOptions
+        """
+        chrome_options.add_extension(self._har_export_extension_crx)
 
     def _fetch_with_selenium_remote_web_driver(self) -> None:
         """
@@ -232,5 +261,8 @@ class BaseFetcher:
         return self.driver.get_screenshot_as_png()
 
     def __del__(self) -> None:
+        """
+        Clean up before going out of scope
+        """
         if hasattr(self, "driver"):
             self.driver.quit()

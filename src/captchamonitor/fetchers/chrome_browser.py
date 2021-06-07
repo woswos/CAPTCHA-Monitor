@@ -1,3 +1,5 @@
+import time
+
 from selenium import webdriver
 
 from captchamonitor.fetchers.base_fetcher import BaseFetcher
@@ -27,8 +29,14 @@ class ChromeBrowser(BaseFetcher):
             container_host, container_port
         )
 
-        self._desired_capabilities = webdriver.DesiredCapabilities.CHROME
+        self._desired_capabilities = webdriver.DesiredCapabilities.CHROME.copy()
         self._selenium_options = webdriver.ChromeOptions()
+
+        # Install the extensions
+        self._install_har_export_extension_crx(self._selenium_options)
+
+        # Enable the network monitoring tools to record HAR in Chrome Browser
+        self._selenium_options.add_argument("--auto-open-devtools-for-tabs")
 
         # Set connections to Tor if we need to use Tor
         if self.use_tor:
@@ -45,6 +53,11 @@ class ChromeBrowser(BaseFetcher):
             command_executor=self._selenium_executor_url,
             options=self._selenium_options,
         )
+
+        # Allows some time for HAR export trigger extension to initialize
+        # Don't remove this sleep, otherwise HAR export trigger extension returns
+        # nothing and causes trouble
+        time.sleep(1)
 
     def fetch(self) -> None:
         """

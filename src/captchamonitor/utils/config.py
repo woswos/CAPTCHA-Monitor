@@ -23,7 +23,8 @@ ENV_VARS = {
     "docker_chrome_browser_container_name": "CM_DOCKER_CHROME_BROWSER_CONTAINER_NAME",
     "docker_chrome_browser_container_port": "CM_DOCKER_CHROME_BROWSER_CONTAINER_PORT",
     "asset_har_export_extension_xpi": "CM_ASSET_HAR_EXPORT_EXTENSION_XPI",
-    "asset_har_export_extension_xpi_id": "CM_ASSET_HAR_EXPORT_EXTENSION_ID",
+    "asset_har_export_extension_xpi_id": "CM_ASSET_HAR_EXPORT_EXTENSION_XPI_ID",
+    "asset_har_export_extension_crx": "CM_ASSET_HAR_EXPORT_EXTENSION_CRX",
     "job_queue_delay": "CM_JOB_QUEUE_DELAY",
 }
 

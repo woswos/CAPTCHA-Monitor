@@ -64,9 +64,9 @@ class WorkerInitError(Error):
         return "WorkerInitError: Worker initialization error"
 
 
-class HarExportExtensionXpiError(Error):
+class HarExportExtensionError(Error):
     def __str__(self) -> str:
-        return "HarExportExtensionXpiError: Provided Har Export Trigger extension is not valid"
+        return "HarExportExtensionError: Provided Har Export Trigger extension is not valid"
 
 
 class FetcherConnectionInitError(Error):

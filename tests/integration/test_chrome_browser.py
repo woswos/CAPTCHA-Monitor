@@ -13,7 +13,6 @@ class TestChromeBrowser(unittest.TestCase):
         self.tor_launcher = TorLauncher(self.config)
         self.target_url = "https://check.torproject.org/"
 
-    @pytest.mark.skip(reason="Need to implement HAR exporting in Chrome Browser")
     def test_chrome_browser_without_tor(self):
         chrome_browser = ChromeBrowser(
             config=self.config,
@@ -29,7 +28,6 @@ class TestChromeBrowser(unittest.TestCase):
 
         self.assertIn("Sorry. You are not using Tor.", chrome_browser.page_source)
 
-    @pytest.mark.skip(reason="Need to implement HAR exporting in Chrome Browser")
     def test_chrome_browser_with_tor(self):
         chrome_browser = ChromeBrowser(
             config=self.config,
