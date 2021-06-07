@@ -80,9 +80,6 @@ class TestUpdateWebsite(unittest.TestCase):
         website_list.get_alexa_top_50()
         website_data = website_list.website_list
 
-        # # Check if the url table is empty
-        # self.assertEqual(self.db_website_query.count(), 0)
-
         update_website._UpdateWebsite__insert_website_into_db(website_data)
 
         # Check if the url table was populated with correct data
