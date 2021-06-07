@@ -55,10 +55,11 @@ class TorBrowser(BaseFetcher):
         tb_profile = FirefoxProfile(profile_location)
 
         # Install the extensions
-        self._install_har_export_extension(tb_profile.extensionsDir)
+        self._install_har_export_extension_xpi(tb_profile.extensionsDir)
 
         # Enable the network monitoring tools to record HAR in Tor Browser
         tb_profile.set_preference("devtools.netmonitor.enabled", True)
+        tb_profile.set_preference("devtools.toolbox.selectedTool", "netmonitor")
         tb_profile.set_preference("devtools.netmonitor.har.compress", False)
         tb_profile.set_preference(
             "devtools.netmonitor.har.includeResponseBodies", False
@@ -95,7 +96,7 @@ class TorBrowser(BaseFetcher):
         tb_profile.set_preference("extensions.torbutton.versioncheck_enabled", False)
 
         # Set selenium related options for Tor Browser
-        self._desired_capabilities = webdriver.DesiredCapabilities.FIREFOX
+        self._desired_capabilities = webdriver.DesiredCapabilities.FIREFOX.copy()
         self._selenium_options = webdriver.FirefoxOptions()
         self._selenium_options.profile = tb_profile
         self._selenium_options.add_argument("--devtools")

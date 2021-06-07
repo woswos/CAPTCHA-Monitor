@@ -32,10 +32,11 @@ class FirefoxBrowser(BaseFetcher):
         ff_profile = FirefoxProfile()
 
         # Install the extensions
-        self._install_har_export_extension(ff_profile.extensionsDir)
+        self._install_har_export_extension_xpi(ff_profile.extensionsDir)
 
         # Enable the network monitoring tools to record HAR in Firefox Browser
         ff_profile.set_preference("devtools.netmonitor.enabled", True)
+        ff_profile.set_preference("devtools.toolbox.selectedTool", "netmonitor")
         ff_profile.set_preference("devtools.netmonitor.har.compress", False)
         ff_profile.set_preference(
             "devtools.netmonitor.har.includeResponseBodies", False
@@ -60,7 +61,7 @@ class FirefoxBrowser(BaseFetcher):
             ff_profile.set_preference("network.proxy.socks_remote_dns", True)
 
         # Set selenium related options for Firefox Browser
-        self._desired_capabilities = webdriver.DesiredCapabilities.FIREFOX
+        self._desired_capabilities = webdriver.DesiredCapabilities.FIREFOX.copy()
         self._selenium_options = webdriver.FirefoxOptions()
         self._selenium_options.profile = ff_profile
         self._selenium_options.add_argument("--devtools")
