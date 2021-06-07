@@ -125,6 +125,24 @@ services:
       timeout: 30s
       retries: 5
 
+  brave-browser-container:
+    image: captchamonitor-brave-browser-container:latest
+    build:
+      context: ./standalone-brave-browser
+      dockerfile: Dockerfile
+    networks:
+      - captchamonitor_network
+    volumes:
+      - shared_tmp_volume:/tmp
+    shm_size: '2gb'
+    environment:
+      SE_OPTS: "-port 4447"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/bin/check-grid.sh --host 0.0.0.0 --port 4447"]
+      interval: 15s
+      timeout: 30s
+      retries: 5
+
 networks:
   captchamonitor_network:
     driver: bridge
