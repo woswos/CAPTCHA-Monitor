@@ -28,8 +28,11 @@ logs:
 	docker-compose logs --tail=100 captchamonitor cm-worker cm-update
 
 init: check_root
-	apt install python3-pip mypy
+	rm -f .env
+	cp .env.example .env
+	apt install python3-pip mypy -qqy
 	pip3 install darglint black pylint isort sphinx sphinx-autodoc-typehints
+	make build
 
 docs: check_non_root FORCE
 	pip3 install -e src/
