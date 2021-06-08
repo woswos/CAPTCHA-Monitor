@@ -47,21 +47,21 @@ class MetaData(BaseModel):
     # fmt: on
 
 
-class URL(BaseModel):
+class Domain(BaseModel):
     """
-    Stores list of tracked URLs and metadata related to them
+    Stores list of tracked domains and metadata related to them
     """
 
-    __tablename__ = "url"
+    __tablename__ = "domain"
 
     # fmt: off
-    url = Column(String, unique=True, nullable=False)            # Complete URL without protocol
-    supports_http = Column(Boolean, nullable=False)              # True or False based on whether the URL supports http protocol
-    supports_https = Column(Boolean, nullable=False)             # True or False based on whether the URL supports https protocol
-    supports_ftp = Column(Boolean, nullable=False)               # True or False based on whether the URL supports ftp protocol
-    supports_ipv4 = Column(Boolean, nullable=False)              # True or False based on whether the URL supports IPv4
-    supports_ipv6 = Column(Boolean, nullable=False)              # True or False based on whether the URL supports IPv6
-    requires_multiple_requests = Column(Boolean, nullable=False) # True or False based on whether the URL requires multiple HTTP requests to completely fetch
+    domain = Column(String, unique=True, nullable=False)         # Complete domain without protocol
+    supports_http = Column(Boolean, nullable=False)              # True or False based on whether the domain supports http protocol
+    supports_https = Column(Boolean, nullable=False)             # True or False based on whether the domain supports https protocol
+    supports_ftp = Column(Boolean, nullable=False)               # True or False based on whether the domain supports ftp protocol
+    supports_ipv4 = Column(Boolean, nullable=False)              # True or False based on whether the domain supports IPv4
+    supports_ipv6 = Column(Boolean, nullable=False)              # True or False based on whether the domain supports IPv6
+    requires_multiple_requests = Column(Boolean, nullable=False) # True or False based on whether the website on the domain requires multiple HTTP requests to completely fetch
     cdn = Column(String)                                         # CDN provider, if known
     comment = Column(String)                                     # Comments, if there is any
     # fmt: on
@@ -121,24 +121,25 @@ class FetchBaseModel(BaseModel):
     # pylint: disable=E0213
     @declared_attr
     def fetcher_id(cls) -> Column:
-        # Name of the desired fetcher to use
-        return Column(Integer, ForeignKey("fetcher.id"))
+        # ID of the desired fetcher to use
+        return Column(Integer, ForeignKey("fetcher.id"), nullable=False)
 
     # pylint: disable=E0213
     @declared_attr
-    def url_id(cls) -> Column:
-        # Complete URL including the http/https prefix
-        return Column(Integer, ForeignKey("url.id"))
+    def domain_id(cls) -> Column:
+        # ID of the domain to use
+        return Column(Integer, ForeignKey("domain.id"), nullable=False)
 
     # pylint: disable=E0213
     @declared_attr
     def relay_id(cls) -> Column:
         # Fingerprint exit node/relay to use, only required when using Tor
-        return Column(Integer, ForeignKey("relay.id"))
+        return Column(Integer, ForeignKey("relay.id"), nullable=False)
 
     # fmt: off
-    options = Column(JSON)              # Additional options to provide to fetcher in JSON format
-    tbb_security_level = Column(String) # Only required when using Tor Browser. Possible values: low, medium, or high
+    url = Column(String, nullable=False) # Complete URL including the http/https/ftp prefix and protocol
+    options = Column(JSON)               # Additional options to provide to fetcher in JSON format
+    tbb_security_level = Column(String)  # Only required when using Tor Browser. Possible values: low, medium, or high
     # fmt: on
 
 
@@ -155,7 +156,7 @@ class FetchQueue(FetchBaseModel):
 
     # References to the foreign keys, gives access to these tables
     ref_fetcher = relationship("Fetcher", backref="FetchQueue")
-    ref_url = relationship("URL", backref="FetchQueue")
+    ref_domain = relationship("Domain", backref="FetchQueue")
     ref_relay = relationship("Relay", backref="FetchQueue")
 
 
@@ -174,7 +175,7 @@ class FetchCompleted(FetchBaseModel):
 
     # References to the foreign keys, gives access to these tables
     ref_fetcher = relationship("Fetcher", backref="FetchCompleted")
-    ref_url = relationship("URL", backref="FetchCompleted")
+    ref_domain = relationship("Domain", backref="FetchCompleted")
     ref_relay = relationship("Relay", backref="FetchCompleted")
 
 
@@ -192,5 +193,5 @@ class FetchFailed(FetchBaseModel):
 
     # References to the foreign keys, gives access to these tables
     ref_fetcher = relationship("Fetcher", backref="FetchFailed")
-    ref_url = relationship("URL", backref="FetchFailed")
+    ref_domain = relationship("Domain", backref="FetchFailed")
     ref_relay = relationship("Relay", backref="FetchFailed")
