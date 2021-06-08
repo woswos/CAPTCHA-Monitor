@@ -1,4 +1,5 @@
 import os
+import json
 import time
 import shutil
 import logging
@@ -225,12 +226,13 @@ class BaseFetcher:
         self.page_source = self.driver.page_source
         self.page_cookies = self.driver.get_cookies()
         self.page_title = self.driver.title
-        self.page_har = self.driver.execute_async_script(
+        har_dict = self.driver.execute_async_script(
             """
             var callback = arguments[arguments.length - 1];
             HAR.triggerExport().then((harLog) => { callback(harLog) });
             """
         )
+        self.page_har = json.dumps({"log": har_dict})
 
     def get_selenium_logs(self) -> dict:
         """
