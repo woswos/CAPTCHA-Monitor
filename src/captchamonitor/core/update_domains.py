@@ -6,11 +6,11 @@ import pytz
 from sqlalchemy.orm import sessionmaker
 
 from captchamonitor.utils.config import Config
-from captchamonitor.utils.models import URL
+from captchamonitor.utils.models import Domain
 from captchamonitor.utils.website_parser import WebsiteParser
 
 
-class UpdateWebsite:
+class UpdateDomains:
     """
     Fetches Alexa topsites and Moz500 website and parses the list of urls in the website and inserts the urls listed there into the
     database
@@ -23,7 +23,7 @@ class UpdateWebsite:
         auto_update: bool = True,
     ) -> None:
         """
-        Initializes UpdateWebsites
+        Initializes UpdateDomains
 
         :param config: The config class instance that contains global configuration values
         :type config: Config
@@ -52,11 +52,11 @@ class UpdateWebsite:
         """
         # Iterate over the websites in consensus file
         for website in website_list:
-            query = self.__db_session.query(URL).filter(URL.url == website)
+            query = self.__db_session.query(Domain).filter(Domain.domain == website)
             if query.count() == 0:
                 # Add new website
-                db_website = URL(
-                    url=website,
+                db_website = Domain(
+                    domain=website,
                     supports_http=True,
                     supports_https=False,
                     supports_ftp=False,
@@ -68,7 +68,7 @@ class UpdateWebsite:
             else:
                 db_website = query.first()
                 db_website.updated_at = datetime.now(pytz.utc)
-                db_website.url = website
+                db_website.domain = website
                 db_website.supports_http = True
                 db_website.supports_https = False
                 db_website.supports_ftp = False

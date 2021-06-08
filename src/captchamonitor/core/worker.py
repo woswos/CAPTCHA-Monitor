@@ -99,7 +99,7 @@ class Worker:
                     options_dict.update(job.options)
                 self.__fetcher = TorBrowser(
                     config=self.__config,
-                    url=job.ref_url.url,
+                    url=job.url,
                     tor_launcher=self.__tor_launcher,
                     options=options_dict,
                     use_tor=job.ref_fetcher.uses_tor,
@@ -108,7 +108,7 @@ class Worker:
             elif job.ref_fetcher.method == FirefoxBrowser.method_name_in_db:
                 self.__fetcher = FirefoxBrowser(
                     config=self.__config,
-                    url=job.ref_url.url,
+                    url=job.url,
                     tor_launcher=self.__tor_launcher,
                     options=job.options,
                     use_tor=job.ref_fetcher.uses_tor,
@@ -117,7 +117,7 @@ class Worker:
             elif job.ref_fetcher.method == ChromeBrowser.method_name_in_db:
                 self.__fetcher = ChromeBrowser(
                     config=self.__config,
-                    url=job.ref_url.url,
+                    url=job.url,
                     tor_launcher=self.__tor_launcher,
                     options=job.options,
                     use_tor=job.ref_fetcher.uses_tor,
@@ -126,7 +126,7 @@ class Worker:
             elif job.ref_fetcher.method == OperaBrowser.method_name_in_db:
                 self.__fetcher = OperaBrowser(
                     config=self.__config,
-                    url=job.ref_url.url,
+                    url=job.url,
                     tor_launcher=self.__tor_launcher,
                     options=job.options,
                     use_tor=job.ref_fetcher.uses_tor,
@@ -143,19 +143,20 @@ class Worker:
         except Exception as exception:
             # If failed, put into the failed table
             failed = FetchFailed(
+                url=job.url,
                 options=job.options,
                 tbb_security_level=job.tbb_security_level,
                 captcha_monitor_version=self.__config["version"],
                 fail_reason=str(exception),
                 fetcher_id=job.fetcher_id,
-                url_id=job.url_id,
+                domain_id=job.domain_id,
                 relay_id=job.relay_id,
             )
             self.__db_session.add(failed)
             self.__logger.debug(
-                "Worker %s wasn't able to fetch URL id %s with %s: %s",
+                "Worker %s wasn't able to fetch %s with %s: %s",
                 self.__worker_id,
-                job.url_id,
+                job.url,
                 job.fetcher_id,
                 str(exception),
             )
@@ -163,20 +164,21 @@ class Worker:
         else:
             # If successful, put into the completed table
             completed = FetchCompleted(
+                url=job.url,
                 options=job.options,
                 tbb_security_level=job.tbb_security_level,
                 captcha_monitor_version=self.__config["version"],
                 html_data=self.__fetcher.page_source,
                 http_requests=self.__fetcher.page_har,
                 fetcher_id=job.fetcher_id,
-                url_id=job.url_id,
+                domain_id=job.domain_id,
                 relay_id=job.relay_id,
             )
             self.__db_session.add(completed)
             self.__logger.debug(
-                "Worker %s successfully fetched URL id %s with %s",
+                "Worker %s successfully fetched %s with %s",
                 self.__worker_id,
-                job.url_id,
+                job.url,
                 job.fetcher_id,
             )
 

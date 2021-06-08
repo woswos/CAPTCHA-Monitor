@@ -8,7 +8,7 @@ from captchamonitor.utils.config import Config
 from captchamonitor.utils.database import Database
 from captchamonitor.utils.exceptions import ConfigInitError, DatabaseInitError
 from captchamonitor.core.update_relays import UpdateRelays
-from captchamonitor.core.update_website import UpdateWebsite
+from captchamonitor.core.update_domains import UpdateDomains
 from captchamonitor.utils.small_scripts import node_id
 
 
@@ -82,13 +82,13 @@ class CaptchaMonitor:
             db_session=self.__db_session,
         )
 
-    def update_urls(self) -> None:
+    def update_domains(self) -> None:
         """
-        Updates the list of URLs in the database
+        Updates the list of domains in the database
         """
-        self.__logger.info("Started updating URLs")
+        self.__logger.info("Started updating domains")
 
-        UpdateWebsite(config=self.__config, db_session=self.__db_session)
+        UpdateDomains(config=self.__config, db_session=self.__db_session)
 
     def update_relays(self) -> None:
         """

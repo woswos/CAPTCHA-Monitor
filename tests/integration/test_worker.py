@@ -5,8 +5,8 @@ import pytest
 from captchamonitor.core.worker import Worker
 from captchamonitor.utils.config import Config
 from captchamonitor.utils.models import (
-    URL,
     Relay,
+    Domain,
     Fetcher,
     FetchQueue,
     FetchFailed,
@@ -35,8 +35,8 @@ class TestWorker(unittest.TestCase):
         )
 
         # Add test urls
-        test_url_success = URL(
-            url="https://check.torproject.org/",
+        test_domain_success = Domain(
+            domain="check.torproject.org",
             supports_http=True,
             supports_https=True,
             supports_ftp=False,
@@ -44,10 +44,10 @@ class TestWorker(unittest.TestCase):
             supports_ipv6=False,
             requires_multiple_requests=True,
         )
-        self.db_session.add(test_url_success)
+        self.db_session.add(test_domain_success)
 
-        test_url_fail = URL(
-            url="https://StupidURL",
+        test_domain_fail = Domain(
+            domain="stupid.urlextension",
             supports_http=True,
             supports_https=True,
             supports_ftp=False,
@@ -55,7 +55,7 @@ class TestWorker(unittest.TestCase):
             supports_ipv6=False,
             requires_multiple_requests=True,
         )
-        self.db_session.add(test_url_fail)
+        self.db_session.add(test_domain_fail)
 
         # Add test relay
         test_relay = Relay(
@@ -85,7 +85,12 @@ class TestWorker(unittest.TestCase):
 
     def test_worker_single_run_without_tor_success(self):
         # Insert a job
-        new_job = FetchQueue(fetcher_id=1, url_id=1, relay_id=1)
+        new_job = FetchQueue(
+            url="https://check.torproject.org",
+            fetcher_id=1,
+            domain_id=1,
+            relay_id=1,
+        )
         self.db_session.add(new_job)
 
         # Commit changes to the database
@@ -99,11 +104,16 @@ class TestWorker(unittest.TestCase):
         self.worker.process_next_job()
 
         self.assertNotEqual(db_job.count(), 0)
-        self.assertEqual(db_job.first().ref_url.url, "https://check.torproject.org/")
+        self.assertEqual(db_job.first().url, "https://check.torproject.org")
 
     def test_worker_single_run_without_tor_fail(self):
         # Insert a job
-        new_job = FetchQueue(fetcher_id=1, url_id=2, relay_id=1)
+        new_job = FetchQueue(
+            url="https://stupid.urlextension",
+            fetcher_id=1,
+            domain_id=2,
+            relay_id=1,
+        )
         self.db_session.add(new_job)
 
         # Commit changes to the database
@@ -117,11 +127,16 @@ class TestWorker(unittest.TestCase):
         self.worker.process_next_job()
 
         self.assertNotEqual(db_job.count(), 0)
-        self.assertEqual(db_job.first().ref_url.url, "https://StupidURL")
+        self.assertEqual(db_job.first().url, "https://stupid.urlextension")
 
     def test_worker_single_run_with_tor_success(self):
         # Insert a job
-        new_job = FetchQueue(fetcher_id=2, url_id=1, relay_id=1)
+        new_job = FetchQueue(
+            url="https://check.torproject.org",
+            fetcher_id=2,
+            domain_id=1,
+            relay_id=1,
+        )
         self.db_session.add(new_job)
 
         # Commit changes to the database
@@ -135,11 +150,16 @@ class TestWorker(unittest.TestCase):
         self.worker.process_next_job()
 
         self.assertNotEqual(db_job.count(), 0)
-        self.assertEqual(db_job.first().ref_url.url, "https://check.torproject.org/")
+        self.assertEqual(db_job.first().url, "https://check.torproject.org")
 
     def test_worker_single_run_with_tor_fail(self):
         # Insert a job
-        new_job = FetchQueue(fetcher_id=2, url_id=2, relay_id=1)
+        new_job = FetchQueue(
+            url="https://stupid.urlextension",
+            fetcher_id=2,
+            domain_id=2,
+            relay_id=1,
+        )
         self.db_session.add(new_job)
 
         # Commit changes to the database
@@ -153,7 +173,7 @@ class TestWorker(unittest.TestCase):
         self.worker.process_next_job()
 
         self.assertNotEqual(db_job.count(), 0)
-        self.assertEqual(db_job.first().ref_url.url, "https://StupidURL")
+        self.assertEqual(db_job.first().url, "https://stupid.urlextension")
 
     def test_worker_no_job_in_queue(self):
         # Process the job, shouldn't rise any errors
