@@ -10,6 +10,7 @@ from captchamonitor.utils.models import FetchQueue, FetchFailed, FetchCompleted
 from captchamonitor.utils.exceptions import FetcherNotFound
 from captchamonitor.utils.tor_launcher import TorLauncher
 from captchamonitor.fetchers.tor_browser import TorBrowser
+from captchamonitor.fetchers.opera_browser import OperaBrowser
 from captchamonitor.fetchers.chrome_browser import ChromeBrowser
 from captchamonitor.fetchers.firefox_browser import FirefoxBrowser
 
@@ -47,7 +48,7 @@ class Worker:
         self.__worker_id: str = worker_id
         self.__tor_launcher: TorLauncher = TorLauncher(self.__config)
         self.__job_queue_delay: float = float(self.__config["job_queue_delay"])
-        self.__fetcher: Union[TorBrowser, FirefoxBrowser, ChromeBrowser]
+        self.__fetcher: Union[TorBrowser, FirefoxBrowser, ChromeBrowser, OperaBrowser]
 
         # Loop over the jobs
         while loop:
@@ -64,6 +65,7 @@ class Worker:
 
         :raises FetcherNotFound: If requested fetcher is not available
         """
+        # pylint: disable=R0912
         # Get claimed jobs by this worker
         db_job = self.__db_session.query(FetchQueue).filter(
             FetchQueue.claimed_by == self.__worker_id
@@ -114,6 +116,15 @@ class Worker:
 
             elif job.ref_fetcher.method == ChromeBrowser.method_name_in_db:
                 self.__fetcher = ChromeBrowser(
+                    config=self.__config,
+                    url=job.ref_url.url,
+                    tor_launcher=self.__tor_launcher,
+                    options=job.options,
+                    use_tor=job.ref_fetcher.uses_tor,
+                )
+
+            elif job.ref_fetcher.method == OperaBrowser.method_name_in_db:
+                self.__fetcher = OperaBrowser(
                     config=self.__config,
                     url=job.ref_url.url,
                     tor_launcher=self.__tor_launcher,
