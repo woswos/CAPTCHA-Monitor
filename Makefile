@@ -8,10 +8,7 @@ build:
 	docker-compose build
 
 up:
-	docker-compose up -d --scale cm-worker=5 --scale cm-update=1
-
-temp:
-	docker-compose up --scale cm-worker=5 --scale cm-update=1
+	docker-compose up -d --scale cm-worker=2 --scale cm-update=1
 
 down:
 ifneq ($(shell docker ps -f ancestor="captchamonitor-tor-container" -q),)
