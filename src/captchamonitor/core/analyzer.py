@@ -51,13 +51,15 @@ class Analyzer:
 
             tor = query_by_domain.filter(Fetcher.uses_tor == True).first()
             non_tor = query_by_domain.filter(Fetcher.uses_tor == False).first()
-            exit_relay = tor.ref_relay
 
-            # Use the data for analysis
-            tor.html_data
-            tor.http_requests
+            if tor is not None and non_tor is not None:
+                exit_relay = tor.ref_relay
 
-            non_tor.html_data
-            non_tor.http_requests
+                # Use the data for analysis
+                tor.html_data
+                tor.http_requests
 
-            exit_relay.fingerprint
+                non_tor.html_data
+                non_tor.http_requests
+
+                exit_relay.fingerprint
