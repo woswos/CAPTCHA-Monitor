@@ -1,7 +1,7 @@
 # https://docs.gitlab.com/ee/user/project/merge_requests/test_coverage_visualization.html
 # https://docs.gitlab.com/ee/ci/unit_test_reports.html
 
-image: python:latest
+image: python:3.9
 
 tests:
   stage: test
