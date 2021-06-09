@@ -1,6 +1,7 @@
 import time
 import logging
 import argparse
+from random import randint
 
 import schedule
 
@@ -28,6 +29,9 @@ logging.basicConfig(format="%(asctime)s %(module)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("captchamonitor")
 logger.setLevel(logging.DEBUG)
 
+# Add a random startup delay to prevent possible race conditions
+time.sleep(randint(1, 5))
+
 cm = CaptchaMonitor()
 
 # Run in the specified mode
@@ -39,6 +43,7 @@ elif args.update:
     schedule.every().day.do(cm.update_domains)
     schedule.every().hour.do(cm.update_relays)
     schedule.every().day.do(cm.update_fetchers)
+    schedule.every().hour.do(cm.schedule_jobs)
 
 # Run all scheduled jobs at the beginning
 schedule.run_all()

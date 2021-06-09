@@ -7,6 +7,7 @@ from captchamonitor.core.worker import Worker
 from captchamonitor.utils.config import Config
 from captchamonitor.utils.database import Database
 from captchamonitor.utils.exceptions import ConfigInitError, DatabaseInitError
+from captchamonitor.core.schedule_jobs import ScheduleJobs
 from captchamonitor.core.update_relays import UpdateRelays
 from captchamonitor.core.update_domains import UpdateDomains
 from captchamonitor.utils.small_scripts import node_id
@@ -64,11 +65,16 @@ class CaptchaMonitor:
         # Obtain the session from database module
         self.__db_session = self.__database.session()
 
-    def add_jobs(self) -> None:
+    def schedule_jobs(self) -> None:
         """
         Adds new jobs to the database
         """
-        self.__logger.info("Adding new jobs")
+        self.__logger.info("Scheduling new jobs")
+
+        ScheduleJobs(
+            config=self.__config,
+            db_session=self.__db_session,
+        )
 
     def worker(self) -> None:
         """
