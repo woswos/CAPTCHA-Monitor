@@ -1,6 +1,6 @@
 import os
 import logging
-from typing import Any, Optional
+from typing import Any, KeysView, Optional, ValuesView
 
 from captchamonitor.version import __version__
 from captchamonitor.utils.exceptions import ConfigInitError
@@ -82,3 +82,9 @@ class Config:
 
     def __repr__(self) -> Any:
         return repr(self.__dict__)
+
+    def keys(self) -> KeysView[str]:
+        return self.__dict__.keys()
+
+    def values(self) -> ValuesView[Any]:
+        return self.__dict__.values()
