@@ -1,5 +1,7 @@
+import sys
 import time
 import logging
+import traceback
 from typing import Union, Optional
 
 from sqlalchemy import text
@@ -140,14 +142,18 @@ class Worker:
             self.__fetcher.fetch()
 
         # pylint: disable=W0703
-        except Exception as exception:
+        except Exception:
+            # Get traceback information
+            T, V, TB = sys.exc_info()
+            error = "".join(traceback.format_exception(T, V, TB))
+
             # If failed, put into the failed table
             failed = FetchFailed(
                 url=job.url,
                 options=job.options,
                 tbb_security_level=job.tbb_security_level,
                 captcha_monitor_version=self.__config["version"],
-                fail_reason=str(exception),
+                fail_reason=str(error),
                 fetcher_id=job.fetcher_id,
                 domain_id=job.domain_id,
                 relay_id=job.relay_id,
@@ -158,7 +164,7 @@ class Worker:
                 self.__worker_id,
                 job.url,
                 job.fetcher_id,
-                str(exception),
+                str(error),
             )
 
         else:
