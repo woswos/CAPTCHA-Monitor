@@ -1,6 +1,6 @@
 import logging
 from typing import Dict, List
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytz
 from sqlalchemy.orm import sessionmaker
@@ -75,6 +75,9 @@ class UpdateRelays:
 
         current_datetime = datetime.now()
         current_datetime_str = current_datetime.strftime(self.__datetime_format)
+        one_hour_earlier_str = (datetime.now() - timedelta(hours=1)).strftime(
+            self.__datetime_format
+        )
 
         # Check if it exists in the database
         if query.count() == 0:
@@ -85,7 +88,7 @@ class UpdateRelays:
             )
             self.__db_session.add(metadata)
             self.__db_session.commit()
-            return datetime.strptime(current_datetime_str, self.__datetime_format)
+            return datetime.strptime(one_hour_earlier_str, self.__datetime_format)
 
         # Get and return the existing value
         date_from_db = query.one().value

@@ -52,7 +52,7 @@ class TestUpdateRelays(unittest.TestCase):
             config=self.config, db_session=self.db_session, auto_update=False
         )
 
-        self.assertEqual(update_relays._UpdateRelays__hours_since_last_update(), 0)
+        self.assertEqual(update_relays._UpdateRelays__hours_since_last_update(), 1)
 
         # Call again in the simulated future
         with freeze_time("2100-01-01"):
