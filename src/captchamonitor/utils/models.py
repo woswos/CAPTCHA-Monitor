@@ -134,7 +134,7 @@ class FetchBaseModel(BaseModel):
     @declared_attr
     def relay_id(cls) -> Column:
         # Fingerprint exit node/relay to use, only required when using Tor
-        return Column(Integer, ForeignKey("relay.id"), nullable=False)
+        return Column(Integer, ForeignKey("relay.id"))
 
     # fmt: off
     url = Column(String, nullable=False) # Complete URL including the http/https/ftp prefix and protocol
