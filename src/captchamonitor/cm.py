@@ -114,7 +114,7 @@ class CaptchaMonitor:
             db_session=self.__db_session,
         )
 
-    def analyze(self) -> None:
+    def analyzer(self) -> None:
         """
         Analyzes the data recorded in the database
         """
