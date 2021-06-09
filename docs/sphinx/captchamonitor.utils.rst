@@ -76,6 +76,14 @@ captchamonitor.utils.tor\_launcher module
    :undoc-members:
    :show-inheritance:
 
+captchamonitor.utils.website\_parser module
+-------------------------------------------
+
+.. automodule:: captchamonitor.utils.website_parser
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

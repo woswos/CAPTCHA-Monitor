@@ -38,7 +38,7 @@ docs: check_non_root FORCE
 	@echo "\e[93m>> Installing the package\e[0m"
 	pip3 install -e src/
 	@echo "\n\e[93m>> Generating documentation from docstrings\e[0m"
-	sphinx-apidoc -o ./docs/sphinx/ ./src/captchamonitor/
+	sphinx-apidoc -f -o ./docs/sphinx/ ./src/captchamonitor/
 	@echo "\n\e[93m>> Building the documentation\e[0m"
 	sphinx-build -b html ./docs/sphinx/ public
 	@echo "\n\e[92m>> Done!\e[0m"

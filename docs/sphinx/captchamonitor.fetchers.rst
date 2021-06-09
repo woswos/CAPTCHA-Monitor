@@ -28,6 +28,14 @@ captchamonitor.fetchers.firefox\_browser module
    :undoc-members:
    :show-inheritance:
 
+captchamonitor.fetchers.opera\_browser module
+---------------------------------------------
+
+.. automodule:: captchamonitor.fetchers.opera_browser
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 captchamonitor.fetchers.tor\_browser module
 -------------------------------------------
 
