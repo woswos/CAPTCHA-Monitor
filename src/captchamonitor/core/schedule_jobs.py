@@ -46,21 +46,24 @@ class ScheduleJobs:
         Goes over all available domains and inserts a new job for fetching them
         with Tor Browser and Firefox Browser
         """
+        # pylint: disable=C0121
         # Get the list of domains
         domains = self.__db_session.query(Domain).all()
         tor_browser = (
             self.__db_session.query(Fetcher)
             .filter(Fetcher.method == "tor_browser")
+            .filter(Fetcher.uses_tor == True)
             .first()
         )
         firefox_browser = (
             self.__db_session.query(Fetcher)
             .filter(Fetcher.method == "firefox_browser")
+            .filter(Fetcher.uses_tor == False)
             .first()
         )
         relay = (
             self.__db_session.query(Relay)
-            .filter(Relay.ipv4_exiting_allowed == True)  # pylint: disable=C0121
+            .filter(Relay.ipv4_exiting_allowed == True)
             .first()
         )
 
