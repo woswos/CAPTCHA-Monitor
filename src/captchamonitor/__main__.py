@@ -16,6 +16,13 @@ parser.add_argument(
     help="Run an instance of worker",
 )
 parser.add_argument(
+    "-a",
+    "--analyze",
+    action="store_true",
+    default=False,
+    help="Run an instance of data analyzer",
+)
+parser.add_argument(
     "-u",
     "--update",
     action="store_true",
@@ -38,6 +45,9 @@ cm = CaptchaMonitor()
 if args.worker:
     logger.info("Intializing CAPTCHA Monitor in worker mode")
     cm.worker()
+elif args.analyse:
+    logger.info("Intializing CAPTCHA Monitor in data analysis mode")
+    cm.analyze()
 elif args.update:
     logger.info("Intializing CAPTCHA Monitor in update mode")
     schedule.every().day.do(cm.update_domains)

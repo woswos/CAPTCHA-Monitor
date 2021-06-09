@@ -5,6 +5,7 @@ from typing import Optional
 
 from captchamonitor.core.worker import Worker
 from captchamonitor.utils.config import Config
+from captchamonitor.core.analyzer import Analyzer
 from captchamonitor.utils.database import Database
 from captchamonitor.utils.exceptions import ConfigInitError, DatabaseInitError
 from captchamonitor.core.schedule_jobs import ScheduleJobs
@@ -65,30 +66,6 @@ class CaptchaMonitor:
         # Obtain the session from database module
         self.__db_session = self.__database.session()
 
-    def schedule_jobs(self) -> None:
-        """
-        Adds new jobs to the database
-        """
-        self.__logger.info("Scheduling new jobs")
-
-        ScheduleJobs(
-            config=self.__config,
-            db_session=self.__db_session,
-        )
-
-    def worker(self) -> None:
-        """
-        Fetches a job from the database and processes it using Tor Browser or
-        other specified browsers. Inserts the result back into the database.
-        """
-        self.__logger.info("Running worker %s", self.__node_id)
-
-        Worker(
-            worker_id=self.__node_id,
-            config=self.__config,
-            db_session=self.__db_session,
-        )
-
     def update_domains(self) -> None:
         """
         Updates the list of domains in the database
@@ -113,11 +90,41 @@ class CaptchaMonitor:
 
         UpdateFetchers(config=self.__config, db_session=self.__db_session)
 
+    def schedule_jobs(self) -> None:
+        """
+        Adds new jobs to the database
+        """
+        self.__logger.info("Scheduling new jobs")
+
+        ScheduleJobs(
+            config=self.__config,
+            db_session=self.__db_session,
+        )
+
+    def worker(self) -> None:
+        """
+        Fetches a job from the database and processes it using Tor Browser or
+        other specified browsers. Inserts the result back into the database.
+        """
+        self.__logger.info("Running worker %s", self.__node_id)
+
+        Worker(
+            worker_id=self.__node_id,
+            config=self.__config,
+            db_session=self.__db_session,
+        )
+
     def analyze(self) -> None:
         """
-        Analyses the data recorded in the database
+        Analyzes the data recorded in the database
         """
         self.__logger.debug("Started data analysis")
+
+        Analyzer(
+            analyzer_id=self.__node_id,
+            config=self.__config,
+            db_session=self.__db_session,
+        )
 
     def __del__(self) -> None:
         """

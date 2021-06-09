@@ -37,6 +37,15 @@ services:
       - -m
       - captchamonitor
       - --worker
+
+  cm-analyze:
+    <<: *captchamonitor_base_service
+    restart: always
+    entrypoint:
+      - python
+      - -m
+      - captchamonitor
+      - --analyze
       
   cm-update:
     <<: *captchamonitor_base_service
