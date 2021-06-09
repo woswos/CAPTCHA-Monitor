@@ -38,6 +38,7 @@ elif args.update:
     logger.info("Intializing CAPTCHA Monitor in update mode")
     schedule.every().day.do(cm.update_domains)
     schedule.every().hour.do(cm.update_relays)
+    schedule.every().day.do(cm.update_fetchers)
 
 # Run all scheduled jobs at the beginning
 schedule.run_all()

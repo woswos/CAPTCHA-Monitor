@@ -10,6 +10,7 @@ from captchamonitor.utils.exceptions import ConfigInitError, DatabaseInitError
 from captchamonitor.core.update_relays import UpdateRelays
 from captchamonitor.core.update_domains import UpdateDomains
 from captchamonitor.utils.small_scripts import node_id
+from captchamonitor.core.update_fetchers import UpdateFetchers
 
 
 class CaptchaMonitor:
@@ -97,6 +98,14 @@ class CaptchaMonitor:
         self.__logger.info("Started updating relays")
 
         UpdateRelays(config=self.__config, db_session=self.__db_session)
+
+    def update_fetchers(self) -> None:
+        """
+        Updates the list of fetchers in the database
+        """
+        self.__logger.info("Started updating list of fetchers")
+
+        UpdateFetchers(config=self.__config, db_session=self.__db_session)
 
     def analyze(self) -> None:
         """
