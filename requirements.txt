@@ -1,25 +1,27 @@
 # app
 sqlalchemy<1.4.0
-sqlalchemy-utils
-psycopg2-binary
-selenium
+sqlalchemy-utils>=0.37.4
+psycopg2-binary>=2.8.6
+selenium>=3.141.0
 stem>=1.8.0
-schedule
-pytz
-docker
-port_for
-country_converter
-beautifulsoup4
+schedule>=1.1.0
+pytz>=2021.1
+docker>=5.0.0
+port-for>=0.6.1
+country-converter>=0.7.3
+beautifulsoup4>=4.9.3
 
 # dev/tests
-pytest
-pytest-rerunfailures
-pytest-icdiff
-pytest-cov
-pytest-mock
-freezegun
-mypy
-pylint
-black
-isort
-darglint
+pytest>=6.2.4
+pytest-rerunfailures>=10.0
+pytest-icdiff>=0.5
+pytest-cov>=2.12.0
+pytest-mock>=3.6.1
+freezegun>=1.1.0
+mypy==0.800
+pylint>=2.8.3
+black>=21.5b2
+isort>=5.8.0
+darglint>=1.8.0
+sphinx>=4.0.2
+sphinx-autodoc-typehints>=1.12.0
