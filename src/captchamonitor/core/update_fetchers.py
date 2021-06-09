@@ -41,9 +41,10 @@ class UpdateFetchers:
         :return: List of web browsers
         :rtype: Set
         """
+        keywords = ["docker", "browser"]
         browsers = set()
         for config in self.__config.keys():
-            if "docker" in config and "container" in config:
+            if all(x in config for x in keywords):
                 name = config.split("_")
                 browsers.add(f"{name[1]}_{name[2]}")
         return browsers
