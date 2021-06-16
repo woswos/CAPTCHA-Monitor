@@ -1,5 +1,5 @@
 # Based on Selenium Docker Node
-FROM selenium/node-base:latest
+FROM selenium/node-base:3.141.59-20210607
 
 USER root
 

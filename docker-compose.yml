@@ -1,7 +1,15 @@
 version: "2.2"
 
+x-logging-options: &default-logging-options
+  logging:
+    driver: "json-file"
+    options:
+        max-file: "5"
+        max-size: "10m"
+
 services:
   captchamonitor: &captchamonitor_base_service
+    <<: *default-logging-options
     image: captchamonitor
     build:
       context: .
@@ -57,6 +65,7 @@ services:
       - --update
 
   postgres:
+    <<: *default-logging-options
     image: postgres:9.6
     environment:
       POSTGRES_USER: ${CM_DB_USER}
@@ -74,6 +83,7 @@ services:
       retries: 5
 
   tor-container:
+    <<: *default-logging-options
     image: captchamonitor-tor-container:latest
     build:
       context: ./tor-container
@@ -84,6 +94,7 @@ services:
       - /bin/sh
 
   tor-browser-container:
+    <<: *default-logging-options
     image: captchamonitor-tor-browser-container:latest
     build:
       context: ./standalone-tor-browser
@@ -105,7 +116,8 @@ services:
       retries: 5
 
   firefox-browser-container:
-    image: selenium/standalone-firefox:latest
+    <<: *default-logging-options
+    image: selenium/standalone-firefox:3.141.59-20210607
     volumes:
       - shared_tmp_volume:/tmp
     networks:
@@ -120,7 +132,8 @@ services:
       retries: 5
 
   chrome-browser-container:
-    image: selenium/standalone-chrome:latest
+    <<: *default-logging-options
+    image: selenium/standalone-chrome:3.141.59-20210607
     volumes:
       - shared_tmp_volume:/tmp
     networks:
@@ -135,6 +148,7 @@ services:
       retries: 5
 
   brave-browser-container:
+    <<: *default-logging-options
     image: captchamonitor-brave-browser-container:latest
     build:
       context: ./standalone-brave-browser
@@ -153,7 +167,8 @@ services:
       retries: 5
 
   opera-browser-container:
-    image: selenium/standalone-opera:latest
+    <<: *default-logging-options
+    image: selenium/standalone-opera:3.141.59-20210607
     volumes:
       - shared_tmp_volume:/tmp
     networks:
