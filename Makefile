@@ -31,7 +31,7 @@ init: check_root
 	@echo "\n\e[93m>> Installing requirements\e[0m"
 	pip3 install -q --upgrade --force-reinstall -r requirements.txt
 	@echo "\n\e[93m>> Building Docker images\e[0m"
-	# make build
+	make build
 	@echo "\n\e[92m>> Done!\e[0m"
 
 docs: check_non_root FORCE

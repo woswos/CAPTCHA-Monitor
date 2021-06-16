@@ -51,7 +51,7 @@ class TorBrowser(BaseFetcher):
         # Convert security level to integer representation
         security_level = security_levels[security_level]
 
-        # Obtain the Tor Browser profile
+        # Obtain the Tor Browser profile and create a copy of it in /tmp
         tb_profile = FirefoxProfile(profile_location)
 
         # Install the extensions
