@@ -70,6 +70,11 @@ class BaseFetcher:
         self._num_retries_on_fail: int = 3
         self._delay_in_seconds_between_retries: int = 3
 
+        # Update default options with the specified ones
+        if self.options is not None:
+            self.page_timeout = self.options.get("page_timeout", page_timeout)
+            self.script_timeout = self.options.get("script_timeout", script_timeout)
+
         # Get the extension path for xpi
         self._har_export_extension_xpi: str = self._config[
             "asset_har_export_extension_xpi"

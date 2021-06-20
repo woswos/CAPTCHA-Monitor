@@ -62,6 +62,7 @@ class Domain(BaseModel):
     supports_ipv4 = Column(Boolean, nullable=False)              # True or False based on whether the domain supports IPv4
     supports_ipv6 = Column(Boolean, nullable=False)              # True or False based on whether the domain supports IPv6
     requires_multiple_requests = Column(Boolean, nullable=False) # True or False based on whether the website on the domain requires multiple HTTP requests to completely fetch
+    options = Column(JSON)                                       # Options, if there is any
     cdn = Column(String)                                         # CDN provider, if known
     comment = Column(String)                                     # Comments, if there is any
     # fmt: on

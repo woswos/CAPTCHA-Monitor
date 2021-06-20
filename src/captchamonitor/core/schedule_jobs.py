@@ -70,12 +70,14 @@ class ScheduleJobs:
         for domain in domains:
             new_job_tor_browser = FetchQueue(
                 url=f"https://{domain.domain}",
+                options=domain.options,
                 fetcher_id=tor_browser.id,
                 domain_id=domain.id,
                 relay_id=relay.id,
             )
             new_job_firefox_browser = FetchQueue(
                 url=f"https://{domain.domain}",
+                options=domain.options,
                 fetcher_id=firefox_browser.id,
                 domain_id=domain.id,
             )
