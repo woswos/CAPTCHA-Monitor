@@ -22,11 +22,11 @@ class OperaBrowser(BaseFetcher):
         socks_host = self._tor_launcher.ip_address
         socks_port = self._tor_launcher.socks_port
 
-        container_host = self._config["docker_opera_browser_container_name"]
-        container_port = self._config["docker_opera_browser_container_port"]
+        self.container_host = self._config["docker_opera_browser_container_name"]
+        self.container_port = self._config["docker_opera_browser_container_port"]
 
         self._selenium_executor_url = self._get_selenium_executor_url(
-            container_host, container_port
+            self.container_host, self.container_port
         )
 
         self._desired_capabilities = webdriver.DesiredCapabilities.OPERA.copy()

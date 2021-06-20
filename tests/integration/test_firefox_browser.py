@@ -26,6 +26,8 @@ class TestFirefoxBrowser(unittest.TestCase):
 
         self.assertIn("Sorry. You are not using Tor.", firefox_browser.page_source)
 
+        firefox_browser.close()
+
     def test_firefox_browser_with_tor(self):
         firefox_browser = FirefoxBrowser(
             config=self.config,
@@ -43,3 +45,5 @@ class TestFirefoxBrowser(unittest.TestCase):
             "Congratulations. This browser is configured to use Tor.",
             firefox_browser.page_source,
         )
+
+        firefox_browser.close()

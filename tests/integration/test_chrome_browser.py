@@ -28,6 +28,8 @@ class TestChromeBrowser(unittest.TestCase):
 
         self.assertIn("Sorry. You are not using Tor.", chrome_browser.page_source)
 
+        chrome_browser.close()
+
     def test_chrome_browser_with_tor(self):
         chrome_browser = ChromeBrowser(
             config=self.config,
@@ -45,3 +47,5 @@ class TestChromeBrowser(unittest.TestCase):
             "Congratulations. This browser is configured to use Tor.",
             chrome_browser.page_source,
         )
+
+        chrome_browser.close()

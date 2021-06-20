@@ -33,6 +33,8 @@ class TestTorBrowser(unittest.TestCase):
             tor_browser.page_source,
         )
 
+        tor_browser.close()
+
     def test_tor_browser_wrong_profile_location(self):
         test_config = deep_copy(self.config)
 
@@ -97,6 +99,8 @@ class TestTorBrowser(unittest.TestCase):
             tor_browser.page_source,
         )
 
+        tor_browser.close()
+
     @pytest.mark.skip(
         reason="HAR exporting doesn't work in safest mode since JS is blocked completely"
     )
@@ -117,3 +121,5 @@ class TestTorBrowser(unittest.TestCase):
             "Congratulations. This browser is configured to use Tor.",
             tor_browser.page_source,
         )
+
+        tor_browser.close()

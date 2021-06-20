@@ -1,19 +1,13 @@
 import os
 import json
-import time
 import shutil
 import logging
 from typing import Any, Union, Optional
 
 from selenium import webdriver
-from selenium.common.exceptions import WebDriverException
 
 from captchamonitor.utils.config import Config
-from captchamonitor.utils.exceptions import (
-    FetcherURLFetchError,
-    HarExportExtensionError,
-    FetcherConnectionInitError,
-)
+from captchamonitor.utils.exceptions import HarExportExtensionError
 from captchamonitor.utils.tor_launcher import TorLauncher
 
 
@@ -51,12 +45,14 @@ class BaseFetcher:
         :param use_tor: Should I connect the fetcher to Tor? Has no effect when using Tor Browser, defaults to True
         :type use_tor: bool
         """
-        # Public attributes
+        # Public class attributes
         self.url: str = url
         self.use_tor: bool = use_tor
         self.page_timeout: int = page_timeout
         self.script_timeout: int = script_timeout
         self.options: Optional[dict] = options
+        self.container_host: str
+        self.container_port: str
         self.driver: webdriver.Remote
         self.page_source: str
         self.page_cookies: str
@@ -123,35 +119,13 @@ class BaseFetcher:
         :type command_executor: str
         :param options: webdriver.Options from Selenium, defaults to None
         :type options: webdriver.Options object, optional
-        :raises FetcherConnectionInitError: If it wasn't able to connect to the webdriver
         """
         # Connect to browser container
-        connected = False
-        for _ in range(self._num_retries_on_fail):
-            try:
-                self.driver = webdriver.Remote(
-                    desired_capabilities=desired_capabilities,
-                    command_executor=command_executor,
-                    options=options,
-                )
-                connected = True
-                break
-
-            except ConnectionRefusedError as exception:
-                self._logger.debug(
-                    "Unable to connect to the %s container, retrying: %s",
-                    container_name,
-                    exception,
-                )
-                time.sleep(self._delay_in_seconds_between_retries)
-
-        # Check if connection to selenium container was successfull
-        if not connected:
-            self._logger.warning(
-                "Could not connect to the %s container after many retries",
-                container_name,
-            )
-            raise FetcherConnectionInitError
+        self.driver = webdriver.Remote(
+            desired_capabilities=desired_capabilities,
+            command_executor=command_executor,
+            options=options,
+        )
 
         # Set driver timeout
         self.driver.set_page_load_timeout(self.page_timeout)
@@ -213,15 +187,8 @@ class BaseFetcher:
     def _fetch_with_selenium_remote_web_driver(self) -> None:
         """
         Fetches the given URL with the remote web driver
-
-        :raises FetcherURLFetchError: If given URL wasn't fetched
         """
-        try:
-            self.driver.get(self.url)
-
-        except WebDriverException as exception:
-            self._logger.debug("Unable to fetch %s because of: %s", self.url, exception)
-            raise FetcherURLFetchError(exception) from exception
+        self.driver.get(self.url)
 
         self.page_source = self.driver.page_source
         self.page_cookies = self.driver.get_cookies()
@@ -262,7 +229,7 @@ class BaseFetcher:
         # else
         return self.driver.get_screenshot_as_png()
 
-    def __del__(self) -> None:
+    def close(self) -> None:
         """
         Clean up before going out of scope
         """

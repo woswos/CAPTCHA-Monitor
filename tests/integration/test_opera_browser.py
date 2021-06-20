@@ -28,6 +28,8 @@ class TestOperaBrowser(unittest.TestCase):
 
         self.assertIn("Sorry. You are not using Tor.", opera_browser.page_source)
 
+        opera_browser.close()
+
     def test_opera_browser_with_tor(self):
         opera_browser = OperaBrowser(
             config=self.config,
@@ -45,3 +47,5 @@ class TestOperaBrowser(unittest.TestCase):
             "Congratulations. This browser is configured to use Tor.",
             opera_browser.page_source,
         )
+
+        opera_browser.close()
