@@ -20,7 +20,7 @@ class TestTorBrowser(unittest.TestCase):
             config=self.config,
             url=self.target_url,
             tor_launcher=self.tor_launcher,
-            options={"TorBrowserSecurityLevel": "standard"},
+            options={"tbb_security_level": "standard"},
             use_tor=True,
         )
 
@@ -47,7 +47,7 @@ class TestTorBrowser(unittest.TestCase):
             config=test_config,
             url=self.target_url,
             tor_launcher=self.tor_launcher,
-            options={"TorBrowserSecurityLevel": "standard"},
+            options={"tbb_security_level": "standard"},
             use_tor=True,
         )
 
@@ -63,7 +63,7 @@ class TestTorBrowser(unittest.TestCase):
             config=self.config,
             url=self.target_url,
             tor_launcher=self.tor_launcher,
-            options={"TorBrowserSecurityLevel": None},
+            options={"tbb_security_level": None},
             use_tor=True,
         )
 
@@ -86,7 +86,7 @@ class TestTorBrowser(unittest.TestCase):
             config=self.config,
             url=self.target_url,
             tor_launcher=self.tor_launcher,
-            options={"TorBrowserSecurityLevel": "safer"},
+            options={"tbb_security_level": "safer"},
             use_tor=True,
         )
 
@@ -109,7 +109,7 @@ class TestTorBrowser(unittest.TestCase):
             config=self.config,
             url=self.target_url,
             tor_launcher=self.tor_launcher,
-            options={"TorBrowserSecurityLevel": "safest"},
+            options={"tbb_security_level": "safest"},
             use_tor=True,
         )
 

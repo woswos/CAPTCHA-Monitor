@@ -42,7 +42,7 @@ class TorBrowser(BaseFetcher):
         # TODO: Clean this if else mess
         security_levels = {"safest": 1, "safer": 2, "standard": 4}
         if self.options is not None:
-            security_level = self.options.get("TorBrowserSecurityLevel", "standard")
+            security_level = self.options.get("tbb_security_level", "standard")
             if security_level is None:
                 security_level = "standard"
         else:

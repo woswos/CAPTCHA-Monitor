@@ -97,7 +97,7 @@ class Worker:
 
             # Fetch it using a fetcher
             if job.ref_fetcher.method == TorBrowser.method_name_in_db:
-                options_dict = {"TorBrowserSecurityLevel": job.tbb_security_level}
+                options_dict = {"tbb_security_level": job.tbb_security_level}
                 if job.options is not None:
                     options_dict.update(job.options)
                 self.__fetcher = TorBrowser(
