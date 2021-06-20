@@ -8,7 +8,7 @@ build:
 	docker-compose build
 
 up:
-	docker-compose up -d --scale cm-worker=2 --scale cm-update=1 --scale cm-analyze=1
+	docker-compose up -d --scale cm-worker=3 --scale cm-update=1 --scale cm-analyzer=1
 
 down:
 ifneq ($(shell docker ps -f ancestor="captchamonitor-tor-container" -q),)
@@ -18,11 +18,11 @@ endif
 	docker-compose down --remove-orphans
 
 test: down
-	docker-compose up -d --scale cm-worker=0 --scale cm-update=0 --scale cm-analyze=0
+	docker-compose up -d --scale cm-worker=0 --scale cm-update=0 --scale cm-analyzer=0
 	docker-compose run --rm --no-deps --entrypoint="pytest -v --reruns 3 --reruns-delay 3 --cov=/src/captchamonitor/ --cov-report term-missing" captchamonitor /tests
 
 logs:
-	docker-compose logs --tail=100 captchamonitor cm-worker cm-update cm-analyze
+	docker-compose logs --tail=100 captchamonitor cm-worker cm-update cm-analyzer
 
 init: check_root
 	@echo "\e[93m>> Creating .env file\e[0m"
