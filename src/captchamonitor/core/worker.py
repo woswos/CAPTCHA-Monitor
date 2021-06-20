@@ -14,6 +14,7 @@ from captchamonitor.utils.tor_launcher import TorLauncher
 from captchamonitor.fetchers.tor_browser import TorBrowser
 from captchamonitor.fetchers.opera_browser import OperaBrowser
 from captchamonitor.fetchers.chrome_browser import ChromeBrowser
+from captchamonitor.utils.container_manager import ContainerManager
 from captchamonitor.fetchers.firefox_browser import FirefoxBrowser
 
 
@@ -147,6 +148,11 @@ class Worker:
             T, V, TB = sys.exc_info()
             error = "".join(traceback.format_exception(T, V, TB))
 
+            # Check if container is healthy
+            ContainerManager(
+                self.__fetcher.container_host
+            ).restart_browser_container_if_unhealthy()
+
             # If failed, put into the failed table
             failed = FetchFailed(
                 url=job.url,
@@ -189,6 +195,10 @@ class Worker:
             )
 
         finally:
+            # Close the fetcher
+            if hasattr(self, f"_{self.__class__.__name__}__fetcher"):
+                self.__fetcher.close()
+
             # Reset the changes
             self.__tor_launcher.reset_configuration()
 
