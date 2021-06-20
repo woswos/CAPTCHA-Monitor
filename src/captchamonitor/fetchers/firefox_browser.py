@@ -60,6 +60,9 @@ class FirefoxBrowser(BaseFetcher):
             ff_profile.set_preference("network.proxy.socks_port", int(socks_port))
             ff_profile.set_preference("network.proxy.socks_remote_dns", True)
 
+        # Apply the preferences
+        ff_profile.update_preferences()
+
         # Set selenium related options for Firefox Browser
         self._desired_capabilities = webdriver.DesiredCapabilities.FIREFOX.copy()
         self._selenium_options = webdriver.FirefoxOptions()

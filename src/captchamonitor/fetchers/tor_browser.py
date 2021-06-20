@@ -95,6 +95,9 @@ class TorBrowser(BaseFetcher):
         tb_profile.set_preference("app.update.enabled", False)
         tb_profile.set_preference("extensions.torbutton.versioncheck_enabled", False)
 
+        # Apply the preferences
+        tb_profile.update_preferences()
+
         # Set selenium related options for Tor Browser
         self._desired_capabilities = webdriver.DesiredCapabilities.FIREFOX.copy()
         self._selenium_options = webdriver.FirefoxOptions()
