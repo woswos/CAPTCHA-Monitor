@@ -99,7 +99,8 @@ class CaptchaMonitor:
         ScheduleJobs(
             config=self.__config,
             db_session=self.__db_session,
-        )
+            loop=False,
+        ).schedule_next_batch()
 
     def worker(self) -> None:
         """

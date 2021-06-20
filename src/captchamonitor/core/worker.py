@@ -148,11 +148,6 @@ class Worker:
             T, V, TB = sys.exc_info()
             error = "".join(traceback.format_exception(T, V, TB))
 
-            # Check if container is healthy
-            ContainerManager(
-                self.__fetcher.container_host
-            ).restart_browser_container_if_unhealthy()
-
             # If failed, put into the failed table
             failed = FetchFailed(
                 url=job.url,
@@ -172,6 +167,14 @@ class Worker:
                 job.fetcher_id,
                 str(error),
             )
+
+            # If fetcher was initialized correctly
+            if hasattr(self, f"_{self.__class__.__name__}__fetcher"):
+                # Check if container is healthy
+                self.__logger.debug("Checking if the container is healthy")
+                ContainerManager(
+                    self.__fetcher.container_host
+                ).restart_browser_container_if_unhealthy()
 
         else:
             # If successful, put into the completed table

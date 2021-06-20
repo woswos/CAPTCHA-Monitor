@@ -5,6 +5,7 @@ import logging
 from typing import Any, Union, Optional
 
 from selenium import webdriver
+from selenium.common.exceptions import WebDriverException
 
 from captchamonitor.utils.config import Config
 from captchamonitor.utils.exceptions import HarExportExtensionError
@@ -234,4 +235,8 @@ class BaseFetcher:
         Clean up before going out of scope
         """
         if hasattr(self, "driver"):
-            self.driver.quit()
+            try:
+                self.driver.quit()
+            except WebDriverException:
+                # We can safely ignore "No active session with ID XXXXX" exceptions
+                pass
