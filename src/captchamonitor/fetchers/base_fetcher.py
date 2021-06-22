@@ -2,10 +2,12 @@ import os
 import json
 import shutil
 import logging
-from typing import Any, Union, Optional
+from typing import Any, List, Union, Optional
 
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 from captchamonitor.utils.config import Config
 from captchamonitor.utils.exceptions import HarExportExtensionError
@@ -25,6 +27,7 @@ class BaseFetcher:
         tor_launcher: TorLauncher,
         page_timeout: int = 30,
         script_timeout: int = 30,
+        url_change_timeout: int = 30,
         options: Optional[dict] = None,
         use_tor: bool = True,
     ) -> None:
@@ -41,6 +44,8 @@ class BaseFetcher:
         :type page_timeout: int
         :param script_timeout: Maximum time allowed for a JS script to respond, defaults to 30
         :type script_timeout: int
+        :param url_change_timeout: Maximum time allowed while waiting for driver URL to change, defaults to 30
+        :type url_change_timeout: int
         :param options: Dictionary of options to pass to the fetcher, defaults to None
         :type options: Optional[dict], optional
         :param use_tor: Should I connect the fetcher to Tor? Has no effect when using Tor Browser, defaults to True
@@ -51,7 +56,11 @@ class BaseFetcher:
         self.use_tor: bool = use_tor
         self.page_timeout: int = page_timeout
         self.script_timeout: int = script_timeout
+        self.url_change_timeout: int = url_change_timeout
         self.options: Optional[dict] = options
+        self.gdpr_remove: bool = False
+        self.gdpr_wait_for_url_change: bool = False
+        self.gdpr_keywords: List[str] = ["Accept"]
         self.container_host: str
         self.container_port: str
         self.driver: webdriver.Remote
@@ -72,8 +81,16 @@ class BaseFetcher:
 
         # Update default options with the specified ones
         if self.options is not None:
+            self.gdpr_remove = self.options.get("gdpr_remove", self.gdpr_remove)
+            self.gdpr_wait_for_url_change = self.options.get(
+                "gdpr_wait_for_url_change", self.gdpr_wait_for_url_change
+            )
+            self.gdpr_keywords = self.options.get("gdpr_keywords", self.gdpr_keywords)
             self.page_timeout = self.options.get("page_timeout", page_timeout)
             self.script_timeout = self.options.get("script_timeout", script_timeout)
+            self.url_change_timeout = self.options.get(
+                "url_change_timeout", url_change_timeout
+            )
 
         # Get the extension path for xpi
         self._har_export_extension_xpi: str = self._config[
@@ -190,11 +207,52 @@ class BaseFetcher:
         """
         chrome_options.add_extension(self._har_export_extension_crx)
 
+    def _remove_gdpr_popup(self) -> None:
+
+        self._logger.debug("Trying to remove the GDPR popup")
+
+        # Produce a similar string using the keywords:
+        # ["Souhlasím", "Alle akzeptieren", "Jag godkänner"]
+        keywords_str = '", "'.join(map(str, self.gdpr_keywords))
+        keywords_array_str = f'arr = ["{keywords_str}"]'
+
+        js_gdpr_remover = (
+            keywords_array_str
+            + """
+                for (var i = 0; i < arr.length; i++) {
+                    if (document.documentElement.innerHTML.includes(arr[i])) {
+                        s = (arr[i]);
+                        path = "//*[contains(., '" + s + "')]";
+                        x = document.evaluate(path, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+                        for (var i = 0; i < x.snapshotLength; i++) x.snapshotItem(i).click();
+                    }
+                }
+              """
+        )
+
+        # Get a copy of the URL
+        old_url = self.driver.current_url
+
+        # Execute the GDPR remover
+        self.driver.execute_script(js_gdpr_remover)
+
+        if self.gdpr_wait_for_url_change:
+            WebDriverWait(self.driver, self.url_change_timeout).until(
+                EC.url_changes(old_url)
+            )
+            WebDriverWait(self.driver, self.url_change_timeout).until(
+                lambda driver: driver.execute_script("return document.readyState")
+                == "complete"
+            )
+
     def _fetch_with_selenium_remote_web_driver(self) -> None:
         """
         Fetches the given URL with the remote web driver
         """
         self.driver.get(self.url)
+
+        if self.gdpr_remove:
+            self._remove_gdpr_popup()
 
         self.page_source = self.driver.page_source
         self.page_cookies = self.driver.get_cookies()
