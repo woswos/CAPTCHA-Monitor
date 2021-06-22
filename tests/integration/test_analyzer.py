@@ -8,6 +8,7 @@ from captchamonitor.utils.models import (
     Fetcher,
     FetchQueue,
     FetchCompleted,
+    AnalyzeCompleted,
 )
 from captchamonitor.core.analyzer import Analyzer
 from captchamonitor.utils.database import Database
@@ -89,6 +90,7 @@ class TestAnalyzer(unittest.TestCase):
 
         # Make sure that the jobs are processed
         self.assertEqual(self.db_session.query(FetchCompleted).count(), 2)
+        self.assertEqual(self.db_session.query(AnalyzeCompleted).count(), 0)
 
     def tearDown(self):
         self.db_session.close()
@@ -98,4 +100,17 @@ class TestAnalyzer(unittest.TestCase):
             analyzer_id=self.analyzer_id,
             config=self.config,
             db_session=self.db_session,
+        )
+
+        # Resembles Same
+        self.assertEqual(self.db_session.query(AnalyzeCompleted).first().dom_analyze, 1)
+
+        # No Captcha
+        self.assertEqual(
+            self.db_session.query(AnalyzeCompleted).first().captcha_checker, 0
+        )
+
+        # Status Code Same
+        self.assertEqual(
+            self.db_session.query(AnalyzeCompleted).first().status_check, None
         )

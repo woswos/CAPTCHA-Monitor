@@ -196,3 +196,26 @@ class FetchFailed(FetchBaseModel):
     ref_fetcher = relationship("Fetcher", backref="FetchFailed")
     ref_domain = relationship("Domain", backref="FetchFailed")
     ref_relay = relationship("Relay", backref="FetchFailed")
+
+
+class AnalyzeCompleted(BaseModel):
+    """
+    Contains the Analyzer table
+    """
+
+    __tablename__ = "analyze_completed"
+
+    # pylint: disable=E0213
+    @declared_attr
+    def fetch_completed_id(cls) -> Column:
+        # ID of FetchCompleted table to use
+        return Column(Integer, ForeignKey("fetch_completed.id"), nullable=False)
+
+    # fmt: off
+    captcha_checker = Column(Integer) # Checks if the website contains captcha or not
+    dom_analyze = Column(Integer)     # Analyzes the DOM structure to find out if the webite appears to be same or different
+    status_check = Column(Integer)    # Checks for the HTTP statuses received by the websites on different clients
+    # fmt: on
+
+    # References to the foreign keys, gives access to these tables
+    ref_analyzer = relationship("FetchCompleted", backref="AnalyzeCompleted")
