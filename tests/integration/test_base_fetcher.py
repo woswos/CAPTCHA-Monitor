@@ -19,7 +19,6 @@ class TestBaseFetcher(unittest.TestCase):
             config=self.config,
             url=self.target_url,
             tor_launcher=self.tor_launcher,
-            options={},
             use_tor=False,
         )
 
