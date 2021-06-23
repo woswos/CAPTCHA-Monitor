@@ -61,13 +61,13 @@ class TestAnalyzer(unittest.TestCase):
         test_fetcher_tor = Fetcher(method="tor_browser", uses_tor=True, version="82")
 
         queue_non_tor = FetchQueue(
-            url=f"https://www.{self.test_domain}",
+            url=f"https://{self.test_domain}",
             fetcher_id=1,
             domain_id=1,
         )
 
         queue_tor = FetchQueue(
-            url=f"https://www.{self.test_domain}",
+            url=f"https://{self.test_domain}",
             fetcher_id=2,
             domain_id=1,
             relay_id=1,
