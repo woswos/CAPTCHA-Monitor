@@ -89,7 +89,7 @@ class UpdateDomains:
         website = WebsiteParser()
         website.get_alexa_top_50()
         website.get_moz_top_500()
-        website_list = list(website.uniq_website_list)
+        website_list = list(website.unique_website_list)
         self.__insert_website_into_db(website_list)
         self.__logger.info(
             "Done with updating the unique website list of both Moz and Alexa sites"

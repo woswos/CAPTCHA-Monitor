@@ -97,7 +97,7 @@ class TestUpdateDomains(unittest.TestCase):
         website_list.get_moz_top_500()
         website_data = website_list.website_list
         # Unique length of website
-        unique_length_of_website = len(website_list.uniq_website_list)
+        unique_length_of_website = len(website_list.unique_website_list)
 
         update_domains._UpdateDomains__insert_website_into_db(website_data)
 

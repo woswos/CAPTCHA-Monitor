@@ -1,8 +1,15 @@
+import re
 import logging
-from typing import Set, List
+from typing import List, Optional
+from urllib.parse import urlparse
 
 import requests
 from bs4 import BeautifulSoup
+
+from captchamonitor.utils.exceptions import (
+    WebsiteParserFetchError,
+    WebsiteParserParseError,
+)
 
 
 class WebsiteParser:
@@ -17,113 +24,134 @@ class WebsiteParser:
         """
         # Public class attributes
         self.website_list: List[str] = []
-        self.number_of_websites: int = 0
-        self.uniq_website_list: Set[str] = set()
 
         # Private class attributes
         self.__logger = logging.getLogger(__name__)
 
-    def __fetch_and_parse_url(self, url: str) -> BeautifulSoup:
+    @property
+    def number_of_websites(self) -> int:
         """
-        Fetches given url and parses using BeautifulSoup
+        Returns the total number of websites parsed
 
-        :param url: The url of the given website
+        :return: The total number of websites parsed
+        :rtype: int
+        """
+        return len(self.website_list)
+
+    @property
+    def unique_website_list(self) -> List[str]:
+        """
+        Returns the list of unique websites
+
+        :return: The list of unique websites
+        :rtype: List[str]
+        """
+        return list(set(self.website_list))
+
+    def __fetch_url(self, url: str) -> BeautifulSoup:
+        """
+        Fetches given URL and parses using BeautifulSoup
+
+        :param url: The URL of the given website
         :type url: str
+        :raises WebsiteParserFetchError: If it cannot fetch the given URL
         :return: The BeautifulSoup parsed HTML
         :rtype: BeautifulSoup
         """
         try:
             result = requests.get(url)
-            return BeautifulSoup(result.text, "html.parser")
+
         except requests.ConnectionError as exception:
             self.__logger.debug(
-                "Fetching of %s failed becasue of (Connection Error): [%s]",
+                "Fetching of %s failed because of Connection Error: %s",
                 url,
                 exception,
             )
-            return BeautifulSoup("", "html.parser")
+            raise WebsiteParserFetchError from exception
+
         except requests.Timeout as exception:
             self.__logger.debug(
-                "Fetching of %s failed becasue of (Time out): [%s]", url, exception
+                "Fetching of %s failed because of timeout: %s", url, exception
             )
-            return BeautifulSoup("", "html.parser")
+            raise WebsiteParserFetchError from exception
+
+        return BeautifulSoup(result.text, "html.parser")
 
     @staticmethod
-    def __cleaning_website(url: str) -> str:
+    def __extract_hostname_from_url(url: str) -> Optional[str]:
         """
-        Cleans the urls, removing `www., http://, https://` from anywhere in the url to unify all the websites and return in lowercase
+        Extracts the hostname from given URL, turns into lowercase, and removes
+        any preceding www subdomains
 
-        :param url: The url of the given website
+        :param url: The URL of the given website
         :type url: str
-        :return: The clean url after processing
-        :rtype: str
+        :return: Extracted hostname after processing
+        :rtype: Optional[str]
         """
-        if url is not None:
-            url = url.replace("www.", "").replace("http://", "").replace("https://", "")
-            return url.lower()
-        # If url is None it returns str "None"
-        return "None"
+        # Add a protocol is there is none
+        if not re.match("(?:http|ftp|https)://", url):
+            url = f"http://{url}"
+
+        # Extract the hostname
+        hostname = urlparse(url).hostname
+
+        if hostname is not None:
+            # Convert to lowercase
+            hostname = hostname.lower()
+
+            # Get rid of wwww, if there is any
+            hostname = hostname.replace("www.", "")
+
+            return hostname
+
+        return None
 
     def get_moz_top_500(self) -> List[str]:
         """
         Gets the Top 500 website list from moz.com/top500
 
+        :raises WebsiteParserParseError: If the website layout is different than expected
         :return: List containing moz websites
         :rtype: List[str]
         """
-        # Take the website as url and parse it
         url = "https://moz.com/top500"
-        result = self.__fetch_and_parse_url(url)
-        try:
-            info = result.find_all("td")
-            length = len(info)
-            for _ in range(1, length, 4):
-                site = info[_].a.get("href")
-                # Checks if the url parsed is not None
-                if self.__cleaning_website(site) != "None":
-                    self.website_list.append(self.__cleaning_website(site))
-                    self.uniq_website_list.add(self.__cleaning_website(site))
-        except AttributeError as exception:
-            self.__logger.debug(
-                "Moz 500 website returns None in website url. More details are: [%s]",
-                exception,
-            )
-        except TypeError as exception:
-            self.__logger.debug(
-                "Moz 500 website returns None in the information. More details are: [%s]",
-                exception,
-            )
-        self.number_of_websites = +len(self.website_list)
+
+        page = self.__fetch_url(url)
+        table_rows = page.find_all("td")
+
+        if len(table_rows) == 0:
+            raise WebsiteParserParseError
+
+        for _ in range(1, len(table_rows), 4):
+            raw_url = table_rows[_].a.get("href")
+            hostname = self.__extract_hostname_from_url(raw_url)
+
+            if hostname is not None:
+                self.website_list.append(hostname)
+
         return self.website_list
 
     def get_alexa_top_50(self) -> List[str]:
-        """Gets the Top 50 website lists from alexa.com/topsites
+        """
+        Gets the Top 50 website lists from alexa.com/topsites
 
-        :return: List containing alexa topsites
+        :raises WebsiteParserParseError: If the website layout is different than expected
+        :return: List containing Alexa topsites
         :rtype: List[str]
         """
         url = "https://alexa.com/topsites"
-        result = self.__fetch_and_parse_url(url)
-        try:
-            # Parses according to div and class "tr site-listing"
-            info = result.find_all("div", class_="tr site-listing")
-            length = len(info)
-            self.number_of_websites = +length
-            for _ in range(0, length):
-                site = info[_].a.text
-                # Checks if the url parsed is not None
-                if self.__cleaning_website(site) != "None":
-                    self.website_list.append(self.__cleaning_website(site))
-                    self.uniq_website_list.add(self.__cleaning_website(site))
-        except AttributeError as exception:
-            self.__logger.debug(
-                "Alexa Topsite returns None in website url. More details are: [%s]",
-                exception,
-            )
-        except TypeError as exception:
-            self.number_of_websites = 0
-            self.__logger.debug(
-                "Alexa Topsite returns None in the information. More details are: [%s]",
-                exception,
-            )
+
+        page = self.__fetch_url(url)
+        table_rows = page.find_all("div", class_="tr site-listing")
+
+        if len(table_rows) == 0:
+            raise WebsiteParserParseError
+
+        for row in table_rows:
+            raw_url = row.a.text
+            hostname = self.__extract_hostname_from_url(raw_url)
+
+            if hostname is not None:
+                self.website_list.append(hostname)
+
         return self.website_list

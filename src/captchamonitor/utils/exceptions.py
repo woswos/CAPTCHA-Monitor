@@ -87,3 +87,13 @@ class TorBrowserProfileLocationError(Error):
 class FetcherNotFound(Error):
     def __str__(self) -> str:
         return "FetcherNotFound: The provided fetcher method is not available"
+
+
+class WebsiteParserFetchError(Error):
+    def __str__(self) -> str:
+        return "WebsiteParserFetchError: Cannot fetch the target website"
+
+
+class WebsiteParserParseError(Error):
+    def __str__(self) -> str:
+        return "WebsiteParserParseError: Cannot parse the website as expected, probably the website layout has changed"
