@@ -12,7 +12,15 @@ class TestGdprRemover(unittest.TestCase):
         self.config = Config()
         self.tor_launcher = TorLauncher(self.config)
         self.target_url = "https://yahoo.com"
-        self.exit_relay_in_france = "E2A3EF73F2B26BC4ABB4A2429180897C21DB7BDD"
+        self.exit_relays_in_france = [
+            "E2A3EF73F2B26BC4ABB4A2429180897C21DB7BDD",
+            "1F7EAF14071F8975AFCF219FD62E8451B40E70BB",
+            "84C0072767EE559B54FAC8EBE56C9B80EB7741BA",
+            "E81AE352A41ECB6C1C67A00816A7B22EDE206F01",
+            "7B9B9F33654C7B54EF57853F8ADDC86155426EBB",
+            "9493135BC3EC01A29707EACA058FCEBD619F3BB1",
+            "2AB6F7D59DF6153F4DB1DB6479C3422F5724C4BA",
+        ]
         self.gdpr_keywords = [
             "Souhlasím",
             "Alle akzeptieren",
@@ -28,8 +36,19 @@ class TestGdprRemover(unittest.TestCase):
             "Accept",
             "Tout accepter",
         ]
+
         # Connect to an exit node in France
-        self.tor_launcher.create_new_circuit_to(self.exit_relay_in_france)
+        connected = False
+        for relay in self.exit_relays_in_france:
+            try:
+                self.tor_launcher.create_new_circuit_to(relay)
+                connected = True
+            except:
+                # Try the next exit
+                pass
+
+        # Continue to test if we managed to connect to
+        self.assertTrue(connected, "Cannot connect to a European exit relay")
 
     def test_gdpr_remover(self):
         firefox_browser = FirefoxBrowser(
