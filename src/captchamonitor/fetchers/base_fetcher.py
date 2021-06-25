@@ -10,7 +10,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from captchamonitor.utils.config import Config
-from captchamonitor.utils.exceptions import HarExportExtensionError
+from captchamonitor.utils.exceptions import MissingTorLauncher, HarExportExtensionError
 from captchamonitor.utils.tor_launcher import TorLauncher
 
 
@@ -24,12 +24,12 @@ class BaseFetcher:
         self,
         config: Config,
         url: str,
-        tor_launcher: TorLauncher,
+        tor_launcher: Optional[TorLauncher] = None,
         page_timeout: int = 30,
         script_timeout: int = 30,
         url_change_timeout: int = 30,
         options: Optional[dict] = None,
-        use_tor: bool = True,
+        use_tor: bool = False,
     ) -> None:
         """
         Initializes the fetcher with given arguments and tries to fetch the given URL
@@ -38,8 +38,8 @@ class BaseFetcher:
         :type config: Config
         :param url: The URL to fetch
         :type url: str
-        :param tor_launcher: TorLauncher class
-        :type tor_launcher: TorLauncher
+        :param tor_launcher: TorLauncher class, defaults to None
+        :type tor_launcher: Optional[TorLauncher], optional
         :param page_timeout: Maximum time allowed for a web page to load, defaults to 30
         :type page_timeout: int
         :param script_timeout: Maximum time allowed for a JS script to respond, defaults to 30
@@ -50,6 +50,7 @@ class BaseFetcher:
         :type options: Optional[dict], optional
         :param use_tor: Should I connect the fetcher to Tor? Has no effect when using Tor Browser, defaults to True
         :type use_tor: bool
+        :raises MissingTorLauncher: If use_tor is set to True but no Tor Launcher provided
         """
         # Public class attributes
         self.url: str = url
@@ -71,13 +72,17 @@ class BaseFetcher:
 
         # Protected class attributes
         self._logger = logging.getLogger(__name__)
-        self._tor_launcher: TorLauncher = tor_launcher
+        self._tor_launcher: Optional[TorLauncher] = tor_launcher
         self._config: Config = config
         self._selenium_options: Any
         self._selenium_executor_url: str
         self._desired_capabilities: webdriver.DesiredCapabilities
         self._num_retries_on_fail: int = 3
         self._delay_in_seconds_between_retries: int = 3
+
+        # Check if use_tor is set to True but Tor Launcher is not passed
+        if self.use_tor and (self._tor_launcher is None):
+            raise MissingTorLauncher
 
         # Update default options with the specified ones
         if self.options is not None:

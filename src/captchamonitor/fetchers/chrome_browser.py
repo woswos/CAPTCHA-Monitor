@@ -19,9 +19,6 @@ class ChromeBrowser(BaseFetcher):
         """
         Prepares and starts the Chrome Browser for fetching
         """
-        socks_host = self._tor_launcher.ip_address
-        socks_port = self._tor_launcher.socks_port
-
         self.container_host = self._config["docker_chrome_browser_container_name"]
         self.container_port = self._config["docker_chrome_browser_container_port"]
 
@@ -40,6 +37,10 @@ class ChromeBrowser(BaseFetcher):
 
         # Set connections to Tor if we need to use Tor
         if self.use_tor:
+            socks_host = self._tor_launcher.ip_address  # type: ignore
+            socks_port = self._tor_launcher.socks_port  # type: ignore
+
+            # Set Tor as proxy
             proxy = f"socks5://{socks_host}:{socks_port}"
             self._selenium_options.add_argument(f"--proxy-server={proxy}")
 

@@ -23,8 +23,9 @@ class TorBrowser(BaseFetcher):
 
         :raises TorBrowserProfileLocationError: If provided Tor Browser location is not valid
         """
-        socks_host = self._tor_launcher.ip_address
-        socks_port = self._tor_launcher.socks_port
+        socks_host = self._tor_launcher.ip_address  # type: ignore
+        socks_port = self._tor_launcher.socks_port  # type: ignore
+
         profile_location = self._config["docker_tor_browser_container_profile_location"]
 
         self.container_host = self._config["docker_tor_browser_container_name"]

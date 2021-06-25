@@ -19,9 +19,6 @@ class OperaBrowser(BaseFetcher):
         """
         Prepares and starts the Opera Browser for fetching
         """
-        socks_host = self._tor_launcher.ip_address
-        socks_port = self._tor_launcher.socks_port
-
         self.container_host = self._config["docker_opera_browser_container_name"]
         self.container_port = self._config["docker_opera_browser_container_port"]
 
@@ -40,6 +37,9 @@ class OperaBrowser(BaseFetcher):
 
         # Set connections to Tor if we need to use Tor with Opera Browser
         if self.use_tor:
+            socks_host = self._tor_launcher.ip_address  # type: ignore
+            socks_port = self._tor_launcher.socks_port  # type: ignore
+
             proxy = f"socks5://{socks_host}:{socks_port}"
             self._selenium_options.add_argument(f"--proxy-server={proxy}")
 

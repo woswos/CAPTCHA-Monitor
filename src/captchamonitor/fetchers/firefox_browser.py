@@ -18,9 +18,6 @@ class FirefoxBrowser(BaseFetcher):
         """
         Prepares and starts the Firefox Browser for fetching
         """
-        socks_host = self._tor_launcher.ip_address
-        socks_port = self._tor_launcher.socks_port
-
         self.container_host = self._config["docker_firefox_browser_container_name"]
         self.container_port = self._config["docker_firefox_browser_container_port"]
 
@@ -54,6 +51,9 @@ class FirefoxBrowser(BaseFetcher):
 
         # Set connections to Tor if we need to use Tor
         if self.use_tor:
+            socks_host = self._tor_launcher.ip_address  # type: ignore
+            socks_port = self._tor_launcher.socks_port  # type: ignore
+
             ff_profile.set_preference("network.proxy.type", 1)
             ff_profile.set_preference("network.proxy.socks_version", 5)
             ff_profile.set_preference("network.proxy.socks", str(socks_host))
