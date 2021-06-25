@@ -1,5 +1,6 @@
 import unittest
 
+from captchamonitor.utils.exceptions import NoSuchDomain
 from captchamonitor.utils.domain_attributes import DomainAttributes
 
 
@@ -26,3 +27,7 @@ class TestDomainAttributes(unittest.TestCase):
         self.assertFalse(domain_attributes_2.supports_ipv6)
         self.assertFalse(domain_attributes_2.supports_ftp)
         self.assertFalse(domain_attributes_2.gdpr_wait_for_url_change)
+
+    def test_non_existing_domain(self):
+        with self.assertRaises(NoSuchDomain):
+            DomainAttributes("lolrandomdomain.randomtld")
