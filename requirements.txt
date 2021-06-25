@@ -11,6 +11,7 @@ port-for>=0.6.1
 country-converter>=0.7.3
 beautifulsoup4>=4.9.3
 timeout-decorator>=0.5.0
+dnspython>=2.1.0
 
 # dev/tests
 pytest>=6.2.4

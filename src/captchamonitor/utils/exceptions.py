@@ -102,3 +102,8 @@ class WebsiteParserFetchError(Error):
 class WebsiteParserParseError(Error):
     def __str__(self) -> str:
         return "WebsiteParserParseError: Cannot parse the website as expected, probably the website layout has changed"
+
+
+class NoSuchDomain(Error):
+    def __str__(self) -> str:
+        return "NoSuchDomain: Given domain does not exist"
