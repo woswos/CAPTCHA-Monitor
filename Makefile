@@ -21,6 +21,15 @@ test: down
 	docker-compose up -d --scale cm-worker=0 --scale cm-update=0 --scale cm-analyzer=0
 	docker-compose run --rm --no-deps --entrypoint="pytest -v --reruns 3 --reruns-delay 3 --cov=/src/captchamonitor/ --cov-report term-missing" captchamonitor /tests
 
+singletest:
+ifndef TEST
+	@echo "\e[93m>> TEST is undefined. Please set TEST environment variable to the name of the TEST to execute\e[0m"
+	@echo "\e[93m>> Example usage: TEST=test_onionoo_init make singletest\e[0m"
+	exit 1
+endif
+	@echo "\e[93m>> Executing test '$(TEST)'\e[0m"
+	docker-compose run --rm --no-deps --entrypoint="pytest -v -x -s -k $(TEST)" captchamonitor /tests
+
 logs:
 	docker-compose logs --tail=100 captchamonitor cm-worker cm-update cm-analyzer
 
