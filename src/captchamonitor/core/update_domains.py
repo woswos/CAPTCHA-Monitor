@@ -7,7 +7,9 @@ from sqlalchemy.orm import sessionmaker
 
 from captchamonitor.utils.config import Config
 from captchamonitor.utils.models import Domain
+from captchamonitor.utils.exceptions import NoSuchDomain
 from captchamonitor.utils.website_parser import WebsiteParser
+from captchamonitor.utils.domain_attributes import DomainAttributes
 
 
 class UpdateDomains:
@@ -53,28 +55,44 @@ class UpdateDomains:
         # Iterate over the websites in consensus file
         for website in website_list:
             query = self.__db_session.query(Domain).filter(Domain.domain == website)
-            if query.count() == 0:
-                # Add new website
-                db_website = Domain(
-                    domain=website,
-                    supports_http=True,
-                    supports_https=False,
-                    supports_ftp=False,
-                    supports_ipv4=True,
-                    supports_ipv6=False,
-                    requires_multiple_requests=True,
+
+            try:
+                # Check the attributes
+                attributes = DomainAttributes(website)
+
+            except NoSuchDomain:
+                self.__logger.debug(
+                    "Skipping %s since there was an error while getting its attributes"
                 )
-                self.__db_session.add(db_website)
+
             else:
-                db_website = query.first()
-                db_website.updated_at = datetime.now(pytz.utc)
-                db_website.domain = website
-                db_website.supports_http = True
-                db_website.supports_https = False
-                db_website.supports_ftp = False
-                db_website.supports_ipv4 = True
-                db_website.supports_ipv6 = False
-                db_website.requires_multiple_requests = True
+                # Insert results into the database
+                if query.count() == 0:
+                    # Add new website
+                    db_website = Domain(
+                        domain=website,
+                        supports_http=attributes.supports_http,
+                        supports_https=attributes.supports_https,
+                        supports_ftp=attributes.supports_ftp,
+                        supports_ipv4=attributes.supports_ipv4,
+                        supports_ipv6=attributes.supports_ipv6,
+                        requires_multiple_requests=attributes.requires_multiple_requests,
+                    )
+                    self.__db_session.add(db_website)
+
+                else:
+                    # Or update the existing entry
+                    db_website = query.first()
+                    db_website.updated_at = datetime.now(pytz.utc)
+                    db_website.domain = website
+                    db_website.supports_http = attributes.supports_http
+                    db_website.supports_https = attributes.supports_https
+                    db_website.supports_ftp = attributes.supports_ftp
+                    db_website.supports_ipv4 = attributes.supports_ipv4
+                    db_website.supports_ipv6 = attributes.supports_ipv6
+                    db_website.requires_multiple_requests = (
+                        attributes.requires_multiple_requests
+                    )
 
         # Commit changes to the database
         self.__db_session.commit()
