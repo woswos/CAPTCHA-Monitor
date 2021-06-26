@@ -5,21 +5,28 @@ export DOCKER_BUILDKIT=1
 all: init down build up
 
 build:
+	@echo "\e[93m>> Building the containers\e[0m"
 	docker-compose build
 
 up:
+	@echo "\e[93m>> Running all of the containers\e[0m"
 	docker-compose up -d --scale cm-worker=3 --scale cm-update=1 --scale cm-analyzer=1
 
 down:
+	@echo "\e[93m>> Shutting down the containers\e[0m"
 ifneq ($(shell docker ps -f ancestor="captchamonitor-tor-container" -q),)
-	@echo "\n>> Killing captchamonitor-tor-container instances"
+	@echo "\e[93m>> Killing captchamonitor-tor-container instances\e[0m"
 	docker kill $$(sudo docker ps -f ancestor="captchamonitor-tor-container" -q)
 endif
 	docker-compose down --remove-orphans
 
-test: down
-	docker-compose up -d --scale cm-worker=0 --scale cm-update=0 --scale cm-analyzer=0
+test: pretest
+	@echo "\e[93m>> Executing all tests\e[0m"
 	docker-compose run --rm --no-deps --entrypoint="pytest -v --reruns 3 --reruns-delay 3 --cov=/src/captchamonitor/ --cov-report term-missing" captchamonitor /tests
+
+pretest: down
+	@echo "\e[93m>> Preparing the containers for testing\e[0m"
+	docker-compose up -d --scale cm-worker=0 --scale cm-update=0 --scale cm-analyzer=0
 
 singletest:
 ifndef TEST
@@ -31,6 +38,7 @@ endif
 	docker-compose run --rm --no-deps --entrypoint="pytest -v -x -s -k $(TEST)" captchamonitor /tests
 
 logs:
+	@echo "\e[93m>> Printing the logs\e[0m"
 	docker-compose logs --tail=100 captchamonitor cm-worker cm-update cm-analyzer
 
 init: check_root
