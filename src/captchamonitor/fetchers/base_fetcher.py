@@ -262,11 +262,14 @@ class BaseFetcher:
 
         elif self.use_proxy_type == "http":
             ff_profile.set_preference("network.proxy.type", 1)
+            ff_profile.set_preference("network.proxy.proxy_over_tls", True)
+            ff_profile.set_preference("network.proxy.share_proxy_settings", False)
             ff_profile.set_preference("network.proxy.http", str(self._proxy_host))
             ff_profile.set_preference("network.proxy.http_port", int(self._proxy_port))
             ff_profile.set_preference("network.proxy.ssl", str(self._proxy_host))
             ff_profile.set_preference("network.proxy.ssl_port", int(self._proxy_port))
-            ff_profile.set_preference("network.proxy.proxy_over_tls", True)
+            ff_profile.set_preference("network.proxy.ftp", str(self._proxy_host))
+            ff_profile.set_preference("network.proxy.ftp_port", int(self._proxy_port))
 
         # Apply the preferences
         ff_profile.update_preferences()
