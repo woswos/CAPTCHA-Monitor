@@ -22,27 +22,10 @@ class ChromeBrowser(BaseFetcher):
         self.container_host = self._config["docker_chrome_browser_container_name"]
         self.container_port = self._config["docker_chrome_browser_container_port"]
 
-        self._selenium_executor_url = self._get_selenium_executor_url(
-            self.container_host, self.container_port
-        )
-
         self._desired_capabilities = webdriver.DesiredCapabilities.CHROME.copy()
-        self._selenium_options = webdriver.ChromeOptions()
 
-        # Install the extensions
-        self._install_har_export_extension_crx(self._selenium_options)
-
-        # Enable the network monitoring tools to record HAR in Chrome Browser
-        self._selenium_options.add_argument("--auto-open-devtools-for-tabs")
-
-        # Set connections to Tor if we need to use Tor
-        if self.use_tor:
-            socks_host = self._tor_launcher.ip_address  # type: ignore
-            socks_port = self._tor_launcher.socks_port  # type: ignore
-
-            # Set Tor as proxy
-            proxy = f"socks5://{socks_host}:{socks_port}"
-            self._selenium_options.add_argument(f"--proxy-server={proxy}")
+        # Perform the rest of the common setup
+        self._setup_common_chromium_based_fetcher()
 
     def connect(self) -> None:
         """

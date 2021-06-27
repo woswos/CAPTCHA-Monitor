@@ -1,6 +1,5 @@
 import os
 
-from selenium import webdriver
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 
 from captchamonitor.utils.exceptions import TorBrowserProfileLocationError
@@ -23,17 +22,10 @@ class TorBrowser(BaseFetcher):
 
         :raises TorBrowserProfileLocationError: If provided Tor Browser location is not valid
         """
-        socks_host = self._tor_launcher.ip_address  # type: ignore
-        socks_port = self._tor_launcher.socks_port  # type: ignore
-
-        profile_location = self._config["docker_tor_browser_container_profile_location"]
-
         self.container_host = self._config["docker_tor_browser_container_name"]
         self.container_port = self._config["docker_tor_browser_container_port"]
 
-        self._selenium_executor_url = self._get_selenium_executor_url(
-            self.container_host, self.container_port
-        )
+        profile_location = self._config["docker_tor_browser_container_profile_location"]
 
         # Check if the profile location makes sense
         if not os.path.isdir(profile_location):
@@ -55,24 +47,6 @@ class TorBrowser(BaseFetcher):
         # Obtain the Tor Browser profile and create a copy of it in /tmp
         tb_profile = FirefoxProfile(profile_location)
 
-        # Install the extensions
-        self._install_har_export_extension_xpi(tb_profile.extensionsDir)
-
-        # Enable the network monitoring tools to record HAR in Tor Browser
-        tb_profile.set_preference("devtools.netmonitor.enabled", True)
-        tb_profile.set_preference("devtools.toolbox.selectedTool", "netmonitor")
-        tb_profile.set_preference("devtools.netmonitor.har.compress", False)
-        tb_profile.set_preference(
-            "devtools.netmonitor.har.includeResponseBodies", False
-        )
-        tb_profile.set_preference("devtools.netmonitor.har.jsonp", False)
-        tb_profile.set_preference("devtools.netmonitor.har.jsonpCallback", False)
-        tb_profile.set_preference("devtools.netmonitor.har.forceExport", False)
-        tb_profile.set_preference(
-            "devtools.netmonitor.har.enableAutoExportToFile", False
-        )
-        tb_profile.set_preference("devtools.netmonitor.har.pageLoadedTimeout", "2500")
-
         # Set security level
         tb_profile.set_preference(
             "extensions.torbutton.security_slider", int(security_level)
@@ -88,22 +62,11 @@ class TorBrowser(BaseFetcher):
         tb_profile.set_preference("extensions.torbutton.display_circuit", False)
         tb_profile.set_preference("extensions.torbutton.use_nontor_proxy", True)
 
-        # Set the details for the external Tor
-        tb_profile.set_preference("network.proxy.socks", str(socks_host))
-        tb_profile.set_preference("network.proxy.socks_port", int(socks_port))
-
         # Stop updates
-        tb_profile.set_preference("app.update.enabled", False)
         tb_profile.set_preference("extensions.torbutton.versioncheck_enabled", False)
 
-        # Apply the preferences
-        tb_profile.update_preferences()
-
-        # Set selenium related options for Tor Browser
-        self._desired_capabilities = webdriver.DesiredCapabilities.FIREFOX.copy()
-        self._selenium_options = webdriver.FirefoxOptions()
-        self._selenium_options.profile = tb_profile
-        self._selenium_options.add_argument("--devtools")
+        # Perform the rest of the common setup procedures
+        self._setup_common_firefox_based_fetcher(tb_profile)
 
     def connect(self) -> None:
         """
