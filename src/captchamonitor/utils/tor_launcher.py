@@ -33,8 +33,8 @@ class TorLauncher:
         """
         # Public class attributes
         self.ip_address: str
-        self.socks_port: str
-        self.control_port: str
+        self.socks_port: int
+        self.control_port: int
         self.relay_fingerprints: List[Any]
 
         # Private class attributes
@@ -84,8 +84,8 @@ class TorLauncher:
             raise TorLauncherInitError
 
         # Find unused ports
-        self.socks_port = str(port_for.select_random())
-        self.control_port = str(port_for.select_random())
+        self.socks_port = int(port_for.select_random())
+        self.control_port = int(port_for.select_random())
 
         # Initialize a new Tor container
         self.__container = client.containers.run(
@@ -113,8 +113,8 @@ class TorLauncher:
             detach=True,
             auto_remove=True,
             ports={
-                f"{self.socks_port}/tcp": int(self.socks_port),
-                f"{self.control_port}/tcp": int(self.control_port),
+                f"{self.socks_port}/tcp": self.socks_port,
+                f"{self.control_port}/tcp": self.control_port,
             },
         )
 
