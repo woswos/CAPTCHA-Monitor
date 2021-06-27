@@ -69,9 +69,9 @@ class HarExportExtensionError(Error):
         return "HarExportExtensionError: Provided Har Export Trigger extension is not valid"
 
 
-class MissingTorLauncher(Error):
+class MissingProxy(Error):
     def __str__(self) -> str:
-        return "MissingTorLauncher: You need to pass me the Tor Launcher if you set use_tor to True"
+        return "MissingProxy: You need to pass me a proxy if you set use_proxy_type"
 
 
 class FetcherConnectionInitError(Error):

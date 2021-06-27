@@ -2,7 +2,7 @@ import os
 import json
 import shutil
 import logging
-from typing import Any, List, Union, Optional
+from typing import Any, List, Tuple, Union, Optional
 
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
@@ -11,8 +11,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 
 from captchamonitor.utils.config import Config
-from captchamonitor.utils.exceptions import MissingTorLauncher, HarExportExtensionError
-from captchamonitor.utils.tor_launcher import TorLauncher
+from captchamonitor.utils.exceptions import MissingProxy, HarExportExtensionError
 
 
 class BaseFetcher:
@@ -25,12 +24,12 @@ class BaseFetcher:
         self,
         config: Config,
         url: str,
-        tor_launcher: Optional[TorLauncher] = None,
+        proxy: Optional[Tuple[str, int]] = None,
+        use_proxy_type: Optional[str] = None,
         page_timeout: int = 30,
         script_timeout: int = 30,
         url_change_timeout: int = 30,
         options: Optional[dict] = None,
-        use_tor: bool = False,
     ) -> None:
         """
         Initializes the fetcher with given arguments and tries to fetch the given URL
@@ -39,8 +38,10 @@ class BaseFetcher:
         :type config: Config
         :param url: The URL to fetch
         :type url: str
-        :param tor_launcher: TorLauncher class, defaults to None
-        :type tor_launcher: Optional[TorLauncher], optional
+        :param proxy: Proxy host and port, defaults to None
+        :type proxy: Optional[Tuple[str, int]], optional
+        :param use_proxy_type: Proxy type to use: "tor" or "http", defaults to None
+        :type use_proxy_type: Optional[str], optional
         :param page_timeout: Maximum time allowed for a web page to load, defaults to 30
         :type page_timeout: int
         :param script_timeout: Maximum time allowed for a JS script to respond, defaults to 30
@@ -49,13 +50,11 @@ class BaseFetcher:
         :type url_change_timeout: int
         :param options: Dictionary of options to pass to the fetcher, defaults to None
         :type options: Optional[dict], optional
-        :param use_tor: Should I connect the fetcher to Tor? Has no effect when using Tor Browser, defaults to True
-        :type use_tor: bool
-        :raises MissingTorLauncher: If use_tor is set to True but no Tor Launcher provided
+        :raises MissingProxy: If use_proxy_type is not None but no proxy provided
         """
         # Public class attributes
         self.url: str = url
-        self.use_tor: bool = use_tor
+        self.use_proxy_type: Optional[str] = use_proxy_type
         self.page_timeout: int = page_timeout
         self.script_timeout: int = script_timeout
         self.url_change_timeout: int = url_change_timeout
@@ -73,7 +72,9 @@ class BaseFetcher:
 
         # Protected class attributes
         self._logger = logging.getLogger(__name__)
-        self._tor_launcher: Optional[TorLauncher] = tor_launcher
+        self._proxy: Optional[Tuple[str, int]] = proxy
+        self._proxy_host: str
+        self._proxy_port: int
         self._config: Config = config
         self._selenium_options: Any
         self._selenium_executor_url: str
@@ -81,9 +82,14 @@ class BaseFetcher:
         self._num_retries_on_fail: int = 3
         self._delay_in_seconds_between_retries: int = 3
 
-        # Check if use_tor is set to True but Tor Launcher is not passed
-        if self.use_tor and (self._tor_launcher is None):
-            raise MissingTorLauncher
+        # Check if use_proxy_type is set to True but proxy is not passed
+        if (self.use_proxy_type is not None) and (self._proxy is None):
+            raise MissingProxy
+
+        # Extract the proxy host and port
+        if self._proxy is not None:
+            self._proxy_host = str(self._proxy[0])  # type: ignore
+            self._proxy_port = int(self._proxy[1])  # type: ignore
 
         # Update default options with the specified ones
         if self.options is not None:
@@ -247,14 +253,11 @@ class BaseFetcher:
         ff_profile.set_preference("app.update.enabled", False)
 
         # Set connections to Tor if we need to use Tor
-        if self.use_tor:
-            socks_host = self._tor_launcher.ip_address  # type: ignore
-            socks_port = self._tor_launcher.socks_port  # type: ignore
-
+        if self.use_proxy_type == "tor":
             ff_profile.set_preference("network.proxy.type", 1)
             ff_profile.set_preference("network.proxy.socks_version", 5)
-            ff_profile.set_preference("network.proxy.socks", str(socks_host))
-            ff_profile.set_preference("network.proxy.socks_port", int(socks_port))
+            ff_profile.set_preference("network.proxy.socks", str(self._proxy_host))
+            ff_profile.set_preference("network.proxy.socks_port", int(self._proxy_port))
             ff_profile.set_preference("network.proxy.socks_remote_dns", True)
 
         # Apply the preferences
@@ -284,12 +287,9 @@ class BaseFetcher:
         self._selenium_options.add_argument("--auto-open-devtools-for-tabs")
 
         # Set connections to Tor if we need to use Tor
-        if self.use_tor:
-            socks_host = self._tor_launcher.ip_address  # type: ignore
-            socks_port = self._tor_launcher.socks_port  # type: ignore
-
+        if self.use_proxy_type == "tor":
             # Set Tor as proxy
-            proxy = f"socks5://{socks_host}:{socks_port}"
+            proxy = f"socks5://{self._proxy_host}:{self._proxy_port}"
             self._selenium_options.add_argument(f"--proxy-server={proxy}")
 
     def _remove_gdpr_popup(self) -> None:

@@ -1,7 +1,5 @@
 import unittest
 
-import pytest
-
 from captchamonitor.utils.config import Config
 from captchamonitor.utils.tor_launcher import TorLauncher
 from captchamonitor.fetchers.opera_browser import OperaBrowser
@@ -10,16 +8,12 @@ from captchamonitor.fetchers.opera_browser import OperaBrowser
 class TestOperaBrowser(unittest.TestCase):
     def setUp(self):
         self.config = Config()
-        self.tor_launcher = TorLauncher(self.config)
         self.target_url = "https://check.torproject.org/"
 
     def test_opera_browser_without_tor(self):
         opera_browser = OperaBrowser(
             config=self.config,
             url=self.target_url,
-            tor_launcher=self.tor_launcher,
-            options={},
-            use_tor=False,
         )
 
         opera_browser.setup()
@@ -31,12 +25,17 @@ class TestOperaBrowser(unittest.TestCase):
         opera_browser.close()
 
     def test_opera_browser_with_tor(self):
+        tor_launcher = TorLauncher(self.config)
+        proxy = (
+            tor_launcher.ip_address,
+            tor_launcher.socks_port,
+        )
+
         opera_browser = OperaBrowser(
             config=self.config,
             url=self.target_url,
-            tor_launcher=self.tor_launcher,
-            options={},
-            use_tor=True,
+            proxy=proxy,
+            use_proxy_type="tor",
         )
 
         opera_browser.setup()

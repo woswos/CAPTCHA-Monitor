@@ -13,15 +13,19 @@ class TestTorBrowser(unittest.TestCase):
     def setUp(self):
         self.config = Config()
         self.tor_launcher = TorLauncher(self.config)
+        self.proxy = (
+            self.tor_launcher.ip_address,
+            self.tor_launcher.socks_port,
+        )
         self.target_url = "https://check.torproject.org/"
 
     def test_tor_browser_security_level_standard(self):
         tor_browser = TorBrowser(
             config=self.config,
             url=self.target_url,
-            tor_launcher=self.tor_launcher,
+            proxy=self.proxy,
+            use_proxy_type="tor",
             options={"tbb_security_level": "standard"},
-            use_tor=True,
         )
 
         tor_browser.setup()
@@ -46,9 +50,9 @@ class TestTorBrowser(unittest.TestCase):
         tor_browser = TorBrowser(
             config=test_config,
             url=self.target_url,
-            tor_launcher=self.tor_launcher,
+            proxy=self.proxy,
+            use_proxy_type="tor",
             options={"tbb_security_level": "standard"},
-            use_tor=True,
         )
 
         # Try to setup the browser
@@ -62,9 +66,9 @@ class TestTorBrowser(unittest.TestCase):
         tor_browser = TorBrowser(
             config=self.config,
             url=self.target_url,
-            tor_launcher=self.tor_launcher,
+            proxy=self.proxy,
+            use_proxy_type="tor",
             options={"tbb_security_level": None},
-            use_tor=True,
         )
 
         # Try to setup the browser
@@ -74,8 +78,8 @@ class TestTorBrowser(unittest.TestCase):
         tor_browser = TorBrowser(
             config=self.config,
             url=self.target_url,
-            tor_launcher=self.tor_launcher,
-            use_tor=True,
+            proxy=self.proxy,
+            use_proxy_type="tor",
         )
 
         # Try to setup the browser
@@ -85,9 +89,9 @@ class TestTorBrowser(unittest.TestCase):
         tor_browser = TorBrowser(
             config=self.config,
             url=self.target_url,
-            tor_launcher=self.tor_launcher,
+            proxy=self.proxy,
+            use_proxy_type="tor",
             options={"tbb_security_level": "safer"},
-            use_tor=True,
         )
 
         tor_browser.setup()
@@ -108,9 +112,9 @@ class TestTorBrowser(unittest.TestCase):
         tor_browser = TorBrowser(
             config=self.config,
             url=self.target_url,
-            tor_launcher=self.tor_launcher,
+            proxy=self.proxy,
+            use_proxy_type="tor",
             options={"tbb_security_level": "safest"},
-            use_tor=True,
         )
 
         tor_browser.setup()

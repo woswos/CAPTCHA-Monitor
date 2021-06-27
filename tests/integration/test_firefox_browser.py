@@ -8,16 +8,12 @@ from captchamonitor.fetchers.firefox_browser import FirefoxBrowser
 class TestFirefoxBrowser(unittest.TestCase):
     def setUp(self):
         self.config = Config()
-        self.tor_launcher = TorLauncher(self.config)
         self.target_url = "https://check.torproject.org/"
 
     def test_firefox_browser_without_tor(self):
         firefox_browser = FirefoxBrowser(
             config=self.config,
             url=self.target_url,
-            tor_launcher=self.tor_launcher,
-            options={},
-            use_tor=False,
         )
 
         firefox_browser.setup()
@@ -29,12 +25,17 @@ class TestFirefoxBrowser(unittest.TestCase):
         firefox_browser.close()
 
     def test_firefox_browser_with_tor(self):
+        tor_launcher = TorLauncher(self.config)
+        proxy = (
+            tor_launcher.ip_address,
+            tor_launcher.socks_port,
+        )
+
         firefox_browser = FirefoxBrowser(
             config=self.config,
             url=self.target_url,
-            tor_launcher=self.tor_launcher,
-            options={},
-            use_tor=True,
+            proxy=proxy,
+            use_proxy_type="tor",
         )
 
         firefox_browser.setup()
