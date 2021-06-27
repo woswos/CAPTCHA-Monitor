@@ -5,7 +5,7 @@ import pytest
 from captchamonitor.utils.config import Config
 from captchamonitor.utils.exceptions import TorBrowserProfileLocationError
 from captchamonitor.utils.tor_launcher import TorLauncher
-from captchamonitor.utils.small_scripts import deep_copy
+from captchamonitor.utils.small_scripts import deep_copy, get_random_http_proxy
 from captchamonitor.fetchers.tor_browser import TorBrowser
 
 
@@ -123,6 +123,28 @@ class TestTorBrowser(unittest.TestCase):
 
         self.assertIn(
             "Congratulations. This browser is configured to use Tor.",
+            tor_browser.page_source,
+        )
+
+        tor_browser.close()
+
+    @pytest.mark.flaky(reruns=0)
+    def test_tor_browser_with_http_proxy(self):
+        proxy = get_random_http_proxy()
+
+        tor_browser = TorBrowser(
+            config=self.config,
+            url=self.target_url,
+            proxy=proxy,
+            use_proxy_type="http",
+        )
+
+        tor_browser.setup()
+        tor_browser.connect()
+        tor_browser.fetch()
+
+        self.assertIn(
+            proxy[0],
             tor_browser.page_source,
         )
 

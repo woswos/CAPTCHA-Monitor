@@ -1,7 +1,10 @@
 import unittest
 
+import pytest
+
 from captchamonitor.utils.config import Config
 from captchamonitor.utils.tor_launcher import TorLauncher
+from captchamonitor.utils.small_scripts import get_random_http_proxy
 from captchamonitor.fetchers.opera_browser import OperaBrowser
 
 
@@ -44,6 +47,28 @@ class TestOperaBrowser(unittest.TestCase):
 
         self.assertIn(
             "Congratulations. This browser is configured to use Tor.",
+            opera_browser.page_source,
+        )
+
+        opera_browser.close()
+
+    @pytest.mark.flaky(reruns=0)
+    def test_opera_browser_with_http_proxy(self):
+        proxy = get_random_http_proxy()
+
+        opera_browser = OperaBrowser(
+            config=self.config,
+            url=self.target_url,
+            proxy=proxy,
+            use_proxy_type="http",
+        )
+
+        opera_browser.setup()
+        opera_browser.connect()
+        opera_browser.fetch()
+
+        self.assertIn(
+            proxy[0],
             opera_browser.page_source,
         )
 

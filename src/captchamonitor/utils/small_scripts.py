@@ -1,7 +1,9 @@
 import os
 import pickle
+from typing import Tuple
 
 import docker
+import requests
 
 # Deep copies objects
 deep_copy = lambda obj: pickle.loads(pickle.dumps(obj))
@@ -37,3 +39,16 @@ def node_id() -> int:
         pass
 
     return id_value
+
+
+def get_random_http_proxy() -> Tuple[str, int]:
+    """
+    Queries pubproxy.com and returns a random HTTP proxy that supports HTTPS
+
+    :return: A random HTTP proxy host and port
+    :rtype: Tuple[str, int]
+    """
+    api_url = "http://pubproxy.com/api/proxy?https=true"
+    result = requests.get(api_url).json()
+    proxy = result["data"][0]
+    return (str(proxy["ip"]), int(proxy["port"]))

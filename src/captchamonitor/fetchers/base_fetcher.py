@@ -260,6 +260,14 @@ class BaseFetcher:
             ff_profile.set_preference("network.proxy.socks_port", int(self._proxy_port))
             ff_profile.set_preference("network.proxy.socks_remote_dns", True)
 
+        elif self.use_proxy_type == "http":
+            ff_profile.set_preference("network.proxy.type", 1)
+            ff_profile.set_preference("network.proxy.http", str(self._proxy_host))
+            ff_profile.set_preference("network.proxy.http_port", int(self._proxy_port))
+            ff_profile.set_preference("network.proxy.ssl", str(self._proxy_host))
+            ff_profile.set_preference("network.proxy.ssl_port", int(self._proxy_port))
+            ff_profile.set_preference("network.proxy.proxy_over_tls", True)
+
         # Apply the preferences
         ff_profile.update_preferences()
 
@@ -291,6 +299,16 @@ class BaseFetcher:
             # Set Tor as proxy
             proxy = f"socks5://{self._proxy_host}:{self._proxy_port}"
             self._selenium_options.add_argument(f"--proxy-server={proxy}")
+
+        elif self.use_proxy_type == "http":
+            proxy = f"{self._proxy_host}:{self._proxy_port}"
+            self._desired_capabilities["proxy"] = {
+                "httpProxy": proxy,
+                "ftpProxy": proxy,
+                "sslProxy": proxy,
+                "proxyType": "MANUAL",
+            }
+            self._desired_capabilities["acceptSslCerts"] = True
 
     def _remove_gdpr_popup(self) -> None:
 
