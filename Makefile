@@ -35,7 +35,7 @@ ifndef TEST
 	exit 1
 endif
 	@echo "\e[93m>> Executing test '$(TEST)'\e[0m"
-	docker-compose run --rm --no-deps --entrypoint="pytest -v -x -s -k $(TEST)" captchamonitor /tests
+	docker-compose run --rm --no-deps --entrypoint="pytest --full-trace -v -x -s -k $(TEST)" captchamonitor /tests
 
 logs:
 	@echo "\e[93m>> Printing the logs\e[0m"
