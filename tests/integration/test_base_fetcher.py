@@ -1,29 +1,27 @@
-import unittest
 from random import randint
 
-from captchamonitor.utils.config import Config
 from captchamonitor.fetchers.base_fetcher import BaseFetcher
 
 
-class TestBaseFetcher(unittest.TestCase):
-    def setUp(self):
-        self.config = Config()
-        self.target_url = "https://check.torproject.org/"
-        self.page_timeout_value = randint(0, 1000)
-        self.script_timeout_value = randint(0, 1000)
+class TestBaseFetcher:
+    @classmethod
+    def setup_class(cls):
+        cls.target_url = "https://check.torproject.org/"
+        cls.page_timeout_value = randint(0, 1000)
+        cls.script_timeout_value = randint(0, 1000)
 
-    def test_base_fetcher_init(self):
+    def test_base_fetcher_init(self, config):
         base_fetcher = BaseFetcher(
-            config=self.config,
+            config=config,
             url=self.target_url,
         )
 
-        self.assertEqual(base_fetcher.page_timeout, 30)
-        self.assertEqual(base_fetcher.script_timeout, 30)
+        assert base_fetcher.page_timeout == 30
+        assert base_fetcher.script_timeout == 30
 
-    def test_base_fetcher_init_with_options(self):
+    def test_base_fetcher_init_with_options(self, config):
         base_fetcher_1 = BaseFetcher(
-            config=self.config,
+            config=config,
             url=self.target_url,
             options={
                 "page_timeout": self.page_timeout_value,
@@ -31,27 +29,27 @@ class TestBaseFetcher(unittest.TestCase):
             },
         )
 
-        self.assertEqual(base_fetcher_1.page_timeout, self.page_timeout_value)
-        self.assertEqual(base_fetcher_1.script_timeout, self.script_timeout_value)
+        assert base_fetcher_1.page_timeout == self.page_timeout_value
+        assert base_fetcher_1.script_timeout == self.script_timeout_value
 
         base_fetcher_2 = BaseFetcher(
-            config=self.config,
+            config=config,
             url=self.target_url,
             options={
                 "script_timeout": self.script_timeout_value,
             },
         )
 
-        self.assertEqual(base_fetcher_2.page_timeout, 30)
-        self.assertEqual(base_fetcher_2.script_timeout, self.script_timeout_value)
+        assert base_fetcher_2.page_timeout == 30
+        assert base_fetcher_2.script_timeout == self.script_timeout_value
 
         base_fetcher_3 = BaseFetcher(
-            config=self.config,
+            config=config,
             url=self.target_url,
             options={
                 "page_timeout": self.page_timeout_value,
             },
         )
 
-        self.assertEqual(base_fetcher_3.page_timeout, self.page_timeout_value)
-        self.assertEqual(base_fetcher_3.script_timeout, 30)
+        assert base_fetcher_3.page_timeout == self.page_timeout_value
+        assert base_fetcher_3.script_timeout == 30

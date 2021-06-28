@@ -1,29 +1,20 @@
-import unittest
-
 import pytest
 
-from captchamonitor.utils.config import Config
 from captchamonitor.utils.exceptions import TorBrowserProfileLocationError
-from captchamonitor.utils.tor_launcher import TorLauncher
-from captchamonitor.utils.small_scripts import deep_copy, get_random_http_proxy
+from captchamonitor.utils.small_scripts import deep_copy
 from captchamonitor.fetchers.tor_browser import TorBrowser
 
 
-class TestTorBrowser(unittest.TestCase):
-    def setUp(self):
-        self.config = Config()
-        self.tor_launcher = TorLauncher(self.config)
-        self.proxy = (
-            self.tor_launcher.ip_address,
-            self.tor_launcher.socks_port,
-        )
-        self.target_url = "https://check.torproject.org/"
+class TestTorBrowser:
+    @classmethod
+    def setup_class(cls):
+        cls.target_url = "https://check.torproject.org/"
 
-    def test_tor_browser_security_level_standard(self):
+    def test_tor_browser_security_level_standard(self, config, tor_proxy):
         tor_browser = TorBrowser(
-            config=self.config,
+            config=config,
             url=self.target_url,
-            proxy=self.proxy,
+            proxy=tor_proxy,
             use_proxy_type="tor",
             options={"tbb_security_level": "standard"},
         )
@@ -32,15 +23,15 @@ class TestTorBrowser(unittest.TestCase):
         tor_browser.connect()
         tor_browser.fetch()
 
-        self.assertIn(
-            "Congratulations. This browser is configured to use Tor.",
-            tor_browser.page_source,
+        assert (
+            "Congratulations. This browser is configured to use Tor."
+            in tor_browser.page_source
         )
 
         tor_browser.close()
 
-    def test_tor_browser_wrong_profile_location(self):
-        test_config = deep_copy(self.config)
+    def test_tor_browser_wrong_profile_location(self, config, tor_proxy):
+        test_config = deep_copy(config)
 
         # Modify the profile directory
         test_config[
@@ -50,23 +41,20 @@ class TestTorBrowser(unittest.TestCase):
         tor_browser = TorBrowser(
             config=test_config,
             url=self.target_url,
-            proxy=self.proxy,
+            proxy=tor_proxy,
             use_proxy_type="tor",
             options={"tbb_security_level": "standard"},
         )
 
-        # Try to setup the browser
-        with pytest.raises(TorBrowserProfileLocationError) as pytest_wrapped_e:
+        # Check if the exception is correct
+        with pytest.raises(TorBrowserProfileLocationError):
             tor_browser.setup()
 
-        # Check if the exception is correct
-        self.assertEqual(pytest_wrapped_e.type, TorBrowserProfileLocationError)
-
-    def test_tor_browser_with_wrong_security_option(self):
+    def test_tor_browser_with_wrong_security_option(self, config, tor_proxy):
         tor_browser = TorBrowser(
-            config=self.config,
+            config=config,
             url=self.target_url,
-            proxy=self.proxy,
+            proxy=tor_proxy,
             use_proxy_type="tor",
             options={"tbb_security_level": None},
         )
@@ -74,22 +62,22 @@ class TestTorBrowser(unittest.TestCase):
         # Try to setup the browser
         tor_browser.setup()
 
-    def test_tor_browser_with_no_option(self):
+    def test_tor_browser_with_no_option(self, config, tor_proxy):
         tor_browser = TorBrowser(
-            config=self.config,
+            config=config,
             url=self.target_url,
-            proxy=self.proxy,
+            proxy=tor_proxy,
             use_proxy_type="tor",
         )
 
         # Try to setup the browser
         tor_browser.setup()
 
-    def test_tor_browser_security_level_safer(self):
+    def test_tor_browser_security_level_safer(self, config, tor_proxy):
         tor_browser = TorBrowser(
-            config=self.config,
+            config=config,
             url=self.target_url,
-            proxy=self.proxy,
+            proxy=tor_proxy,
             use_proxy_type="tor",
             options={"tbb_security_level": "safer"},
         )
@@ -98,9 +86,9 @@ class TestTorBrowser(unittest.TestCase):
         tor_browser.connect()
         tor_browser.fetch()
 
-        self.assertIn(
-            "Congratulations. This browser is configured to use Tor.",
-            tor_browser.page_source,
+        assert (
+            "Congratulations. This browser is configured to use Tor."
+            in tor_browser.page_source
         )
 
         tor_browser.close()
@@ -108,11 +96,11 @@ class TestTorBrowser(unittest.TestCase):
     @pytest.mark.skip(
         reason="HAR exporting doesn't work in safest mode since JS is blocked completely"
     )
-    def test_tor_browser_security_level_safest(self):
+    def test_tor_browser_security_level_safest(self, config, tor_proxy):
         tor_browser = TorBrowser(
-            config=self.config,
+            config=config,
             url=self.target_url,
-            proxy=self.proxy,
+            proxy=tor_proxy,
             use_proxy_type="tor",
             options={"tbb_security_level": "safest"},
         )
@@ -121,21 +109,19 @@ class TestTorBrowser(unittest.TestCase):
         tor_browser.connect()
         tor_browser.fetch()
 
-        self.assertIn(
-            "Congratulations. This browser is configured to use Tor.",
-            tor_browser.page_source,
+        assert (
+            "Congratulations. This browser is configured to use Tor."
+            in tor_browser.page_source
         )
 
         tor_browser.close()
 
     @pytest.mark.flaky(reruns=0)
-    def test_tor_browser_with_http_proxy(self):
-        proxy = get_random_http_proxy()
-
+    def test_tor_browser_with_http_proxy(self, config, http_proxy):
         tor_browser = TorBrowser(
-            config=self.config,
+            config=config,
             url=self.target_url,
-            proxy=proxy,
+            proxy=http_proxy,
             use_proxy_type="http",
         )
 
@@ -143,9 +129,6 @@ class TestTorBrowser(unittest.TestCase):
         tor_browser.connect()
         tor_browser.fetch()
 
-        self.assertIn(
-            proxy[0],
-            tor_browser.page_source,
-        )
+        assert http_proxy[0] in tor_browser.page_source
 
         tor_browser.close()

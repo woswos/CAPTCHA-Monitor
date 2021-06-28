@@ -252,7 +252,7 @@ class TorLauncher:
         self.__controller.remove_event_listener(self.__attach_stream)
         self.__controller.reset_conf("__LeaveStreamsUnattached")
 
-    def __del__(self) -> None:
+    def close(self) -> None:
         """
         Perform cleanup before going out of scope
         """

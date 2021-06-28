@@ -1,21 +1,16 @@
-import unittest
-
 import pytest
 
-from captchamonitor.utils.config import Config
-from captchamonitor.utils.tor_launcher import TorLauncher
-from captchamonitor.utils.small_scripts import get_random_http_proxy
 from captchamonitor.fetchers.firefox_browser import FirefoxBrowser
 
 
-class TestFirefoxBrowser(unittest.TestCase):
-    def setUp(self):
-        self.config = Config()
-        self.target_url = "https://check.torproject.org/"
+class TestFirefoxBrowser:
+    @classmethod
+    def setup_class(cls):
+        cls.target_url = "https://check.torproject.org/"
 
-    def test_firefox_browser_without_tor(self):
+    def test_firefox_browser_without_tor(self, config):
         firefox_browser = FirefoxBrowser(
-            config=self.config,
+            config=config,
             url=self.target_url,
         )
 
@@ -23,21 +18,15 @@ class TestFirefoxBrowser(unittest.TestCase):
         firefox_browser.connect()
         firefox_browser.fetch()
 
-        self.assertIn("Sorry. You are not using Tor.", firefox_browser.page_source)
+        assert "Sorry. You are not using Tor." in firefox_browser.page_source
 
         firefox_browser.close()
 
-    def test_firefox_browser_with_tor(self):
-        tor_launcher = TorLauncher(self.config)
-        proxy = (
-            tor_launcher.ip_address,
-            tor_launcher.socks_port,
-        )
-
+    def test_firefox_browser_with_tor(self, config, tor_proxy):
         firefox_browser = FirefoxBrowser(
-            config=self.config,
+            config=config,
             url=self.target_url,
-            proxy=proxy,
+            proxy=tor_proxy,
             use_proxy_type="tor",
         )
 
@@ -45,21 +34,19 @@ class TestFirefoxBrowser(unittest.TestCase):
         firefox_browser.connect()
         firefox_browser.fetch()
 
-        self.assertIn(
-            "Congratulations. This browser is configured to use Tor.",
-            firefox_browser.page_source,
+        assert (
+            "Congratulations. This browser is configured to use Tor."
+            in firefox_browser.page_source
         )
 
         firefox_browser.close()
 
     @pytest.mark.flaky(reruns=0)
-    def test_firefox_browser_with_http_proxy(self):
-        proxy = get_random_http_proxy()
-
+    def test_firefox_browser_with_http_proxy(self, config, http_proxy):
         firefox_browser = FirefoxBrowser(
-            config=self.config,
+            config=config,
             url=self.target_url,
-            proxy=proxy,
+            proxy=http_proxy,
             use_proxy_type="http",
         )
 
@@ -67,9 +54,6 @@ class TestFirefoxBrowser(unittest.TestCase):
         firefox_browser.connect()
         firefox_browser.fetch()
 
-        self.assertIn(
-            proxy[0],
-            firefox_browser.page_source,
-        )
+        assert http_proxy[0] in firefox_browser.page_source
 
         firefox_browser.close()

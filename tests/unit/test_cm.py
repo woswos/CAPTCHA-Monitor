@@ -1,5 +1,4 @@
 import os
-import unittest
 
 import pytest
 
@@ -7,19 +6,13 @@ from captchamonitor.cm import CaptchaMonitor
 from captchamonitor.utils.config import ENV_VARS
 
 
-class TestAttrDict(unittest.TestCase):
-    def setUp(self):
-        pass
-
+class TestCaptchaMonitor:
     def test_captcha_monitor_failed_init(self):
         # Delete the current values for testing
-        for key, value in ENV_VARS.items():
+        for _, value in ENV_VARS.items():
             if value in os.environ:
                 del os.environ[value]
 
         # Try to initialize
-        with pytest.raises(SystemExit) as pytest_wrapped_e:
+        with pytest.raises(SystemExit):
             CaptchaMonitor()
-
-        # Check if code exits
-        self.assertEqual(pytest_wrapped_e.type, SystemExit)

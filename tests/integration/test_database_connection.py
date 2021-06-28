@@ -1,15 +1,11 @@
-import unittest
-
 import pytest
 
-from captchamonitor.utils.config import Config
 from captchamonitor.utils.database import Database
 from captchamonitor.utils.exceptions import DatabaseInitError
 
 
-class TestDatabaseConnection(unittest.TestCase):
-    def test_connection_with_correct_credentials(self):
-        config = Config()
+class TestDatabaseConnection:
+    def test_connection_with_correct_credentials(self, config):
         Database(
             config["db_host"],
             config["db_port"],
@@ -19,8 +15,5 @@ class TestDatabaseConnection(unittest.TestCase):
         )
 
     def test_connection_with_wrong_credentials(self):
-        with pytest.raises(DatabaseInitError) as pytest_wrapped_e:
+        with pytest.raises(DatabaseInitError):
             Database("db_host", 1231, "db_name", "db_user", "db_password")
-
-        # Check if the exception is correct
-        self.assertEqual(pytest_wrapped_e.type, DatabaseInitError)

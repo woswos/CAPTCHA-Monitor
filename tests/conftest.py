@@ -1,10 +1,11 @@
-import os.path
 import configparser
 
 import pytest
 
 from captchamonitor.utils.config import Config
 from captchamonitor.utils.database import Database
+from captchamonitor.utils.tor_launcher import TorLauncher
+from captchamonitor.utils.small_scripts import get_random_http_proxy
 
 
 def pytest_addoption(parser):
@@ -44,23 +45,59 @@ def wipe_test_db_tables(pytestconfig):
     # Only run this if we are not running in CI mode
     if not pytestconfig.getoption("--ci-mode"):
         # Connect to the database
-        config = Config()
+        config_local = Config()
         database = Database(
-            config["db_host"],
-            config["db_port"],
-            config["db_name"],
-            config["db_user"],
-            config["db_password"],
+            config_local["db_host"],
+            config_local["db_port"],
+            config_local["db_name"],
+            config_local["db_user"],
+            config_local["db_password"],
         )
-        db_session = database.session()
+        db_session_local = database.session()
 
         # Wipe the database tables and reset the autoincrement counters
         meta = database.model.metadata
         for table in meta.tables.keys():
-            db_session.execute(
+            db_session_local.execute(
                 f"TRUNCATE TABLE {table.lower()} RESTART IDENTITY CASCADE;"
             )
 
         # Commit the changes
-        db_session.commit()
-        db_session.close()
+        db_session_local.commit()
+        db_session_local.close()
+
+
+@pytest.fixture(scope="session")
+def tor_proxy():
+    config_local = Config()
+    tor_launcher = TorLauncher(config_local)
+    proxy = (tor_launcher.ip_address, tor_launcher.socks_port)
+    yield proxy
+    tor_launcher.close()
+
+
+@pytest.fixture(scope="session")
+def http_proxy():
+    proxy = get_random_http_proxy()
+    return proxy
+
+
+@pytest.fixture(scope="session")
+def config():
+    config_local = Config()
+    return config_local
+
+
+@pytest.fixture()
+def db_session():
+    config_local = Config()
+    database = Database(
+        config_local["db_host"],
+        config_local["db_port"],
+        config_local["db_name"],
+        config_local["db_user"],
+        config_local["db_password"],
+    )
+    db_session_local = database.session()
+    yield db_session_local
+    db_session_local.close()
