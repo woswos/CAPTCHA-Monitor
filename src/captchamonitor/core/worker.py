@@ -136,18 +136,22 @@ class Worker:
 
         try:
             # Create the options based on the ones described within the job
+            options_dict = {}
             if job.options is not None:
                 options_dict = job.options
-            else:
-                options_dict = {}
 
             # Create a new circuit if we will be using Tor
-            if job.ref_fetcher.uses_tor is True:
+            proxy = None
+            if job.ref_fetcher.uses_proxy_type == "tor":
                 self.__tor_launcher.create_new_circuit_to(job.ref_relay.fingerprint)
+                proxy = (
+                    self.__tor_launcher.ip_address,
+                    self.__tor_launcher.socks_port,
+                )
 
             # If we need to use an exit relay and if the exit relay is located
             # in Europe, enable GDPR removing functionality
-            if job.ref_fetcher.uses_tor:
+            if job.ref_fetcher.uses_proxy_type == "tor":
                 if job.ref_relay.continent in ("Europe", None):
                     options_dict.update(
                         {
@@ -162,36 +166,36 @@ class Worker:
                 self.__fetcher = TorBrowser(
                     config=self.__config,
                     url=job.url,
-                    tor_launcher=self.__tor_launcher,
+                    proxy=proxy,
                     options=options_dict,
-                    use_tor=job.ref_fetcher.uses_tor,
+                    use_proxy_type=job.ref_fetcher.uses_proxy_type,
                 )
 
             elif job.ref_fetcher.method == FirefoxBrowser.method_name_in_db:
                 self.__fetcher = FirefoxBrowser(
                     config=self.__config,
                     url=job.url,
-                    tor_launcher=self.__tor_launcher,
+                    proxy=proxy,
                     options=options_dict,
-                    use_tor=job.ref_fetcher.uses_tor,
+                    use_proxy_type=job.ref_fetcher.uses_proxy_type,
                 )
 
             elif job.ref_fetcher.method == ChromeBrowser.method_name_in_db:
                 self.__fetcher = ChromeBrowser(
                     config=self.__config,
                     url=job.url,
-                    tor_launcher=self.__tor_launcher,
+                    proxy=proxy,
                     options=options_dict,
-                    use_tor=job.ref_fetcher.uses_tor,
+                    use_proxy_type=job.ref_fetcher.uses_proxy_type,
                 )
 
             elif job.ref_fetcher.method == OperaBrowser.method_name_in_db:
                 self.__fetcher = OperaBrowser(
                     config=self.__config,
                     url=job.url,
-                    tor_launcher=self.__tor_launcher,
+                    proxy=proxy,
                     options=options_dict,
-                    use_tor=job.ref_fetcher.uses_tor,
+                    use_proxy_type=job.ref_fetcher.uses_proxy_type,
                 )
 
             else:
@@ -269,3 +273,11 @@ class Worker:
 
             # Commit changes to the database
             self.__db_session.commit()
+
+    def __del__(self) -> None:
+        """
+        Perform cleanup before going out of scope
+        """
+        if hasattr(self, f"_{self.__class__.__name__}__tor_launcher"):
+            # Stop the containers
+            self.__tor_launcher.close()

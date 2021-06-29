@@ -52,13 +52,13 @@ class ScheduleJobs:
         tor_browser = (
             self.__db_session.query(Fetcher)
             .filter(Fetcher.method == "tor_browser")
-            .filter(Fetcher.uses_tor == True)
+            .filter(Fetcher.uses_proxy_type == "tor")
             .first()
         )
         firefox_browser = (
             self.__db_session.query(Fetcher)
             .filter(Fetcher.method == "firefox_browser")
-            .filter(Fetcher.uses_tor == False)
+            .filter(Fetcher.uses_proxy_type == None)
             .first()
         )
         relay = (

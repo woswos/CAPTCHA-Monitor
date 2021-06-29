@@ -35,11 +35,11 @@ def insert_jobs_and_fetchers(db_session):
         ipv6_exiting_allowed=False,
     )
 
-    test_fetcher_non_tor = Fetcher(
-        method="firefox_browser", uses_tor=False, version="82"
-    )
+    test_fetcher_non_tor = Fetcher(method="firefox_browser", version="82")
 
-    test_fetcher_tor = Fetcher(method="tor_browser", uses_tor=True, version="82")
+    test_fetcher_tor = Fetcher(
+        method="tor_browser", uses_proxy_type="tor", version="82"
+    )
 
     # Commit changes to the database
     db_session.add(domain_1)

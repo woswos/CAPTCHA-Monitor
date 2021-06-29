@@ -46,12 +46,12 @@ def insert_relay_and_domain(db_session):
     db_session.add(test_relay)
 
     # Add test fetchers
-    test_fetcher_non_tor = Fetcher(
-        method="firefox_browser", uses_tor=False, version="82"
-    )
+    test_fetcher_non_tor = Fetcher(method="firefox_browser", version="82")
     db_session.add(test_fetcher_non_tor)
 
-    test_fetcher_tor = Fetcher(method="firefox_browser", uses_tor=True, version="82")
+    test_fetcher_tor = Fetcher(
+        method="firefox_browser", uses_proxy_type="tor", version="82"
+    )
     db_session.add(test_fetcher_tor)
 
     # Commit changes to the database

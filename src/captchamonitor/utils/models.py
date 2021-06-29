@@ -105,7 +105,7 @@ class Fetcher(BaseModel):
 
     # fmt: off
     method = Column(String, nullable=False)    # Name of the fetchers coded (Tor Browser, Firefox, Chromium, etc.)
-    uses_tor = Column(Boolean, nullable=False) # True or False based on whether this fetcher uses Tor or not
+    uses_proxy_type = Column(String)           # Defines what kind of proxy this fetcher uses: tor, http, or None
     version = Column(String, nullable=False)   # Version of the tool
     options = Column(JSON)                     # Options, if there is any
     comment = Column(String)                   # Comments, if there is any

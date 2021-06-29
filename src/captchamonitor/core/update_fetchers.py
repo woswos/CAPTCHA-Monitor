@@ -60,13 +60,13 @@ class UpdateFetchers:
         browsers = self.__discover_browser_containers()
 
         for browser in browsers:
-            for uses_tor in [True, False]:
+            for uses_proxy_type in [None, "tor", "http"]:
                 # Check if there is a matching fetcher in the database
                 query = (
                     self.__db_session.query(Fetcher)
                     .filter(Fetcher.method == browser)
                     .filter(
-                        Fetcher.uses_tor == uses_tor,
+                        Fetcher.uses_proxy_type == uses_proxy_type,
                     )
                 )
 
@@ -74,7 +74,7 @@ class UpdateFetchers:
                 if query.count() == 0:
                     fetcher = Fetcher(
                         method=browser,
-                        uses_tor=uses_tor,
+                        uses_proxy_type=uses_proxy_type,
                         version="0",
                     )
                     self.__db_session.add(fetcher)

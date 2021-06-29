@@ -39,7 +39,13 @@ class Analyzer:
         self.soup_n: BeautifulSoup = BeautifulSoup("", "html.parser")
         self.max_k: int = 150
         self.min_k: int = 20
-        self.match_list: List[str] = ["error", "forbidden", "tor", "denied", "sorry"]
+        self.match_list: List[str] = [
+            "error",
+            "forbidden",
+            "tor",
+            "denied",
+            "sorry",
+        ]
         self.tor_store: Dict[str, Any] = {}
         self.non_store: Dict[str, Any] = {}
         self.captcha_checker_value: Optional[int] = None
@@ -67,8 +73,8 @@ class Analyzer:
                 .filter(FetchCompleted.ref_domain == domain)
             )
 
-            tor = query_by_domain.filter(Fetcher.uses_tor == True).first()
-            non_tor = query_by_domain.filter(Fetcher.uses_tor == False).first()
+            tor = query_by_domain.filter(Fetcher.uses_proxy_type == "tor").first()
+            non_tor = query_by_domain.filter(Fetcher.uses_proxy_type == None).first()
 
             if tor is not None and non_tor is not None:
 
