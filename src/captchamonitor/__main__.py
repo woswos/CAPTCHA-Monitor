@@ -24,7 +24,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "-u",
-    "--update",
+    "--updater",
     action="store_true",
     default=False,
     help="Update the URLs and relays in the database",
@@ -48,7 +48,7 @@ if args.worker:
 elif args.analyzer:
     logger.info("Intializing CAPTCHA Monitor in data analysis mode")
     cm.analyzer()
-elif args.update:
+elif args.updater:
     logger.info("Intializing CAPTCHA Monitor in update mode")
     schedule.every().day.do(cm.update_domains)
     schedule.every().hour.do(cm.update_relays)

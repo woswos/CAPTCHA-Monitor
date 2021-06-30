@@ -55,14 +55,14 @@ services:
       - captchamonitor
       - --analyzer
       
-  cm-update:
+  cm-updater:
     <<: *captchamonitor_base_service
     restart: always
     entrypoint:
       - python
       - -m
       - captchamonitor
-      - --update
+      - --updater
 
   postgres:
     <<: *default-logging-options
