@@ -60,7 +60,7 @@ docs: check_non_root FORCE
 	sphinx-build -b html ./docs/sphinx/ public
 	@echo "\n\e[92m>> Done!\e[0m"
 
-check: check_non_root
+check: check_root
 	@echo "\e[93m>> Running isort\e[0m"
 	isort --profile black .
 	@echo "\n\e[93m>> Running black\e[0m"
@@ -75,13 +75,13 @@ check: check_non_root
 
 check_non_root:
 ifeq ($(shell id -u), 0)
-	@echo "\n>> Please run this command without sudo"
+	@echo "\n\e[93m>> Please run this command without sudo\e[0m"
 	exit 1
 endif
 
 check_root:
 ifneq ($(shell id -u), 0)
-	@echo "\n>> Please run this command with sudo"
+	@echo "\n\e[93m>> Please run this command with sudo\e[0m"
 	exit 1
 endif
 
