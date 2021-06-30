@@ -1,7 +1,7 @@
 from setuptools import setup
 
 __version__ = None
-# pylint: disable=W0122
+# pylint: disable=W0122,R1732
 exec(open("captchamonitor/version.py").read())
 
 setup(

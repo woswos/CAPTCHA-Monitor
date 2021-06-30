@@ -75,7 +75,8 @@ class Collector:
 
         try:
             # Download the consensus file directly to the consensus directory
-            open(file_path, "wb").write(requests.get(url).content)
+            with open(file_path, "wb") as file:
+                file.write(requests.get(url).content)
 
         except Exception as exception:
             self.__logger.debug(
@@ -107,7 +108,8 @@ class Collector:
 
             try:
                 # Download the consensus archive to a temporary location
-                open(archive_path, "wb").write(requests.get(url).content)
+                with open(archive_path, "wb") as file:
+                    file.write(requests.get(url).content)
 
             except Exception as exception:
                 self.__logger.debug(

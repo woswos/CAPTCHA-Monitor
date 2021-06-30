@@ -53,9 +53,9 @@ class Analyzer:
         self.status_check_value: Optional[int] = None
         # Private class attributes for analyzer
         self.__logger = logging.getLogger(__name__)
-        self.__config: Config = config
+        self.__config: Config = config  # pylint: disable=W0238
         self.__db_session: sessionmaker = db_session
-        self.__analyzer_id: str = analyzer_id
+        self.__analyzer_id: str = analyzer_id  # pylint: disable=W0238
 
         self.__loop_over_domains()
 
@@ -238,6 +238,7 @@ class Analyzer:
                 tor_http_requests["log"]["entries"][i]["request"]["url"]
             ] = tor_http_requests["log"]["entries"][i]["response"]["status"]
 
+        # pylint: disable=C0206
         for i in tor_H:
             if tor_H[i] != 0 or tor_H != "" or tor_H is not None:
                 self.tor_store[i] = tor_H[i]  # type: ignore
@@ -247,6 +248,7 @@ class Analyzer:
                 non_tor_http_requests["log"]["entries"][i]["request"]["url"]
             ] = non_tor_http_requests["log"]["entries"][i]["response"]["status"]
 
+        # pylint: disable=C0206
         for i in tor_N:
             if tor_N[i] != 0 or tor_N != "" or tor_N is not None:
                 self.non_store[i] = tor_N[i]  # type: ignore

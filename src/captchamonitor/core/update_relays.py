@@ -36,7 +36,7 @@ class UpdateRelays:
         """
         # Private class attributes
         self.__logger = logging.getLogger(__name__)
-        self.__config: Config = config
+        self.__config: Config = config  # pylint: disable=W0238
         self.__db_session: sessionmaker = db_session
         self.__collector: Collector = Collector()
         self.__datetime_format: str = "%Y-%m-%d-%H-00-00"

@@ -37,7 +37,7 @@ class UpdateDomains:
         # Private class attributes
         self.__db_session: sessionmaker = db_session
         self.__logger = logging.getLogger(__name__)
-        self.__config: Config = config
+        self.__config: Config = config  # pylint: disable=W0238
 
         if auto_update:
             self.__logger.info(
