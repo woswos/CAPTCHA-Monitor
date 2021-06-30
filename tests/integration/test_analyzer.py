@@ -86,7 +86,8 @@ class TestAnalyzer:
             analyzer_id="0",
             config=config,
             db_session=db_session,
-        )
+            loop=False,
+        ).process_next_batch_of_domains()
 
         # Resembles Same
         assert db_session.query(AnalyzeCompleted).first().dom_analyze == 1

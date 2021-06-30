@@ -1,4 +1,5 @@
 import json
+import time
 import logging
 from typing import Any, Dict, List, Optional
 
@@ -24,6 +25,7 @@ class Analyzer:
         analyzer_id: str,
         config: Config,
         db_session: sessionmaker,
+        loop: Optional[bool] = True,
     ) -> None:
         """
         Initializes a new analyzer
@@ -34,7 +36,10 @@ class Analyzer:
         :type config: Config
         :param db_session: Database session used to connect to the database
         :type db_session: sessionmaker
+        :param loop: Should I process a batch of domains or keep looping, defaults to True
+        :type loop: bool, optional
         """
+        # Public class attributes
         self.soup_t: BeautifulSoup = BeautifulSoup("", "html.parser")
         self.soup_n: BeautifulSoup = BeautifulSoup("", "html.parser")
         self.max_k: int = 150
@@ -51,15 +56,20 @@ class Analyzer:
         self.captcha_checker_value: Optional[int] = None
         self.dom_analyze_value: Optional[int] = None
         self.status_check_value: Optional[int] = None
-        # Private class attributes for analyzer
+
+        # Private class attributes
         self.__logger = logging.getLogger(__name__)
-        self.__config: Config = config  # pylint: disable=W0238
+        self.__config: Config = config
         self.__db_session: sessionmaker = db_session
         self.__analyzer_id: str = analyzer_id  # pylint: disable=W0238
+        self.__job_queue_delay: float = float(self.__config["job_queue_delay"])
 
-        self.__loop_over_domains()
+        # Loop over the jobs
+        while loop:
+            self.process_next_batch_of_domains()
+            time.sleep(self.__job_queue_delay)
 
-    def __loop_over_domains(self) -> None:
+    def process_next_batch_of_domains(self) -> None:
         """
         Loop over the domain list and get corresponding website data from the database
         """
