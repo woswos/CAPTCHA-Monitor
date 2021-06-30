@@ -1,8 +1,6 @@
-import sys
 import json
 import time
 import logging
-import traceback
 from typing import List, Union, Optional
 
 from sqlalchemy import text
@@ -17,6 +15,7 @@ from captchamonitor.utils.models import (
 )
 from captchamonitor.utils.exceptions import FetcherNotFound
 from captchamonitor.utils.tor_launcher import TorLauncher
+from captchamonitor.utils.small_scripts import get_traceback_information
 from captchamonitor.fetchers.tor_browser import TorBrowser
 from captchamonitor.fetchers.opera_browser import OperaBrowser
 from captchamonitor.fetchers.chrome_browser import ChromeBrowser
@@ -207,9 +206,7 @@ class Worker:
 
         # pylint: disable=W0703
         except Exception:
-            # Get traceback information
-            T, V, TB = sys.exc_info()
-            error = "".join(traceback.format_exception(T, V, TB))
+            error = get_traceback_information()
 
             # If failed, put into the failed table
             failed = FetchFailed(

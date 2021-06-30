@@ -7,7 +7,7 @@ from sqlalchemy.orm import sessionmaker
 
 from captchamonitor.utils.config import Config
 from captchamonitor.utils.models import Domain
-from captchamonitor.utils.exceptions import NoSuchDomain
+from captchamonitor.utils.small_scripts import get_traceback_information
 from captchamonitor.utils.website_parser import WebsiteParser
 from captchamonitor.utils.domain_attributes import DomainAttributes
 
@@ -52,6 +52,7 @@ class UpdateDomains:
         :param website_list: List of strings containing websites
         :type website_list: List[str]
         """
+        # pylint: disable=W0703
         # Iterate over the websites in consensus file
         for website in website_list:
             query = self.__db_session.query(Domain).filter(Domain.domain == website)
@@ -60,9 +61,12 @@ class UpdateDomains:
                 # Check the attributes
                 attributes = DomainAttributes(website)
 
-            except NoSuchDomain:
+            except Exception:
+                error = get_traceback_information()
                 self.__logger.debug(
-                    "Skipping %s since there was an error while getting its attributes"
+                    "Skipping %s since there was an error while getting its attributes:\n %s",
+                    website,
+                    error,
                 )
 
             else:
@@ -94,10 +98,11 @@ class UpdateDomains:
                         attributes.requires_multiple_requests
                     )
 
-        # Commit changes to the database
-        self.__db_session.commit()
+            finally:
+                # Commit changes to the database frequently
+                self.__db_session.commit()
 
-        self.__logger.debug("Inserted a batch of website into the database")
+        self.__logger.debug("Inserted a new batch of website into the database")
 
     def update(self) -> None:
         """

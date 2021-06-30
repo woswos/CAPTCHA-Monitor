@@ -1,5 +1,7 @@
 import os
+import sys
 import pickle
+import traceback
 from typing import Tuple
 
 import docker
@@ -52,3 +54,16 @@ def get_random_http_proxy() -> Tuple[str, int]:
     result = requests.get(api_url).json()
     proxy = result["data"][0]
     return (str(proxy["ip"]), int(proxy["port"]))
+
+
+def get_traceback_information() -> str:
+    """
+    Returns the most recent traceback information in string format
+
+    :return: Most recent traceback information in string format
+    :rtype: str
+    """
+    # Get traceback information
+    T, V, TB = sys.exc_info()
+    error = "".join(traceback.format_exception(T, V, TB))
+    return error
