@@ -127,7 +127,8 @@ class Analyzer:
         :rtype: bool
         """
         # Assuming no captcha
-        tor_c = 0; tor = 0
+        tor_c = 0
+        tor = 0
         # If captcha in html of tor:
         if "captcha" in self.soup_t and "captcha" not in self.soup_n:
             tor_c = 1
