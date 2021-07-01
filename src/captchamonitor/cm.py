@@ -11,7 +11,7 @@ from captchamonitor.utils.exceptions import ConfigInitError, DatabaseInitError
 from captchamonitor.core.schedule_jobs import ScheduleJobs
 from captchamonitor.core.update_relays import UpdateRelays
 from captchamonitor.core.update_domains import UpdateDomains
-from captchamonitor.utils.small_scripts import node_id
+from captchamonitor.utils.small_scripts import node_id, hasattr_private
 from captchamonitor.core.update_fetchers import UpdateFetchers
 
 
@@ -131,5 +131,5 @@ class CaptchaMonitor:
         """
         Do cleaning before going out of scope
         """
-        if hasattr(self, "__db_session"):
+        if hasattr_private(self, "__db_session"):
             self.__db_session.close()

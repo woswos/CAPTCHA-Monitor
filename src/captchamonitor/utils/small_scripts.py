@@ -2,7 +2,7 @@ import os
 import sys
 import pickle
 import traceback
-from typing import Tuple
+from typing import Any, Tuple
 
 import docker
 import requests
@@ -67,3 +67,17 @@ def get_traceback_information() -> str:
     T, V, TB = sys.exc_info()
     error = "".join(traceback.format_exception(T, V, TB))
     return error
+
+
+def hasattr_private(given_object: Any, attribute: str) -> bool:
+    """
+    Returns True if the given private attribute exists
+
+    :param given_object: The class object
+    :type given_object: Any
+    :param attribute: Name of the private class attribute
+    :type attribute: str
+    :return: True is class attribute exists
+    :rtype: bool
+    """
+    return hasattr(given_object, f"_{given_object.__class__.__name__}{attribute}")

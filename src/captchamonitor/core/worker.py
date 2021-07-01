@@ -15,7 +15,10 @@ from captchamonitor.utils.models import (
 )
 from captchamonitor.utils.exceptions import FetcherNotFound
 from captchamonitor.utils.tor_launcher import TorLauncher
-from captchamonitor.utils.small_scripts import get_traceback_information
+from captchamonitor.utils.small_scripts import (
+    hasattr_private,
+    get_traceback_information,
+)
 from captchamonitor.fetchers.tor_browser import TorBrowser
 from captchamonitor.fetchers.opera_browser import OperaBrowser
 from captchamonitor.fetchers.chrome_browser import ChromeBrowser
@@ -275,6 +278,6 @@ class Worker:
         """
         Perform cleanup before going out of scope
         """
-        if hasattr(self, f"_{self.__class__.__name__}__tor_launcher"):
+        if hasattr_private(self, "__tor_launcher"):
             # Stop the containers
             self.__tor_launcher.close()
