@@ -2,3 +2,4 @@
 profile = "black"
 multi_line_output = 3
 length_sort = true
+overwrite_in_place = true
