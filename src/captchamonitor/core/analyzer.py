@@ -127,13 +127,12 @@ class Analyzer:
         :rtype: bool
         """
         # Assuming no captcha
-        tor_c = 0
+        tor_c = 0; tor = 0
         # If captcha in html of tor:
         if "captcha" in self.soup_t and "captcha" not in self.soup_n:
             tor_c = 1
         # If captcha in both, tor_html and non_tor html, or not anywhere:
         else:
-            tor = 0
             for s_ in self.tor_store:
                 if "captcha" in s_:
                     tor = 1
@@ -263,11 +262,11 @@ class Analyzer:
             if tor_N[i] != 0 or tor_N != "" or tor_N is not None:
                 self.non_store[i] = tor_N[i]  # type: ignore
 
-        first_url_t = next(iter(self.tor_store))
+        first_url_t = list(self.tor_store.keys())[0]
         first_status_t = self.tor_store[str(first_url_t)]
 
         # non tor use HARExportTrigger
-        first_url_nt = next(iter(self.non_store))
+        first_url_nt = list(self.non_store.keys())[0]
         first_status_nt = self.non_store[str(first_url_nt)]
 
         if int(first_status_t) > 399 and int(first_status_nt) < 400:
