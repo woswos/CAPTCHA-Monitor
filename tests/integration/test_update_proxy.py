@@ -13,27 +13,37 @@ class TestUpdateProxy:
 
         # Get proxy data
         proxy_list = ProxyParser()
-        proxy_list.get_proxy_details()
-        proxy_anon_example = proxy_list.proxy_anon
-        proxy_host_example = proxy_list.proxy_host
-        proxy_port_example = proxy_list.proxy_port
-        proxy_ssl_example = proxy_list.proxy_ssl
-        proxy_google_pass_example = proxy_list.proxy_google_pass
-        proxy_country_example = proxy_list.proxy_country
-        proxy_incoming_ip_example = proxy_list.incoming_ip_different_from_outgoing_ip
+        proxy_list.get_proxy_details_spys()
 
-        # Check if the url table is empty
+        # Check if the proxy table is empty
         assert db_proxy_query.count() == 0
 
         update_proxy._UpdateProxy__insert_proxy_into_db(
-            proxy_host_list=proxy_host_example,
-            proxy_port_list=proxy_port_example,
-            proxy_ssl_list=proxy_ssl_example,
-            proxy_google_pass_list=proxy_google_pass_example,
-            proxy_country_list=proxy_country_example,
-            proxy_anon_list=proxy_anon_example,
-            proxy_incoming_ip_different_from_outgoing_ip_list=proxy_incoming_ip_example,
+            host_list=proxy_list.host,
+            port_list=proxy_list.port,
+            ssl_list=proxy_list.ssl,
+            google_pass_list=proxy_list.google_pass,
+            country_list=proxy_list.country,
+            anonymity_list=proxy_list.anonymity,
+            incoming_ip_different_from_outgoing_ip_list=proxy_list.incoming_ip_different_from_outgoing_ip,
         )
-        # Check if the proxy table was populated with correct data
-        assert db_proxy_query.count() == len(proxy_anon_example)
-        assert proxy_host_example[0] == db_proxy_query.first().proxy_host
+
+        # Check if the proxy table was populated with correct number of datas
+        assert db_proxy_query.count() == len(proxy_list.host)
+        # Check if the proxy table was populated with the correct data, checking for host
+        assert proxy_list.host[0] == db_proxy_query.first().host
+        # Check if the proxy table was populated with the correct data, checking for port
+        assert proxy_list.port[0] == db_proxy_query.first().port
+        # Check if the proxy table was populated with the correct data, checking for ssl
+        assert proxy_list.ssl[0] == db_proxy_query.first().ssl
+        # Check if the proxy table was populated with the correct data, checking for google passer
+        assert proxy_list.google_pass[0] == db_proxy_query.first().google_pass
+        # Check if the proxy table was populated with the correct data, checking for country code
+        assert proxy_list.country[0] == db_proxy_query.first().country
+        # Check if the proxy table was populated with the correct data, checking for anonymity
+        assert proxy_list.anonymity[0] == db_proxy_query.first().anonymity
+        # Check if the proxy table was populated with the correct data, checking for incoming ip different from outgoing ip
+        assert (
+            proxy_list.incoming_ip_different_from_outgoing_ip[0]
+            == db_proxy_query.first().incoming_ip_different_from_outgoing_ip
+        )
