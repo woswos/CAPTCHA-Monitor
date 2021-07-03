@@ -219,3 +219,22 @@ class AnalyzeCompleted(BaseModel):
 
     # References to the foreign keys, gives access to these tables
     ref_analyzer = relationship("FetchCompleted", backref="AnalyzeCompleted")
+
+
+class Proxy(BaseModel):
+    """
+    Stores list of tracked domains and metadata related to them
+    """
+
+    __tablename__ = "proxy"
+
+    # fmt: off
+
+    proxy_host = Column(String, nullable=False)                                                 # Proxy host
+    proxy_port = Column(String, nullable=False)                                                 # Proxy port
+    proxy_country = Column(String, nullable=False)                                              # Proxy Country
+    proxy_google_pass = Column(Boolean, nullable=False)                                         # True or False based on whether the Google passes on the proxy
+    proxy_anon = Column(String, nullable=False)                                                 # Describes the anonymity of a proxy
+    proxy_incoming_ip_different_from_outgoing_ip = Column(Boolean, nullable=False)              # True or False based on whether the proxy has incoming ip different from outgoing ip
+    proxy_ssl = Column(Boolean, nullable=False)                                                 # True or False based on whether the proxy supports ssl or not
+    # fmt: on
