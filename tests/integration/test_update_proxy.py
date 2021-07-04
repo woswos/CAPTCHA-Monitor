@@ -49,7 +49,7 @@ class TestUpdateProxy:
             incoming_ip_different_from_outgoing_ip_list=proxy_list.incoming_ip_different_from_outgoing_ip,
         )
 
-        # Check if the proxy table was populated with correct number of datas
+        # Check if the proxy table was populated with correct number of data
         assert db_proxy_query.count() == len(proxy_list.host)
         # Check if the proxy table was populated with the correct data, checking for host
         assert proxy_list.host[0] == db_proxy_query.first().host

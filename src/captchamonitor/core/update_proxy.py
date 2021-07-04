@@ -54,7 +54,7 @@ class UpdateProxy:
         incoming_ip_different_from_outgoing_ip_list: List[bool],
     ) -> None:
         """
-        Inserts given list of proxys into the database
+        Inserts given list of proxies into the database
 
         :param host_list: List of strings containing proxy host
         :type host_list: List[str]
@@ -71,7 +71,7 @@ class UpdateProxy:
         :param incoming_ip_different_from_outgoing_ip_list: List of Boolean values to check if proxies have incoming ip different from the outgoing ip
         :type incoming_ip_different_from_outgoing_ip_list: List[bool]
         """
-        # Iterate over the proxys
+        # Iterate over the proxies
         for (
             host,
             port,
@@ -131,7 +131,7 @@ class UpdateProxy:
     def update(self) -> None:
         """
         Fetches the proxies and parses the list of proxy.
-        Later, adds the proxys to the database.
+        Later, adds the proxies to the database.
         """
         proxy = ProxyParser()
         proxy.get_proxy_details_spys()

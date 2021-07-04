@@ -23,7 +23,7 @@ class ProxyParser:
 
     def get_proxy_details_spys(self) -> None:
         """
-        Get the informations regarding the proxies from http://spys.me/proxy.txt.
+        Get the information regarding the proxies from http://spys.me/proxy.txt.
         """
         url = "http://spys.me/proxy.txt"
         try:
