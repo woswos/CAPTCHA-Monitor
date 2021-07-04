@@ -4,6 +4,27 @@ from captchamonitor.utils.proxy_parser import ProxyParser
 
 
 class TestUpdateProxy:
+    def test__insert_similar_proxies_into_db(self, config, db_session):
+        # Check for similar proxy but not identical
+        db_proxy_query = db_session.query(Proxy)
+        update_proxy = UpdateProxy(
+            config=config, db_session=db_session, auto_update=False
+        )
+        # Check if the proxy table is empty
+        assert db_proxy_query.count() == 0
+
+        update_proxy._UpdateProxy__insert_proxy_into_db(
+            host_list=["127.0.0.1", "127.0.0.1"],
+            port_list=["8080", "80"],
+            ssl_list=[True, True],
+            google_pass_list=[True, False],
+            country_list=["XY", "XY"],
+            anonymity_list=["A", "N"],
+            incoming_ip_different_from_outgoing_ip_list=[True, False],
+        )
+
+        assert db_proxy_query.count() == 2
+
     def test__insert_proxies_into_db(self, config, db_session):
         db_proxy_query = db_session.query(Proxy)
 

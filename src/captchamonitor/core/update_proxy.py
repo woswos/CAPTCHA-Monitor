@@ -89,8 +89,11 @@ class UpdateProxy:
             anonymity_list,
             incoming_ip_different_from_outgoing_ip_list,
         ):
+            # Filters only when host and port of proxies match, else we don't filter proxies.
+            # For example there can exist a proxy with same host but different port and we want to look at them as two individual proxies.
             query = self.__db_session.query(Proxy).filter(
-                Proxy.host == host and Proxy.port == port
+                Proxy.host == host,
+                Proxy.port == port,
             )
             # Insert results into the database
             if query.count() == 0:
