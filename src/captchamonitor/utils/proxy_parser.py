@@ -25,7 +25,7 @@ class ProxyParser:
         """
         Get the informations regarding the proxies from http://spys.me/proxy.txt.
         """
-        url = "https://spys.me/proxy.txt"
+        url = "http://spys.me/proxy.txt"
         try:
             page = requests.get(url)
             proxy_list = page.text.split("\n")
