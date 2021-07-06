@@ -157,6 +157,12 @@ class FetchBaseModel(BaseModel):
         # Fingerprint exit node/relay to use, only required when using Tor
         return Column(Integer, ForeignKey("relay.id"))
 
+    # pylint: disable=E0213
+    @declared_attr
+    def proxy_id(cls) -> Column:
+        # Proxy id referring to proxy, when it is used
+        return Column(Integer, ForeignKey("proxy.id"))
+
     # fmt: off
     url = Column(String, nullable=False) # Complete URL including the http/https/ftp prefix and protocol
     options = Column(JSON)               # Additional options to provide to fetcher in JSON format
@@ -179,6 +185,7 @@ class FetchQueue(FetchBaseModel):
     ref_fetcher = relationship("Fetcher", backref="FetchQueue")
     ref_domain = relationship("Domain", backref="FetchQueue")
     ref_relay = relationship("Relay", backref="FetchQueue")
+    ref_proxy = relationship("Proxy", backref="FetchQueue")
 
 
 class FetchCompleted(FetchBaseModel):
@@ -198,6 +205,7 @@ class FetchCompleted(FetchBaseModel):
     ref_fetcher = relationship("Fetcher", backref="FetchCompleted")
     ref_domain = relationship("Domain", backref="FetchCompleted")
     ref_relay = relationship("Relay", backref="FetchCompleted")
+    ref_proxy = relationship("Proxy", backref="FetchCompleted")
 
 
 class FetchFailed(FetchBaseModel):
@@ -216,6 +224,7 @@ class FetchFailed(FetchBaseModel):
     ref_fetcher = relationship("Fetcher", backref="FetchFailed")
     ref_domain = relationship("Domain", backref="FetchFailed")
     ref_relay = relationship("Relay", backref="FetchFailed")
+    ref_proxy = relationship("Proxy", backref="FetchFailed")
 
 
 class AnalyzeCompleted(BaseModel):
