@@ -35,7 +35,9 @@ class BaseModel(Model):  # type: ignore
 
 class MetaData(BaseModel):
     """
-    Stores metadata related to CAPTCHA Monitor's progress accross runs
+    Stores metadata related to CAPTCHA Monitor's progress accross runs and other
+    information that can be updated dynamically
+
     Uses Key:Value pairs for each metadata
     """
 
@@ -93,6 +95,24 @@ class Relay(BaseModel):
     asn_name = Column(String)                                             # Relay's autonomous system name
     platform = Column(String)                                             # The operating system of the relay
     comment = Column(String)                                              # Comments, if there is any
+    # fmt: on
+
+
+class Proxy(BaseModel):
+    """
+    Stores list of tracked proxies and metadata related to them
+    """
+
+    __tablename__ = "proxy"
+
+    # fmt: off
+    host = Column(String, nullable=False)                    # Proxy host
+    port = Column(Integer, nullable=False)                   # Proxy port
+    country = Column(String, nullable=False)                 # Proxy Country
+    google_pass = Column(Boolean)                            # True or False based on whether the Google passes on the proxy
+    anonymity = Column(String, nullable=False)               # Describes the anonymity of a proxy
+    incoming_ip_different_from_outgoing_ip = Column(Boolean) # True or False based on whether the proxy has incoming ip different from outgoing ip
+    ssl = Column(Boolean, nullable=False)                    # True or False based on whether the proxy supports ssl or not
     # fmt: on
 
 
@@ -213,28 +233,9 @@ class AnalyzeCompleted(BaseModel):
 
     # fmt: off
     captcha_checker = Column(Integer) # Checks if the website contains captcha or not
-    dom_analyze = Column(Integer)     # Analyzes the DOM structure to find out if the webite appears to be same or different
+    dom_analyze = Column(Integer)     # Analyzes the DOM structure to find out if the website appears to be same or different
     status_check = Column(Integer)    # Checks for the HTTP statuses received by the websites on different clients
     # fmt: on
 
     # References to the foreign keys, gives access to these tables
     ref_analyzer = relationship("FetchCompleted", backref="AnalyzeCompleted")
-
-
-class Proxy(BaseModel):
-    """
-    Stores list of tracked proxies and metadata related to them
-    """
-
-    __tablename__ = "proxy"
-
-    # fmt: off
-
-    host = Column(String, nullable=False)                                 # Proxy host
-    port = Column(Integer, nullable=False)                                 # Proxy port
-    country = Column(String, nullable=False)                              # Proxy Country
-    google_pass = Column(Boolean)                                         # True or False based on whether the Google passes on the proxy
-    anonymity = Column(String, nullable=False)                            # Describes the anonymity of a proxy
-    incoming_ip_different_from_outgoing_ip = Column(Boolean)              # True or False based on whether the proxy has incoming ip different from outgoing ip
-    ssl = Column(Boolean, nullable=False)                                 # True or False based on whether the proxy supports ssl or not
-    # fmt: on
