@@ -120,6 +120,9 @@ class Worker:
 
             # Check if the proxy type is http, if so: add host and port into the proxy tuple
             elif job.ref_fetcher.uses_proxy_type == "http":
+                self.__logger.info(
+                    "Check if things are: %s:%s", job.ref_proxy.host, job.ref_proxy.port
+                )
                 proxy = (job.ref_proxy.host, job.ref_proxy.port)
 
             # If we need to use an exit relay and if the exit relay is located
