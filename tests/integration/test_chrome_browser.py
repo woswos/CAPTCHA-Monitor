@@ -1,3 +1,5 @@
+# pylint: disable=C0115,C0116,W0212
+
 import pytest
 
 from captchamonitor.fetchers.chrome_browser import ChromeBrowser

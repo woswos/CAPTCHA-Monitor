@@ -1,3 +1,5 @@
+# pylint: disable=C0115,C0116,W0212
+
 import os
 
 import pytest
@@ -7,7 +9,8 @@ from captchamonitor.utils.config import ENV_VARS
 
 
 class TestCaptchaMonitor:
-    def test_captcha_monitor_failed_init(self):
+    @staticmethod
+    def test_captcha_monitor_failed_init():
         # Delete the current values for testing
         for _, value in ENV_VARS.items():
             if value in os.environ:

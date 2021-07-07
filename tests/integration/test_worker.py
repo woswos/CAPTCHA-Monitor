@@ -1,3 +1,5 @@
+# pylint: disable=C0115,C0116,W0212
+
 import pytest
 
 from captchamonitor.core.worker import Worker
@@ -60,7 +62,8 @@ def insert_relay_and_domain(db_session):
 
 @pytest.mark.usefixtures("insert_relay_and_domain")
 class TestWorker:
-    def test_worker_single_run_without_tor_success(self, config, db_session):
+    @staticmethod
+    def test_worker_single_run_without_tor_success(config, db_session):
         worker = Worker(
             worker_id="0",
             config=config,
@@ -90,7 +93,8 @@ class TestWorker:
         assert db_job.count() != 0
         assert db_job.first().url == "https://check.torproject.org"
 
-    def test_worker_single_run_without_tor_fail(self, config, db_session):
+    @staticmethod
+    def test_worker_single_run_without_tor_fail(config, db_session):
         worker = Worker(
             worker_id="0",
             config=config,
@@ -120,7 +124,8 @@ class TestWorker:
         assert db_job.count() != 0
         assert db_job.first().url == "https://stupid.urlextension"
 
-    def test_worker_single_run_with_tor_success(self, config, db_session):
+    @staticmethod
+    def test_worker_single_run_with_tor_success(config, db_session):
         worker = Worker(
             worker_id="0",
             config=config,
@@ -150,7 +155,8 @@ class TestWorker:
         assert db_job.count() != 0
         assert db_job.first().url == "https://check.torproject.org"
 
-    def test_worker_single_run_with_tor_fail(self, config, db_session):
+    @staticmethod
+    def test_worker_single_run_with_tor_fail(config, db_session):
         worker = Worker(
             worker_id="0",
             config=config,
@@ -180,7 +186,8 @@ class TestWorker:
         assert db_job.count() != 0
         assert db_job.first().url == "https://stupid.urlextension"
 
-    def test_worker_no_job_in_queue(self, config, db_session):
+    @staticmethod
+    def test_worker_no_job_in_queue(config, db_session):
         worker = Worker(
             worker_id="0",
             config=config,

@@ -1,3 +1,5 @@
+# pylint: disable=C0115,C0116,W0212
+
 from datetime import datetime, timedelta
 
 from captchamonitor.utils.collector import Collector
@@ -15,13 +17,13 @@ class TestConsensusParser:
         result = ConsensusV3Parser(self.consensus_file)
 
         assert len(result.relay_entries) > 0
-        assert type(result.relay_entries[0]) == ConsensusRelayEntry
+        assert isinstance(result.relay_entries[0], ConsensusRelayEntry)
 
         # Check if a well know relay is in the list
         found = False
         for relay in result.relay_entries:
             if relay.fingerprint == self.valid_fingerprint:
                 found = True
-                assert relay.is_exit == True
+                assert relay.is_exit is True
 
-        assert found == True
+        assert found is True

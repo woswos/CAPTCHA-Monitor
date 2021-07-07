@@ -1,3 +1,5 @@
+# pylint: disable=C0115,C0116,W0212
+
 from random import randint
 
 from captchamonitor.fetchers.base_fetcher import BaseFetcher

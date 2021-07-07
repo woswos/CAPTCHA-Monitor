@@ -1,10 +1,13 @@
+# pylint: disable=C0115,C0116,W0212
+
 from captchamonitor.utils.models import Domain
 from captchamonitor.core.update_domains import UpdateDomains
 from captchamonitor.utils.website_parser import WebsiteParser
 
 
 class TestUpdateDomains:
-    def test__insert_alexa_website_into_db(self, config, db_session):
+    @staticmethod
+    def test__insert_alexa_website_into_db(config, db_session):
         db_website_query = db_session.query(Domain)
 
         update_domains = UpdateDomains(
@@ -25,7 +28,8 @@ class TestUpdateDomains:
         assert db_website_query.count() == len(website_data)
         assert website_data[0] == db_website_query.first().domain
 
-    def test__insert_moz_website_into_db(self, config, db_session):
+    @staticmethod
+    def test__insert_moz_website_into_db(config, db_session):
         db_website_query = db_session.query(Domain)
 
         update_domains = UpdateDomains(
@@ -46,7 +50,8 @@ class TestUpdateDomains:
         assert db_website_query.count() == len(website_data)
         assert website_data[0] == db_website_query.first().domain
 
-    def test_update_url_init_with_already_populated_table(self, config, db_session):
+    @staticmethod
+    def test_update_url_init_with_already_populated_table(config, db_session):
         db_website_query = db_session.query(Domain)
 
         # Prepopulate the table

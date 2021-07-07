@@ -1,3 +1,5 @@
+# pylint: disable=C0115,C0116,W0212
+
 import pytest
 
 from captchamonitor.utils.models import Relay, Domain, Fetcher, FetchQueue
@@ -52,7 +54,8 @@ def insert_jobs_and_fetchers(db_session):
 
 @pytest.mark.usefixtures("insert_jobs_and_fetchers")
 class TestScheduleJobs:
-    def test_schedule_jobs_init(self, config, db_session):
+    @staticmethod
+    def test_schedule_jobs_init(config, db_session):
         schedule_jobs = ScheduleJobs(
             config=config,
             db_session=db_session,

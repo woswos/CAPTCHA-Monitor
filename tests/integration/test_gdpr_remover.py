@@ -1,3 +1,5 @@
+# pylint: disable=C0115,C0116,W0212,W0702
+
 import unittest
 
 import pytest
@@ -43,7 +45,6 @@ class TestGdprRemover(unittest.TestCase):
             except:
                 # Try the next exit
                 print("\n>> Trying next exit relay")
-                pass
             else:
                 break
 

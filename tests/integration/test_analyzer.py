@@ -1,3 +1,5 @@
+# pylint: disable=C0115,C0116,W0212
+
 import pytest
 
 from captchamonitor.core.worker import Worker
@@ -81,7 +83,8 @@ def insert_and_process_jobs(config, db_session):
 
 @pytest.mark.usefixtures("insert_and_process_jobs")
 class TestAnalyzer:
-    def test_analyzer_init(self, config, db_session):
+    @staticmethod
+    def test_analyzer_init(config, db_session):
         Analyzer(
             analyzer_id="0",
             config=config,
@@ -96,4 +99,4 @@ class TestAnalyzer:
         assert db_session.query(AnalyzeCompleted).first().captcha_checker == 0
 
         # Status Code Same
-        assert db_session.query(AnalyzeCompleted).first().status_check == None
+        assert db_session.query(AnalyzeCompleted).first().status_check is None

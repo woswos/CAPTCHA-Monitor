@@ -1,10 +1,13 @@
+# pylint: disable=C0115,C0116,W0212
+
 from captchamonitor.utils.models import Proxy
 from captchamonitor.utils.proxy_parser import ProxyParser
 from captchamonitor.core.update_proxies import UpdateProxies
 
 
 class TestUpdateProxies:
-    def test__insert_similar_proxies_into_db(self, config, db_session):
+    @staticmethod
+    def test__insert_similar_proxies_into_db(config, db_session):
         # Check for similar proxy but not identical
         db_proxy_query = db_session.query(Proxy)
         update_proxy = UpdateProxies(
@@ -25,7 +28,8 @@ class TestUpdateProxies:
 
         assert db_proxy_query.count() == 2
 
-    def test__insert_proxies_into_db(self, config, db_session):
+    @staticmethod
+    def test__insert_proxies_into_db(config, db_session):
         db_proxy_query = db_session.query(Proxy)
 
         update_proxy = UpdateProxies(

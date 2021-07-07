@@ -1,8 +1,10 @@
+# pylint: disable=C0115,C0116,W0212
+
 from datetime import datetime
 
 from freezegun import freeze_time
 
-from captchamonitor.utils.models import Relay, MetaData
+from captchamonitor.utils.models import Relay
 from captchamonitor.utils.onionoo import Onionoo
 from captchamonitor.core.update_relays import UpdateRelays
 from captchamonitor.utils.consensus_parser import ConsensusRelayEntry
@@ -27,9 +29,8 @@ class TestUpdateRelays:
             flags=["test"],
         )
 
-    def test_update_relays_init(self, config, db_session):
-        db_metadata_query = db_session.query(MetaData)
-
+    @staticmethod
+    def test_update_relays_init(config, db_session):
         update_relays = UpdateRelays(
             config=config, db_session=db_session, auto_update=False
         )

@@ -1,3 +1,5 @@
+# pylint: disable=C0115,C0116,W0212
+
 import pytest
 
 from captchamonitor.utils.database import Database
@@ -5,7 +7,8 @@ from captchamonitor.utils.exceptions import DatabaseInitError
 
 
 class TestDatabaseConnection:
-    def test_connection_with_correct_credentials(self, config):
+    @staticmethod
+    def test_connection_with_correct_credentials(config):
         Database(
             config["db_host"],
             config["db_port"],
@@ -14,6 +17,7 @@ class TestDatabaseConnection:
             config["db_password"],
         )
 
-    def test_connection_with_wrong_credentials(self):
+    @staticmethod
+    def test_connection_with_wrong_credentials():
         with pytest.raises(DatabaseInitError):
             Database("db_host", 1231, "db_name", "db_user", "db_password")

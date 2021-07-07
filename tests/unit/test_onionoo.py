@@ -1,3 +1,5 @@
+# pylint: disable=C0115,C0116,W0212
+
 from captchamonitor.utils.onionoo import Onionoo
 
 
@@ -16,8 +18,8 @@ class TestOnionoo:
         assert relay.country.upper() == "US"
         assert relay.continent == "America"
         assert relay.nickname == "csailmitexit"
-        assert relay.ipv4_exiting_allowed == True
-        assert relay.ipv6_exiting_allowed == False
+        assert relay.ipv4_exiting_allowed is True
+        assert relay.ipv6_exiting_allowed is False
 
     def test_onionoo_init_multiple_relays(self):
         onionoo = Onionoo([self.csailmitexit_fpr, self.csailmitnoexit_fpr])
@@ -27,37 +29,37 @@ class TestOnionoo:
     def test_is_exiting_allowed(self):
         onionoo = Onionoo([self.csailmitexit_fpr])
 
-        assert onionoo._Onionoo__is_exiting_allowed({}, self.exit_ports) == False
+        assert onionoo._Onionoo__is_exiting_allowed({}, self.exit_ports) is False
 
         assert (
             onionoo._Onionoo__is_exiting_allowed(
                 {"reject": ["22", "4661-4666", "6881-6999"]}, self.exit_ports
             )
-            == True
+            is True
         )
 
         assert (
             onionoo._Onionoo__is_exiting_allowed(
                 {"accept": ["18", "20-30", "1000-2000"]}, self.exit_ports
             )
-            == False
+            is False
         )
 
         assert (
             onionoo._Onionoo__is_exiting_allowed({"accept": ["80"]}, self.exit_ports)
-            == True
+            is True
         )
 
         assert (
             onionoo._Onionoo__is_exiting_allowed({"reject": ["80"]}, self.exit_ports)
-            == True
+            is True
         )
 
         assert (
             onionoo._Onionoo__is_exiting_allowed(
                 {"accept": ["100"], "reject": ["80-900"]}, self.exit_ports
             )
-            == False
+            is False
         )
 
     def test_is_in_range(self):
@@ -65,10 +67,10 @@ class TestOnionoo:
 
         port_list = ["22", "4661-4666", "6881-6999"]
 
-        assert onionoo._Onionoo__is_in_range(port_list, 22) == True
-        assert onionoo._Onionoo__is_in_range(port_list, 4664) == True
-        assert onionoo._Onionoo__is_in_range(port_list, 6888) == True
+        assert onionoo._Onionoo__is_in_range(port_list, 22) is True
+        assert onionoo._Onionoo__is_in_range(port_list, 4664) is True
+        assert onionoo._Onionoo__is_in_range(port_list, 6888) is True
 
-        assert onionoo._Onionoo__is_in_range(port_list, 80) == False
-        assert onionoo._Onionoo__is_in_range(port_list, 443) == False
-        assert onionoo._Onionoo__is_in_range(port_list, 0) == False
+        assert onionoo._Onionoo__is_in_range(port_list, 80) is False
+        assert onionoo._Onionoo__is_in_range(port_list, 443) is False
+        assert onionoo._Onionoo__is_in_range(port_list, 0) is False

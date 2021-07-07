@@ -11,7 +11,7 @@ tests:
     - isort --check-only --profile black .
     - black --check --line-length 88 .
     - mypy ./src
-    - pylint -v ./src
+    - pylint -v ./src ./tests ./tests/unit ./tests/integration
     - darglint -s sphinx -v 2 ./src
     - pytest -v --cov=src/captchamonitor/ --cov-report term-missing --junitxml=report.xml --ci-mode --ignore=tests/integration
     - coverage xml

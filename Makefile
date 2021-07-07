@@ -68,7 +68,7 @@ check: check_root
 	@echo "\n\e[93m>> Running mypy\e[0m"
 	mypy ./src
 	@echo "\n\e[93m>> Running pylint\e[0m"
-	pylint -v ./src
+	pylint -v ./src ./tests ./tests/unit ./tests/integration
 	@echo "\n\e[93m>> Running darglint\e[0m"
 	darglint -s sphinx -v 2 ./src
 	@echo "\n\e[92m>> Everything seems all right!\e[0m"
