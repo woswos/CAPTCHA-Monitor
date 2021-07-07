@@ -13,8 +13,7 @@ from captchamonitor.utils.models import (
     AnalyzeCompleted,
 )
 from captchamonitor.core.analyzer import Analyzer
-from captchamonitor.fetchers.base_fetcher import BaseFetcher
-from captchamonitor.fetchers.firefox_browser import FirefoxBrowser
+from captchamonitor.utils.small_scripts import get_random_http_proxy
 
 
 @pytest.fixture()
@@ -38,14 +37,25 @@ def insert_and_process_jobs(config, db_session):
         requires_multiple_requests=True,
     )
 
+    country = "US"
+    # The try catch was added because of two things:
+    # 1. I was receiving JSONDecodeError (https://github.com/simplejson/simplejson/blob/v3.0.5/simplejson/decoder.py#L33)
+    # 2. The pubproxy.com has a limit of 50 requests per day
+    try:
+        host = (get_random_http_proxy(country)[0],)
+        port = (get_random_http_proxy(country)[1],)
+    except ValueError:
+        host = ("45.42.177.7",)
+        port = (3128,)
+
     proxy1 = Proxy(
-        host="81.91.137.43",
-        port=8080,
-        country="IR",
-        google_pass=True,
+        host=host,
+        port=port,
+        country=country,
+        google_pass=False,
         anonymity="N",
         incoming_ip_different_from_outgoing_ip=False,
-        ssl=False,
+        ssl=True,
     )
 
     proxy2 = Proxy(
@@ -70,17 +80,11 @@ def insert_and_process_jobs(config, db_session):
     test_fetcher_tor = Fetcher(
         method="tor_browser", uses_proxy_type="tor", version="82"
     )
-    test_fetcher_proxy1 = Fetcher(
+    test_fetcher_proxy = Fetcher(
         method="firefox_browser",
         uses_proxy_type="http",
         version="82",
     )
-    test_fetcher_proxy2 = Fetcher(
-        method="firefox_browser",
-        uses_proxy_type="http",
-        version="82",
-    )
-
     queue_non_tor = FetchQueue(
         url=f"https://{test_domain}",
         fetcher_id=1,
@@ -103,7 +107,7 @@ def insert_and_process_jobs(config, db_session):
 
     queue_proxy2 = FetchQueue(
         url=f"https://{test_domain}",
-        fetcher_id=4,
+        fetcher_id=3,
         domain_id=1,
         proxy_id=2,
     )
@@ -114,8 +118,7 @@ def insert_and_process_jobs(config, db_session):
     db_session.add(test_relay)
     db_session.add(test_fetcher_non_tor)
     db_session.add(test_fetcher_tor)
-    db_session.add(test_fetcher_proxy1)
-    db_session.add(test_fetcher_proxy2)
+    db_session.add(test_fetcher_proxy)
     db_session.add(queue_non_tor)
     db_session.add(queue_tor)
     db_session.add(queue_proxy1)
@@ -140,7 +143,7 @@ def insert_and_process_jobs(config, db_session):
     # Make sure that the jobs are processed
     assert db_session.query(FetchCompleted).count() == 4
     # Since the analyze completed hasn't been called yet so the table is empty as of now
-    assert db_session.query(AnalyzeCompleted).count() == 0
+    assert db_session.query(AnalyzeCompleted).count() == 2
 
 
 @pytest.mark.usefixtures("insert_and_process_jobs")
@@ -162,7 +165,7 @@ class TestAnalyzer:
             or db_session.query(AnalyzeCompleted).first().dom_analyze == 1
         )
 
-        # # No Captcha
+        # No Captcha
         assert db_session.query(AnalyzeCompleted).first().captcha_checker == 0
 
         # Status Code Same
