@@ -247,4 +247,4 @@ class AnalyzeCompleted(BaseModel):
     # fmt: on
 
     # References to the foreign keys, gives access to these tables
-    ref_analyzer = relationship("FetchCompleted", backref="AnalyzeCompleted")
+    ref_fetch_completed = relationship("FetchCompleted", backref="AnalyzeCompleted")

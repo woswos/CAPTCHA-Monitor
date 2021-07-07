@@ -48,14 +48,16 @@ def node_id() -> int:
     return id_value
 
 
-def get_random_http_proxy() -> Tuple[str, int]:
+def get_random_http_proxy(country: str = None) -> Tuple[str, int]:
     """
     Queries pubproxy.com and returns a random HTTP proxy that supports HTTPS
 
+    :param country: Country Code, if nothing is given, still the api will fetch a ip and proxy
+    :type country: str
     :return: A random HTTP proxy host and port
     :rtype: Tuple[str, int]
     """
-    api_url = "http://pubproxy.com/api/proxy?https=true&last_check=5&speed=10&type=http"
+    api_url = f"http://pubproxy.com/api/proxy?https=true&last_check=5&speed=10&type=http&country={country}"
     result = requests.get(api_url).json()
     proxy = result["data"][0]
     return (str(proxy["ip"]), int(proxy["port"]))
