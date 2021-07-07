@@ -55,7 +55,7 @@ def get_random_http_proxy() -> Tuple[str, int]:
     :return: A random HTTP proxy host and port
     :rtype: Tuple[str, int]
     """
-    api_url = "http://pubproxy.com/api/proxy?https=true&last_check=5&speed=10"
+    api_url = "http://pubproxy.com/api/proxy?https=true&last_check=5&speed=10&type=http"
     result = requests.get(api_url).json()
     proxy = result["data"][0]
     return (str(proxy["ip"]), int(proxy["port"]))
