@@ -28,10 +28,26 @@ captchamonitor.utils.consensus\_parser module
    :undoc-members:
    :show-inheritance:
 
+captchamonitor.utils.container\_manager module
+----------------------------------------------
+
+.. automodule:: captchamonitor.utils.container_manager
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 captchamonitor.utils.database module
 ------------------------------------
 
 .. automodule:: captchamonitor.utils.database
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+captchamonitor.utils.domain\_attributes module
+----------------------------------------------
+
+.. automodule:: captchamonitor.utils.domain_attributes
    :members:
    :undoc-members:
    :show-inheritance:
@@ -56,6 +72,14 @@ captchamonitor.utils.onionoo module
 -----------------------------------
 
 .. automodule:: captchamonitor.utils.onionoo
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+captchamonitor.utils.proxy\_parser module
+-----------------------------------------
+
+.. automodule:: captchamonitor.utils.proxy_parser
    :members:
    :undoc-members:
    :show-inheritance:

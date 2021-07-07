@@ -36,6 +36,14 @@ captchamonitor.core.update\_fetchers module
    :undoc-members:
    :show-inheritance:
 
+captchamonitor.core.update\_proxies module
+------------------------------------------
+
+.. automodule:: captchamonitor.core.update_proxies
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 captchamonitor.core.update\_relays module
 -----------------------------------------
 
