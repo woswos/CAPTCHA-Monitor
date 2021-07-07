@@ -16,7 +16,7 @@ class UpdateFetchers:
     def __init__(
         self,
         config: Config,
-        db_session: sessionmaker,  # pylint: disable=R0801
+        db_session: sessionmaker,
     ) -> None:
         """
         Initializes UpdateFetchers

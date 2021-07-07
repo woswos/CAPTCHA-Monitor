@@ -31,7 +31,7 @@ class ScheduleJobs:
         :type loop: bool, optional
         """
         # Private class attributes
-        self.__logger = logging.getLogger(__name__)  # pylint: disable=R0801,W0238
+        self.__logger = logging.getLogger(__name__)  # pylint: disable=W0238
         self.__config: Config = config
         self.__db_session: sessionmaker = db_session
         self.__job_queue_delay: float = float(self.__config["job_queue_delay"])

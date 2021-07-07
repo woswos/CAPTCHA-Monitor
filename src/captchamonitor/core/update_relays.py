@@ -21,7 +21,7 @@ class UpdateRelays:
     def __init__(
         self,
         config: Config,
-        db_session: sessionmaker,  # pylint: disable=R0801
+        db_session: sessionmaker,
         auto_update: bool = True,
     ) -> None:
         """
