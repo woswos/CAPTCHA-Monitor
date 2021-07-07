@@ -41,11 +41,11 @@ def insert_and_process_jobs(config, db_session):
     # 1. I was receiving JSONDecodeError (https://github.com/simplejson/simplejson/blob/v3.0.5/simplejson/decoder.py#L33)
     # 2. The pubproxy.com has a limit of 50 requests per day
     try:
-        host = (get_random_http_proxy(country)[0],)
-        port = (get_random_http_proxy(country)[1],)
+        host = get_random_http_proxy(country)[0]
+        port = get_random_http_proxy(country)[1]
     except ValueError:
-        host = ("45.42.177.7",)
-        port = (3128,)
+        host = "45.42.177.7"
+        port = 3128
 
     proxy1 = Proxy(
         host=host,
