@@ -17,6 +17,7 @@ from captchamonitor.utils.small_scripts import get_random_http_proxy
 
 
 @pytest.fixture()
+# pylint: disable=R0914
 def insert_and_process_jobs(config, db_session):
     test_domain = "api.ipify.org"
     worker = Worker(
@@ -36,21 +37,19 @@ def insert_and_process_jobs(config, db_session):
         requires_multiple_requests=True,
     )
 
-    country = "US"
     # The try catch was added because of two things:
     # 1. I was receiving JSONDecodeError (https://github.com/simplejson/simplejson/blob/v3.0.5/simplejson/decoder.py#L33)
     # 2. The pubproxy.com has a limit of 50 requests per day
+
     try:
-        host = get_random_http_proxy(country)[0]
-        port = get_random_http_proxy(country)[1]
+        proxy_detail = get_random_http_proxy("US")
     except ValueError:
-        host = "45.42.177.7"
-        port = 3128
+        proxy_detail = ("45.42.177.7", 3128)
 
     proxy1 = Proxy(
-        host=host,
-        port=port,
-        country=country,
+        host=proxy_detail[0],
+        port=proxy_detail[1],
+        country="US",
         google_pass=False,
         anonymity="N",
         incoming_ip_different_from_outgoing_ip=False,
