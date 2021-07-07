@@ -199,7 +199,7 @@ class Worker:
             )
 
             # If fetcher was initialized correctly
-            if hasattr(self, f"_{self.__class__.__name__}__fetcher"):
+            if hasattr_private(self, "__fetcher"):
                 # Check if container is healthy
                 self.__logger.debug("Checking if the container is healthy")
                 ContainerManager(
@@ -229,7 +229,7 @@ class Worker:
 
         finally:
             # Close the fetcher
-            if hasattr(self, f"_{self.__class__.__name__}__fetcher"):
+            if hasattr_private(self, "__fetcher"):
                 self.__fetcher.close()
 
             # Reset the changes

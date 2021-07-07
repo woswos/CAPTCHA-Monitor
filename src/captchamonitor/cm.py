@@ -59,7 +59,7 @@ class CaptchaMonitor:
                 time.sleep(3)
 
         # Check if database connection was made
-        if not hasattr(self, f"_{self.__class__.__name__}__database"):
+        if not hasattr_private(self, "__database"):
             self.__logger.warning(
                 "Could not initialize CAPTCHA Monitor since I couldn't connect to the database, exitting"
             )
