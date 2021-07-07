@@ -36,7 +36,9 @@ def node_id() -> int:
     id_value = 0
 
     try:
-        received_id = docker.from_env().containers.get(hostname()).name.split("_")[-1]
+        received_id = (
+            docker.from_env().containers.get(hostname()).name.split("_")[-1]
+        )
 
         if received_id.isnumeric():
             id_value = int(received_id)
@@ -87,7 +89,9 @@ def hasattr_private(given_object: Any, attribute: str) -> bool:
     :return: True is class attribute exists
     :rtype: bool
     """
-    return hasattr(given_object, f"_{given_object.__class__.__name__}{attribute}")
+    return hasattr(
+        given_object, f"_{given_object.__class__.__name__}{attribute}"
+    )
 
 
 def insert_fixtures(
