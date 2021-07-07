@@ -1,19 +1,19 @@
 from captchamonitor.utils.models import Proxy
-from captchamonitor.core.update_proxy import UpdateProxy
 from captchamonitor.utils.proxy_parser import ProxyParser
+from captchamonitor.core.update_proxies import UpdateProxies
 
 
-class TestUpdateProxy:
+class TestUpdateProxies:
     def test__insert_similar_proxies_into_db(self, config, db_session):
         # Check for similar proxy but not identical
         db_proxy_query = db_session.query(Proxy)
-        update_proxy = UpdateProxy(
+        update_proxy = UpdateProxies(
             config=config, db_session=db_session, auto_update=False
         )
         # Check if the proxy table is empty
         assert db_proxy_query.count() == 0
 
-        update_proxy._UpdateProxy__insert_proxy_into_db(
+        update_proxy._UpdateProxies__insert_proxy_into_db(
             host_list=["127.0.0.1", "127.0.0.1"],
             port_list=["8080", "80"],
             ssl_list=[True, True],
@@ -28,7 +28,7 @@ class TestUpdateProxy:
     def test__insert_proxies_into_db(self, config, db_session):
         db_proxy_query = db_session.query(Proxy)
 
-        update_proxy = UpdateProxy(
+        update_proxy = UpdateProxies(
             config=config, db_session=db_session, auto_update=False
         )
 
@@ -39,7 +39,7 @@ class TestUpdateProxy:
         # Check if the proxy table is empty
         assert db_proxy_query.count() == 0
 
-        update_proxy._UpdateProxy__insert_proxy_into_db(
+        update_proxy._UpdateProxies__insert_proxy_into_db(
             host_list=proxy_list.host,
             port_list=proxy_list.port,
             ssl_list=proxy_list.ssl,

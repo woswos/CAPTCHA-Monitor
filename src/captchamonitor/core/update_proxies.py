@@ -10,9 +10,9 @@ from captchamonitor.utils.models import Proxy
 from captchamonitor.utils.proxy_parser import ProxyParser
 
 
-class UpdateProxy:
+class UpdateProxies:
     """
-    Fetches list of Proxy details like proxy host, proxy port, does it support ssl, passes google or not, etc.
+    Fetches list of proxy details like proxy host, proxy port, does it support ssl, passes google or not, etc.
     """
 
     def __init__(
@@ -22,7 +22,7 @@ class UpdateProxy:
         auto_update: bool = True,
     ) -> None:
         """
-        Initializes UpdateProxy
+        Initializes UpdateProxies
 
         :param config: The config class instance that contains global configuration values
         :type config: Config
