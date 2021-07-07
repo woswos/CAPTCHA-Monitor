@@ -30,18 +30,15 @@ class TestUpdateRelays:
     def test_update_relays_init(self, config, db_session):
         db_metadata_query = db_session.query(MetaData)
 
-        # Make sure there is not metadata present in db
-        assert db_metadata_query.count() == 0
-
         update_relays = UpdateRelays(
             config=config, db_session=db_session, auto_update=False
         )
 
-        assert update_relays._UpdateRelays__hours_since_last_update() == 1
+        assert update_relays._UpdateRelays__hours_since_last_update() > 1
 
         # Call again in the simulated future
         with freeze_time("2100-01-01"):
-            assert update_relays._UpdateRelays__hours_since_last_update() > 100
+            assert update_relays._UpdateRelays__hours_since_last_update() > 600000
 
     def test__insert_batch_into_db(self, config, db_session):
         db_relay_query = db_session.query(Relay)

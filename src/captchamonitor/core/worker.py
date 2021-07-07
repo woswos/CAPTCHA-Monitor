@@ -1,4 +1,3 @@
-import json
 import time
 import logging
 from typing import List, Union, Optional
@@ -59,50 +58,18 @@ class Worker:
         self.__worker_id: str = worker_id
         self.__tor_launcher: TorLauncher = TorLauncher(self.__config)
         self.__job_queue_delay: float = float(self.__config["job_queue_delay"])
-        self.__gdpr_keywords: List[str]
+        self.__gdpr_keywords: List[str] = (
+            self.__db_session.query(MetaData)
+            .filter(MetaData.key == "gdpr_keywords")
+            .one()
+            .value
+        )
         self.__fetcher: Union[TorBrowser, FirefoxBrowser, ChromeBrowser, OperaBrowser]
-
-        self.__get_gdpr_keywords()
 
         # Loop over the jobs
         while loop:
             self.process_next_job()
             time.sleep(self.__job_queue_delay)
-
-    def __get_gdpr_keywords(self) -> None:
-        metadata_key = "gdpr_keywords"
-        default_keywords = [
-            "Souhlasím",
-            "Alle akzeptieren",
-            "Jag godkänner",
-            "Ich stimme zu",
-            "Ik ga akkoord",
-            "Godta alle",
-            "Egyetértek",
-            "J'accepte",
-            "I agree",
-            "Acceptai tot",
-            "Accept all",
-            "Accept",
-        ]
-
-        query = self.__db_session.query(MetaData).filter(MetaData.key == metadata_key)
-
-        # Check if the keywords exist in the database
-        if query.count() == 0:
-            # Create a new keyword list if it doesn't exist
-            metadata = MetaData(
-                key=metadata_key,
-                value=json.dumps(default_keywords),
-            )
-            self.__db_session.add(metadata)
-            self.__db_session.commit()
-
-            self.__gdpr_keywords = default_keywords
-
-        else:
-            # Get the values from the db
-            self.__gdpr_keywords = json.loads(query.one().value)
 
     def process_next_job(self) -> None:
         """

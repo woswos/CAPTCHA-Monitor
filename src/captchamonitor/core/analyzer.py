@@ -10,6 +10,7 @@ from captchamonitor.utils.config import Config
 from captchamonitor.utils.models import (
     Domain,
     Fetcher,
+    MetaData,
     FetchCompleted,
     AnalyzeCompleted,
 )
@@ -39,30 +40,29 @@ class Analyzer:
         :param loop: Should I process a batch of domains or keep looping, defaults to True
         :type loop: bool, optional
         """
-        # Public class attributes
-        self.soup_t: BeautifulSoup = BeautifulSoup("", "html.parser")
-        self.soup_n: BeautifulSoup = BeautifulSoup("", "html.parser")
-        self.max_k: int = 150
-        self.min_k: int = 20
-        self.match_list: List[str] = [
-            "error",
-            "forbidden",
-            "tor",
-            "denied",
-            "sorry",
-        ]
-        self.tor_store: Dict[str, Any] = {}
-        self.non_store: Dict[str, Any] = {}
-        self.captcha_checker_value: Optional[int] = None
-        self.dom_analyze_value: Optional[int] = None
-        self.status_check_value: Optional[int] = None
-
         # Private class attributes
         self.__logger = logging.getLogger(__name__)
         self.__config: Config = config
         self.__db_session: sessionmaker = db_session
         self.__analyzer_id: str = analyzer_id  # pylint: disable=W0238
         self.__job_queue_delay: float = float(self.__config["job_queue_delay"])
+
+        # Public class attributes
+        self.soup_t: BeautifulSoup = BeautifulSoup("", "html.parser")
+        self.soup_n: BeautifulSoup = BeautifulSoup("", "html.parser")
+        self.max_k: int = 150
+        self.min_k: int = 20
+        self.match_list: List[str] = (
+            self.__db_session.query(MetaData)
+            .filter(MetaData.key == "analyzer_match_list")
+            .one()
+            .value
+        )
+        self.tor_store: Dict[str, Any] = {}
+        self.non_store: Dict[str, Any] = {}
+        self.captcha_checker_value: Optional[int] = None
+        self.dom_analyze_value: Optional[int] = None
+        self.status_check_value: Optional[int] = None
 
         # Loop over the jobs
         while loop:

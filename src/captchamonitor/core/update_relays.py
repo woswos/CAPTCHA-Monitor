@@ -1,6 +1,6 @@
 import logging
 from typing import Dict, List
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import pytz
 from sqlalchemy.orm import sessionmaker
@@ -62,39 +62,24 @@ class UpdateRelays:
         time_difference = current_datetime - last_datetime
         return int(time_difference.total_seconds() // 3600)
 
-    def __check_last_relay_update(self) -> datetime:
+    def __check_last_relay_update(
+        self, metadata_key: str = "last_relay_update_datetime"
+    ) -> datetime:
         """
         Connects to the database and check the last time relays were updated
 
+        :param metadata_key: Metadata key for the database, defaults to "last_relay_update_datetime"
+        :type metadata_key: str
         :return: The last time relays were updated
         :rtype: datetime
         """
-        metadata_key = "last_relay_update_datetime"
-
         query = self.__db_session.query(MetaData).filter(MetaData.key == metadata_key)
-
-        current_datetime = datetime.now()
-        current_datetime_str = current_datetime.strftime(self.__datetime_format)
-        one_hour_earlier_str = (datetime.now() - timedelta(hours=1)).strftime(
-            self.__datetime_format
-        )
-
-        # Check if it exists in the database
-        if query.count() == 0:
-            # Create a new one if it doesn't exist
-            metadata = MetaData(
-                key=metadata_key,
-                value=current_datetime_str,
-            )
-            self.__db_session.add(metadata)
-            self.__db_session.commit()
-            return datetime.strptime(one_hour_earlier_str, self.__datetime_format)
 
         # Get and return the existing value
         date_from_db = query.one().value
 
         # Update the db
-        query.one().value = current_datetime_str
+        query.one().value = datetime.now().strftime(self.__datetime_format)
         self.__db_session.commit()
 
         return datetime.strptime(date_from_db, self.__datetime_format)

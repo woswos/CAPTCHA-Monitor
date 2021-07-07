@@ -5,7 +5,7 @@ import pytest
 from captchamonitor.utils.config import Config
 from captchamonitor.utils.database import Database
 from captchamonitor.utils.tor_launcher import TorLauncher
-from captchamonitor.utils.small_scripts import get_random_http_proxy
+from captchamonitor.utils.small_scripts import insert_fixtures, get_random_http_proxy
 
 
 def pytest_addoption(parser):
@@ -99,5 +99,6 @@ def db_session():
         config_local["db_password"],
     )
     db_session_local = database.session()
+    insert_fixtures(db_session_local, config_local, "metadata.json")
     yield db_session_local
     db_session_local.close()

@@ -5,13 +5,14 @@ from typing import Optional
 
 from captchamonitor.core.worker import Worker
 from captchamonitor.utils.config import Config
+from captchamonitor.utils.models import MetaData
 from captchamonitor.core.analyzer import Analyzer
 from captchamonitor.utils.database import Database
 from captchamonitor.utils.exceptions import ConfigInitError, DatabaseInitError
 from captchamonitor.core.schedule_jobs import ScheduleJobs
 from captchamonitor.core.update_relays import UpdateRelays
 from captchamonitor.core.update_domains import UpdateDomains
-from captchamonitor.utils.small_scripts import node_id, hasattr_private
+from captchamonitor.utils.small_scripts import node_id, hasattr_private, insert_fixtures
 from captchamonitor.core.update_fetchers import UpdateFetchers
 
 
@@ -65,6 +66,9 @@ class CaptchaMonitor:
 
         # Obtain the session from database module
         self.__db_session = self.__database.session()
+
+        if self.__db_session.query(MetaData).count == 0:
+            insert_fixtures(self.__db_session, self.__config, "metadata.json")
 
     def update_domains(self) -> None:
         """

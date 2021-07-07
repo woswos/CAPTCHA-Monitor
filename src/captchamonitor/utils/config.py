@@ -30,6 +30,7 @@ ENV_VARS = {
     "asset_har_export_extension_xpi_id": "CM_ASSET_HAR_EXPORT_EXTENSION_XPI_ID",
     "asset_har_export_extension_crx": "CM_ASSET_HAR_EXPORT_EXTENSION_CRX",
     "job_queue_delay": "CM_JOB_QUEUE_DELAY",
+    "fixture_location": "CM_FIXTURE_LOCATION",
 }
 
 

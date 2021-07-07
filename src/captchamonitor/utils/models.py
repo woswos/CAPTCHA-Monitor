@@ -45,7 +45,7 @@ class MetaData(BaseModel):
 
     # fmt: off
     key = Column(String, unique=True, nullable=False) # Key for the metadata
-    value = Column(String)                            # Value for the metadata
+    value = Column(JSON)                              # Value for the metadata
     # fmt: on
 
 

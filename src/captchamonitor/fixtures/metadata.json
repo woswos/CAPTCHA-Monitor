@@ -1,0 +1,45 @@
+[
+    {
+        "model": "MetaData",
+        "id": 1,
+        "fields": {
+            "key": "last_relay_update_datetime",
+            "value": "2000-01-01-00-00-00"
+        }
+    },
+    {
+        "model": "MetaData",
+        "id": 2,
+        "fields": {
+            "key": "gdpr_keywords",
+            "value": [
+                "Souhlas\u00edm",
+                "Alle akzeptieren",
+                "Jag godk\u00e4nner",
+                "Ich stimme zu",
+                "Ik ga akkoord",
+                "Godta alle",
+                "Egyet\u00e9rtek",
+                "J'accepte",
+                "I agree",
+                "Acceptai tot",
+                "Accept all",
+                "Accept"
+            ]
+        }
+    },
+    {
+        "model": "MetaData",
+        "id": 3,
+        "fields": {
+            "key": "analyzer_match_list",
+            "value": [
+                "error",
+                "forbidden",
+                "tor",
+                "denied",
+                "sorry"
+            ]
+        }
+    }
+]
