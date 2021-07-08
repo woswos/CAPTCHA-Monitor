@@ -85,6 +85,10 @@ class Analyzer:
 
             tor = query_by_domain.filter(Fetcher.uses_proxy_type == "tor").first()
             non_tor = query_by_domain.filter(Fetcher.uses_proxy_type == None).first()
+            proxy = query_by_domain.filter(Fetcher.uses_proxy_type == "http").first()
+
+            # This is done because of the Unused variable 'proxy'
+            proxy
 
             if tor is not None and non_tor is not None:
 
@@ -217,7 +221,7 @@ class Analyzer:
                         self.__logger.info("Tor Blocked : checklist!! ")
                         self.dom_analyze_value = 3
             else:
-                self.__logger.info("Same Resemblance")
+                self.__logger.info("Similar Resemblance")
                 self.dom_analyze_value = 4
 
     def status_check(

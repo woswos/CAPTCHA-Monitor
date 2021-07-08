@@ -118,6 +118,10 @@ class Worker:
                     self.__tor_launcher.socks_port,
                 )
 
+            # Check if the proxy type is http, if so: add host and port into the proxy tuple
+            elif job.ref_fetcher.uses_proxy_type == "http":
+                proxy = (job.ref_proxy.host, job.ref_proxy.port)
+
             # If we need to use an exit relay and if the exit relay is located
             # in Europe, enable GDPR removing functionality
             if job.ref_fetcher.uses_proxy_type == "tor":
@@ -188,6 +192,7 @@ class Worker:
                 fetcher_id=job.fetcher_id,
                 domain_id=job.domain_id,
                 relay_id=job.relay_id,
+                proxy_id=job.proxy_id,
             )
             self.__db_session.add(failed)
             self.__logger.debug(
@@ -218,6 +223,7 @@ class Worker:
                 fetcher_id=job.fetcher_id,
                 domain_id=job.domain_id,
                 relay_id=job.relay_id,
+                proxy_id=job.proxy_id,
             )
             self.__db_session.add(completed)
             self.__logger.debug(
