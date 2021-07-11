@@ -45,7 +45,7 @@ def insert_and_process_jobs(config, db_session):
         host = (get_random_http_proxy(country)[0],)
         port = (get_random_http_proxy(country)[1],)
     except ValueError:
-        host = ("45.42.177.7",)
+        host = ("20.69.75.204",)
         port = (3128,)
 
     proxy1 = Proxy(
@@ -59,8 +59,8 @@ def insert_and_process_jobs(config, db_session):
     )
 
     proxy2 = Proxy(
-        host="96.95.164.41",
-        port=3128,
+        host="24.168.51.25",
+        port=8080,
         country="US",
         google_pass=True,
         anonymity="N",
@@ -73,6 +73,7 @@ def insert_and_process_jobs(config, db_session):
         ipv4_address="128.31.0.13",
         ipv4_exiting_allowed=True,
         ipv6_exiting_allowed=False,
+        country="US",
     )
 
     test_fetcher_non_tor = Fetcher(method="firefox_browser", version="82")
@@ -143,7 +144,7 @@ def insert_and_process_jobs(config, db_session):
     # Make sure that the jobs are processed
     assert db_session.query(FetchCompleted).count() == 4
     # Since the analyze completed hasn't been called yet so the table is empty as of now
-    assert db_session.query(AnalyzeCompleted).count() == 2
+    assert db_session.query(AnalyzeCompleted).count() == 0
 
 
 @pytest.mark.usefixtures("insert_and_process_jobs")
@@ -159,7 +160,7 @@ class TestAnalyzer:
 
         assert db_session.query(AnalyzeCompleted).count() == 2
 
-        # Resembles Same or Similar Resemblance
+        # Resembles Same or Equal Resemblance
         assert (
             db_session.query(AnalyzeCompleted).first().dom_analyze == 4
             or db_session.query(AnalyzeCompleted).first().dom_analyze == 1
@@ -170,3 +171,9 @@ class TestAnalyzer:
 
         # Status Code Same
         assert db_session.query(AnalyzeCompleted).first().status_check is None
+
+        # Consensus Lite Dom is not executed as site isn't suspicious
+        assert db_session.query(AnalyzeCompleted).first().consensus_lite_dom is None
+
+        # Consensus Lite Captcha is not executed as site isn't suspicious
+        assert db_session.query(AnalyzeCompleted).first().consensus_lite_captcha is None
