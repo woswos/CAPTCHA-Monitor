@@ -241,9 +241,11 @@ class AnalyzeCompleted(BaseModel):
         return Column(Integer, ForeignKey("fetch_completed.id"), nullable=False)
 
     # fmt: off
-    captcha_checker = Column(Integer) # Checks if the website contains captcha or not
-    dom_analyze = Column(Integer)     # Analyzes the DOM structure to find out if the website appears to be same or different
-    status_check = Column(Integer)    # Checks for the HTTP statuses received by the websites on different clients
+    captcha_checker = Column(Integer)           # Checks if the website contains captcha or not
+    dom_analyze = Column(Integer)               # Analyzes the DOM structure to find out if the website appears to be same or different
+    status_check = Column(Integer)              # Checks for the HTTP statuses received by the websites on different clients
+    consensus_lite_dom = Column(Integer)        # Analyzes the proxy lists to produce the Consensus Lite Dom
+    consensus_lite_captcha = Column(Integer)    # Analyzes the proxy lists to produce the Consensus Lite Captcha and check for captchas
     # fmt: on
 
     # References to the foreign keys, gives access to these tables

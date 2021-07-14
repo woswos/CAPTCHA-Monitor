@@ -1,3 +1,4 @@
+import sys
 import json
 import time
 import logging
@@ -8,6 +9,8 @@ from sqlalchemy.orm import sessionmaker
 
 from captchamonitor.utils.config import Config
 from captchamonitor.utils.models import (
+    Proxy,
+    Relay,
     Domain,
     Fetcher,
     MetaData,
@@ -48,10 +51,10 @@ class Analyzer:
         self.__job_queue_delay: float = float(self.__config["job_queue_delay"])
 
         # Public class attributes
-        self.soup_t: BeautifulSoup = BeautifulSoup("", "html.parser")
-        self.soup_n: BeautifulSoup = BeautifulSoup("", "html.parser")
-        self.max_k: int = 150
-        self.min_k: int = 20
+        self.soup_tor: BeautifulSoup = BeautifulSoup("", "html.parser")
+        self.soup_non_tor: BeautifulSoup = BeautifulSoup("", "html.parser")
+        self.max_threshold_value: int = 150
+        self.min_threshold_value: int = 20
         self.match_list: List[str] = (
             self.__db_session.query(MetaData)
             .filter(MetaData.key == "analyzer_match_list")
@@ -63,6 +66,9 @@ class Analyzer:
         self.captcha_checker_value: Optional[int] = None
         self.dom_analyze_value: Optional[int] = None
         self.status_check_value: Optional[int] = None
+        self.consensus_lite_dom_value: Optional[int] = None
+        self.captcha_proxy_val: List[int]
+        self.consensus_lite_captcha_value: Optional[int] = None
 
         # Loop over the jobs
         while loop:
@@ -74,8 +80,7 @@ class Analyzer:
         Loop over the domain list and get corresponding website data from the database
         """
         # pylint: disable=C0121,W0104
-        domains = self.__db_session.query(Domain).all()
-
+        domains = self.__db_session.query(Domain)
         for domain in domains:
             query_by_domain = (
                 self.__db_session.query(FetchCompleted)
@@ -83,12 +88,20 @@ class Analyzer:
                 .filter(FetchCompleted.ref_domain == domain)
             )
 
+            query_by_proxy = (
+                self.__db_session.query(FetchCompleted, Proxy).join(Proxy)
+            ).all()
+            query_by_relay = (
+                self.__db_session.query(FetchCompleted, Relay).join(Relay)
+            ).all()
+
+            proxy_countries_html_data = []
+            for query in query_by_proxy:
+                if query.Proxy.country == query_by_relay[0].Relay.country:
+                    proxy_countries_html_data.append(query.FetchCompleted.html_data)
+
             tor = query_by_domain.filter(Fetcher.uses_proxy_type == "tor").first()
             non_tor = query_by_domain.filter(Fetcher.uses_proxy_type == None).first()
-            proxy = query_by_domain.filter(Fetcher.uses_proxy_type == "http").first()
-
-            # This is done because of the Unused variable 'proxy'
-            proxy
 
             if tor is not None and non_tor is not None:
 
@@ -96,11 +109,18 @@ class Analyzer:
                 HAR_json_tor = json.loads(tor.http_requests)
                 HAR_json_non_tor = json.loads(non_tor.http_requests)
 
+                self.captcha_checker_value = None
+                self.dom_analyze_value = None
+                self.status_check_value = None
+                self.consensus_lite_dom_value = None
+                self.consensus_lite_captcha_value = None
+
                 self.status_check(
                     tor.html_data,
                     HAR_json_tor,
                     non_tor.html_data,
                     HAR_json_non_tor,
+                    proxy_countries_html_data,
                 )
 
                 # Non tor from the FetchCompleted
@@ -108,6 +128,8 @@ class Analyzer:
                     captcha_checker=self.captcha_checker_value,
                     status_check=self.status_check_value,
                     dom_analyze=self.dom_analyze_value,
+                    consensus_lite_dom=self.consensus_lite_dom_value,
+                    consensus_lite_captcha=self.consensus_lite_captcha_value,
                     fetch_completed_id=non_tor.id,
                 )
                 # Tor from the FetchCompleted
@@ -115,11 +137,137 @@ class Analyzer:
                     captcha_checker=self.captcha_checker_value,
                     status_check=self.status_check_value,
                     dom_analyze=self.dom_analyze_value,
+                    consensus_lite_dom=self.consensus_lite_dom_value,
+                    consensus_lite_captcha=self.consensus_lite_captcha_value,
                     fetch_completed_id=tor.id,
                 )
                 self.__db_session.add(analyzer_val_nt)
                 self.__db_session.add(analyzer_val_t)
                 self.__db_session.commit()
+
+    def consensus_lite_captcha(self) -> None:
+        """
+        Extension to the consensus lite module for captcha checking
+        """
+        # Every proxy list has captcha and similarly tor and non-tor doms have captcha:
+        # Two cases:
+        # 1. Either the website returns captcha everytime
+        # 2. or, the website is about captcha itself.
+        if 0 not in self.captcha_proxy_val and self.captcha_checker_value == 0:
+            self.__logger.info("Captcha is prevalent in every case")
+            self.consensus_lite_captcha_value = 1
+        # Assume proxy list with captcha returned and not returned and either captcha returned in both nt and t, or not returned in both nt and t.
+        # Case might be a bit rare.
+        # Tracing it for further details
+        elif 1 in self.captcha_proxy_val and self.captcha_checker_value == 0:
+            self.__logger.info(
+                "captcha in all or just in proxy, not much useful for us, because even if proxy is returned non-tor too is targeted with proxy"
+            )
+            self.consensus_lite_captcha_value = 2
+        # No captcha case
+        elif 1 not in self.captcha_proxy_val and self.captcha_checker_value == 0:
+            self.__logger.info("No captcha for this website")
+            self.consensus_lite_captcha_value = 3
+        # Only non-tor returns no captcha
+        elif 0 not in self.captcha_proxy_val and self.captcha_checker_value == 1:
+            self.__logger.info("Proxy and Tor returns captcha")
+            self.consensus_lite_captcha_value = 4
+        # Proxy might have/haven't captcha, but tor has
+        elif 0 in self.captcha_proxy_val and self.captcha_checker_value == 1:
+            self.__logger.info("Tor returns captcha")
+            self.consensus_lite_captcha_value = 5
+        # Only tor has captcha, might be the case when len(self.captcha_proxy_val) is small too
+        elif 1 not in self.captcha_proxy_val and self.captcha_checker_value == 1:
+            self.__logger.info("Partiality towards just tor")
+            self.consensus_lite_captcha_value = 6
+
+    def consensus_lite_dom(
+        self, tor_dom: int, non_tor_dom: int, proxy_dom: List[int]
+    ) -> None:
+        """
+        Consensus Lite Module for the dom checker
+
+        :param tor_dom: Tor HTML dom nodes
+        :type tor_dom: int
+        :param non_tor_dom: Non-Tor HTML dom nodes
+        :type non_tor_dom: int
+        :param proxy_dom: List of Proxy dom nodes
+        :type proxy_dom: List[int]
+        """
+        mn_difference_nt_and_t = abs(tor_dom - non_tor_dom)
+        mn_difference_nt_and_proxy = int(sys.float_info.max)
+        sum_proxy = 0
+
+        if len(proxy_dom) > 0 and tor_dom > 0 and non_tor_dom > 0:
+            for dom in proxy_dom:
+                sum_proxy = sum_proxy + dom
+                # Check for the minimum difference between non-tor and proxy
+                mn_difference_nt_and_proxy = min(
+                    mn_difference_nt_and_proxy, abs(dom - non_tor_dom)
+                )
+                # If Dom of proxy is greater than non-tor, place a flag for later operations.
+                if dom > non_tor_dom:
+                    neg_pos_var = -1
+                else:
+                    neg_pos_var = 1
+
+            avg_proxy = sum_proxy / len(proxy_dom)
+
+            score_proxy = neg_pos_var * (mn_difference_nt_and_proxy / non_tor_dom) * 100
+            score_tor = (mn_difference_nt_and_t / non_tor_dom) * 100
+
+            self.__logger.info(
+                "Score Proxy: %f and Score tor: %f", score_proxy, score_tor
+            )
+
+            # Similar
+            if (
+                score_proxy < self.min_threshold_value
+                and score_tor < self.min_threshold_value
+            ):
+                self.__logger.info("Not Blocked")
+                self.consensus_lite_dom_value = 0
+
+            # Tor Blocked
+            elif (
+                score_proxy < self.min_threshold_value
+                and score_tor > self.min_threshold_value
+            ):
+                self.__logger.info("Tor Blocked")
+                self.consensus_lite_dom_value = 1
+
+            # Either Both Redirected to other page or both blocked
+            elif (
+                score_proxy > self.min_threshold_value
+                and score_tor > self.min_threshold_value
+            ):
+                self.__logger.info("Both Redirected to other page or Both Blocked")
+                self.consensus_lite_dom_value = 2
+
+            # Proxy not good, Tor better
+            elif (
+                score_proxy > self.min_threshold_value
+                and score_tor < self.min_threshold_value
+            ):
+                self.__logger.info("Tor unblocked, proxy blocked")
+                self.consensus_lite_dom_value = 3
+
+            # Website is in accessible by non-tor
+            elif (
+                score_proxy < 0
+                and score_tor < 0
+                and (100 * abs(avg_proxy - tor_dom)) / avg_proxy
+                < self.min_threshold_value
+            ):
+                self.__logger.info("Non-Tor blocked")
+                self.consensus_lite_dom_value = 4
+
+            # No case have been thought of
+            else:
+                self.__logger.info("Case hasn't been thought of")
+                self.consensus_lite_dom_value = 5
+
+        self.consensus_lite_captcha()
 
     def captcha_checker(self) -> bool:
         """
@@ -127,14 +275,14 @@ class Analyzer:
         1. Check if the HTML consists of Captcha or not for tor and non tor
         2. HAR contains captcha or not
 
-        :return: Chech if captcha is returned or not
+        :return: Check if captcha is returned or not
         :rtype: bool
         """
         # Assuming no captcha
         tor_c = 0
         tor = 0
         # If captcha in html of tor:
-        if "captcha" in self.soup_t and "captcha" not in self.soup_n:
+        if "captcha" in self.soup_tor and "captcha" not in self.soup_non_tor:
             tor_c = 1
         # If captcha in both, tor_html and non_tor html, or not anywhere:
         else:
@@ -155,8 +303,13 @@ class Analyzer:
             return True
         return False
 
-    # pylint:disable=R0912
-    def dom_analyze(self, tor_html_data: str, non_tor_html_data: str) -> None:
+    # pylint: disable=R0912,R0914,R0915
+    def dom_analyze(
+        self,
+        tor_html_data: str,
+        non_tor_html_data: str,
+        proxy_countries_html_data: List[str],
+    ) -> None:
         """
         Analyzes dom
 
@@ -164,64 +317,89 @@ class Analyzer:
         :type tor_html_data: str
         :param non_tor_html_data: Non-Tor HTML data
         :type non_tor_html_data: str
+        :param proxy_countries_html_data: List of Proxy html data
+        :type proxy_countries_html_data: List[str]
         """
-        self.soup_t = BeautifulSoup(tor_html_data, "html.parser")
-        count_t = 0
-        node_tor = []
-        node_non_tor = []
+        self.soup_tor = BeautifulSoup(tor_html_data, "html.parser")
+        # Count the number of nodes in tor
+        tor_node_count = len(self.soup_tor.find_all(True))
 
-        for tag in self.soup_t.find_all(True):
-            node_tor.append(tag)
-            count_t += 1
+        self.soup_non_tor = BeautifulSoup(non_tor_html_data, "html.parser")
+        # Count the number of nodes in non-tor
+        non_tor_node_count = len(self.soup_non_tor.find_all(True))
 
-        self.soup_n = BeautifulSoup(non_tor_html_data, "html.parser")
+        # Count the number of nodes returned by the proxies
+        proxy_node_count = []
+        proxy_node_detail = []
+        self.captcha_proxy_val = []
 
-        count_n = 0
-        for tag in self.soup_n.find_all(True):
-            node_non_tor.append(tag)
-            count_n += 1
+        for proxy_html in proxy_countries_html_data:
+            node_proxy = []
+            soup_proxy = BeautifulSoup(proxy_html, "html.parser")
+            # Check for captcha here itself, thereby reducing the space of the list ass well as execution later
+            captcha_proxy = str(soup_proxy).lower()
+            # Contains captcha or not in forms of 0(No captcha) and 1(Captcha), so that it can be accessed via another class
+            self.captcha_proxy_val.append(int("captcha" in captcha_proxy))
+            for tag in soup_proxy.find_all(True):
+                node_proxy.append(tag)
+            proxy_node_detail.append(node_proxy)
+            proxy_node_count.append(len(node_proxy))
 
-        self.__logger.info("Nodes by tor: %s and non-tor: %s ", count_t, count_n)
+        self.__logger.info(
+            "Nodes by tor: %f, non-tor: %f and proxies: %s",
+            tor_node_count,
+            non_tor_node_count,
+            proxy_node_count,
+        )
         try:
-            dom_score = 100 * ((count_n - count_t) / count_t)
+            dom_score = abs(
+                100 * ((non_tor_node_count - tor_node_count) / tor_node_count)
+            )
         except ZeroDivisionError as e:
             self.__logger.info("Zero Error, check tor Dom: %s", e)
 
         self.__logger.info("DOM Score : %s", dom_score)
 
-        self.soup_t = str(self.soup_t).lower()
-        self.soup_n = str(self.soup_n).lower()
+        self.soup_tor = str(self.soup_tor).lower()
+        self.soup_non_tor = str(self.soup_non_tor).lower()
 
         if self.captcha_checker() is False:
-            if abs(dom_score) > 0:
-                if abs(dom_score) > self.max_k:
-                    #   Random value to check the performance.
-                    #   Might need some more experiments to come back with the correct value
-                    #   or it hasn't been loaded fully (increase loading time)")
+            if dom_score > 0:
+                if dom_score > self.max_threshold_value:
+                    # Random value to check the performance.
+                    # Might need some more experiments to come back with the correct value
                     self.__logger.info("Tor most probably Errors!!")
                     self.dom_analyze_value = 0
-                elif abs(dom_score) < self.min_k:
-                    #   Random value to check the performance.
-                    #   Might need some more experiments to come back with the correct value
-                    #   checks for keywords to help in this case
+                    # Call Consensus lite
+                    self.consensus_lite_dom(
+                        tor_node_count, non_tor_node_count, proxy_node_count
+                    )
+                elif dom_score < self.min_threshold_value:
+                    # Random value to check the performance.
+                    # Might need some more experiments to come back with the correct value
+                    # Checks for keywords to help in this case
                     self.__logger.info("Resembles same")
                     self.dom_analyze_value = 1
                 else:
                     self.__logger.info("Doubtful case!!")
                     self.__logger.info("checking for keywords...")
                     #   checks for keywords to help in this case
-                    res = 0
                     for _ in self.match_list:
-                        if _ in self.soup_t and _ not in self.soup_n:
-                            res = 1
-                    if res == 0:
-                        self.__logger.info("Same!!")
-                        self.dom_analyze_value = 2
-                    else:
-                        self.__logger.info("Tor Blocked : checklist!! ")
-                        self.dom_analyze_value = 3
+                        if _ in self.soup_tor and _ not in self.soup_non_tor:
+                            self.__logger.info("Tor Blocked : checklist!! ")
+                            self.dom_analyze_value = 3
+                        else:
+                            self.__logger.info(
+                                "Survived Checklist but still doubt (Further modules might help)"
+                            )
+                            self.dom_analyze_value = 2
+                    # Call Consensus lite
+                    self.consensus_lite_dom(
+                        tor_node_count, non_tor_node_count, proxy_node_count
+                    )
             else:
-                self.__logger.info("Similar Resemblance")
+                # When DOM is equal
+                self.__logger.info("Equal")
                 self.dom_analyze_value = 4
 
     def status_check(
@@ -230,6 +408,7 @@ class Analyzer:
         tor_http_requests: Dict[str, Any],
         non_tor_html_data: str,
         non_tor_http_requests: Dict[str, Any],
+        proxy_countries_html_data: List[str],
     ) -> None:
 
         """
@@ -243,56 +422,63 @@ class Analyzer:
         :type non_tor_html_data: str
         :param non_tor_http_requests: Non-Tor HAR
         :type non_tor_http_requests: Dict[str, Any]
+        :param proxy_countries_html_data: Html data of all given proxies matching the location of tor nodes.
+        :type proxy_countries_html_data: List[str]
         """
-        tor_H = {}
-        tor_N = {}
+        tor_HAR = {}
+        non_tor_HAR = {}
+        try:
+            for i in range(0, len(tor_http_requests["log"]["entries"])):
+                tor_HAR[
+                    tor_http_requests["log"]["entries"][i]["request"]["url"]
+                ] = tor_http_requests["log"]["entries"][i]["response"]["status"]
+            # pylint: disable=C0206
+            for i in tor_HAR:
+                if tor_HAR[i] != 0 or tor_HAR != "" or tor_HAR is not None:
+                    self.tor_store[i] = tor_HAR[i]  # type: ignore
 
-        for i in range(0, len(tor_http_requests["log"]["entries"])):
-            tor_H[
-                tor_http_requests["log"]["entries"][i]["request"]["url"]
-            ] = tor_http_requests["log"]["entries"][i]["response"]["status"]
+            for i in range(len(non_tor_http_requests["log"]["entries"])):
+                non_tor_HAR[
+                    non_tor_http_requests["log"]["entries"][i]["request"]["url"]
+                ] = non_tor_http_requests["log"]["entries"][i]["response"]["status"]
 
-        # pylint: disable=C0206
-        for i in tor_H:
-            if tor_H[i] != 0 or tor_H != "" or tor_H is not None:
-                self.tor_store[i] = tor_H[i]  # type: ignore
+            # pylint: disable=C0206
+            for i in non_tor_HAR:
+                if non_tor_HAR[i] != 0 or non_tor_HAR != "" or non_tor_HAR is not None:
+                    self.non_store[i] = non_tor_HAR[i]  # type: ignore
 
-        for i in range(len(non_tor_http_requests["log"]["entries"])):
-            tor_N[
-                non_tor_http_requests["log"]["entries"][i]["request"]["url"]
-            ] = non_tor_http_requests["log"]["entries"][i]["response"]["status"]
+            first_url_t = list(self.tor_store.keys())[0]
+            first_status_tor = int(self.tor_store[str(first_url_t)])
 
-        # pylint: disable=C0206
-        for i in tor_N:
-            if tor_N[i] != 0 or tor_N != "" or tor_N is not None:
-                self.non_store[i] = tor_N[i]  # type: ignore
+            # non tor use HARExportTrigger
+            first_url_nt = list(self.non_store.keys())[0]
+            first_status_non_tor = int(self.non_store[str(first_url_nt)])
 
-        first_url_t = list(self.tor_store.keys())[0]
-        first_status_t = self.tor_store[str(first_url_t)]
+            if first_status_tor > 399 and first_status_non_tor < 400:
+                # Error for tag and no error for non tor
+                self.__logger.info("Tor Blocked")
+                self.status_check_value = 0
 
-        # non tor use HARExportTrigger
-        first_url_nt = list(self.non_store.keys())[0]
-        first_status_nt = self.non_store[str(first_url_nt)]
+            elif first_status_tor > 399 and first_status_non_tor > 399:
+                # Both blocked on tor and non-tor
+                self.__logger.info("Site is blocked on tor and non-tor browsers")
+                self.status_check_value = 1
 
-        if int(first_status_t) > 399 and int(first_status_nt) < 400:
-            # Error for tag and no error for non tor
-            self.__logger.info("Tor Blocked")
-            self.status_check_value = 0
-
-        elif int(first_status_t) > 399 and int(first_status_nt) > 399:
-            # Both blocked on tor and non-tor
-            self.__logger.info("Site is blocked on tor and non-tor browsers")
-            self.status_check_value = 1
-
-        elif int(first_status_t) < 300 and int(first_status_nt) > 399:
-            # When tor isn't blocked and non-tor is blocked
-            self.__logger.info("Tor is not blocked, rather non-tor browser is blocked")
-            self.status_check_value = 2
-        else:
-            if int(first_status_t) > 299 and int(first_status_t) < 400:
-                # Chek if tor returns error pages or warning or captchas due to reload
-                self.dom_analyze(tor_html_data, non_tor_html_data)
-
-            elif int(first_status_t) < 300 and int(first_status_nt) < 300:
-                # When both tor and non tor returns no errors
-                self.dom_analyze(tor_html_data, non_tor_html_data)
+            elif first_status_tor < 300 and first_status_non_tor > 399:
+                # When tor isn't blocked and non-tor is blocked
+                self.__logger.info(
+                    "Tor is not blocked, rather non-tor browser is blocked"
+                )
+                self.status_check_value = 2
+            else:
+                if (400 > first_status_tor > 299) or (
+                    first_status_tor < 300 and first_status_non_tor < 300
+                ):
+                    # Check if tor returns error pages or warning or captchas due to reload
+                    self.dom_analyze(
+                        tor_html_data, non_tor_html_data, proxy_countries_html_data
+                    )
+        except TypeError:
+            self.__logger.debug(
+                "Check for the HARExport. Might have actually returned nothing"
+            )
