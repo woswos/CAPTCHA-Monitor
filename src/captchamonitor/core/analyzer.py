@@ -108,12 +108,13 @@ class Analyzer:
                 # Loads JSON
                 HAR_json_tor = json.loads(tor.http_requests)
                 HAR_json_non_tor = json.loads(non_tor.http_requests)
-
                 self.captcha_checker_value = None
                 self.dom_analyze_value = None
                 self.status_check_value = None
                 self.consensus_lite_dom_value = None
                 self.consensus_lite_captcha_value = None
+                self.tor_store = {}
+                self.non_store = {}
 
                 self.status_check(
                     tor.html_data,
@@ -123,15 +124,6 @@ class Analyzer:
                     proxy_countries_html_data,
                 )
 
-                # Non tor from the FetchCompleted
-                analyzer_val_nt = AnalyzeCompleted(
-                    captcha_checker=self.captcha_checker_value,
-                    status_check=self.status_check_value,
-                    dom_analyze=self.dom_analyze_value,
-                    consensus_lite_dom=self.consensus_lite_dom_value,
-                    consensus_lite_captcha=self.consensus_lite_captcha_value,
-                    fetch_completed_id=non_tor.id,
-                )
                 # Tor from the FetchCompleted
                 analyzer_val_t = AnalyzeCompleted(
                     captcha_checker=self.captcha_checker_value,
@@ -141,7 +133,7 @@ class Analyzer:
                     consensus_lite_captcha=self.consensus_lite_captcha_value,
                     fetch_completed_id=tor.id,
                 )
-                self.__db_session.add(analyzer_val_nt)
+
                 self.__db_session.add(analyzer_val_t)
                 self.__db_session.commit()
 
@@ -435,7 +427,10 @@ class Analyzer:
             # pylint: disable=C0206
             for i in tor_HAR:
                 if tor_HAR[i] != 0 or tor_HAR != "" or tor_HAR is not None:
+                    if 300 <= tor_HAR[i] < 400:
+                        continue
                     self.tor_store[i] = tor_HAR[i]  # type: ignore
+                    break
 
             for i in range(len(non_tor_http_requests["log"]["entries"])):
                 non_tor_HAR[
@@ -445,7 +440,10 @@ class Analyzer:
             # pylint: disable=C0206
             for i in non_tor_HAR:
                 if non_tor_HAR[i] != 0 or non_tor_HAR != "" or non_tor_HAR is not None:
+                    if 300 <= non_tor_HAR[i] < 400:
+                        continue
                     self.non_store[i] = non_tor_HAR[i]  # type: ignore
+                    break
 
             first_url_t = list(self.tor_store.keys())[0]
             first_status_tor = int(self.tor_store[str(first_url_t)])
@@ -453,6 +451,12 @@ class Analyzer:
             # non tor use HARExportTrigger
             first_url_nt = list(self.non_store.keys())[0]
             first_status_non_tor = int(self.non_store[str(first_url_nt)])
+
+            self.__logger.info(
+                "Tor status: %d and Nontor status: %d",
+                first_status_tor,
+                first_status_non_tor,
+            )
 
             if first_status_tor > 399 and first_status_non_tor < 400:
                 # Error for tag and no error for non tor
@@ -481,4 +485,8 @@ class Analyzer:
         except TypeError:
             self.__logger.debug(
                 "Check for the HARExport. Might have actually returned nothing"
+            )
+        except IndexError:
+            self.__logger.debug(
+                "Check for the HARExport. Might have no entries and is out of indexes"
             )

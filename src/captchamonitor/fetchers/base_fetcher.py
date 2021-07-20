@@ -329,11 +329,18 @@ class BaseFetcher:
                     if (document.documentElement.innerHTML.includes(arr[i])) {
                         s = (arr[i]);
                         path = "//*[contains(., '" + s + "')]";
+                        console.log(path);
                         x = document.evaluate(path, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-                        for (var i = 0; i < x.snapshotLength; i++) x.snapshotItem(i).click();
+                        for (var j = 0; j < x.snapshotLength; j++) {
+                            try {
+                                x.snapshotItem(j).click();
+                            } catch (err) {
+                                console.log(err)
+                            }
+                        }
                     }
                 }
-              """
+                """
         )
 
         # Get a copy of the URL
