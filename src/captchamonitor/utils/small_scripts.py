@@ -4,13 +4,13 @@ import json
 import pickle
 import importlib
 import traceback
-from typing import Any, Tuple
+from typing import Any, List, Tuple, Union, Optional
 
 import docker
-import requests
 from sqlalchemy.orm import sessionmaker
 
 from captchamonitor.utils.config import Config
+from captchamonitor.fetchers.firefox_browser import FirefoxBrowser
 
 # Deep copies objects
 deep_copy = lambda obj: pickle.loads(pickle.dumps(obj))
@@ -48,19 +48,60 @@ def node_id() -> int:
     return id_value
 
 
-def get_random_http_proxy(country: str = None) -> Tuple[str, int]:
+def get_random_http_proxy(
+    config: Config,
+    tor_proxy: Tuple[str, int],
+    country: Optional[str] = None,
+    multiple: bool = False,
+) -> Union[Tuple[str, int], List[Tuple[str, int]]]:
     """
-    Queries pubproxy.com and returns a random HTTP proxy that supports HTTPS
+    Queries pubproxy.com and returns HTTP proxy(ies) that support(s) HTTPS
 
-    :param country: Country Code, if nothing is given, still the api will fetch a ip and proxy
-    :type country: str
-    :return: A random HTTP proxy host and port
-    :rtype: Tuple[str, int]
+    :param config: The config class instance that contains global configuration values
+    :type config: Config
+    :param tor_proxy: The host and port to the Tor socks proxy
+    :type tor_proxy: Tuple[str, int]
+    :param country: 2 letter (for ex. US) country code for proxy location, defaults to None
+    :type country: Optional[str], optional
+    :param multiple: Should I return multiple proxies?, defaults to False
+    :type multiple: bool
+    :return: The proxy host and port
+    :rtype: Union[Tuple[str, int], List[Tuple[str, int]]]
     """
-    api_url = f"http://pubproxy.com/api/proxy?https=true&last_check=5&speed=10&type=http&country={country}"
-    result = requests.get(api_url).json()
-    proxy = result["data"][0]
-    return (str(proxy["ip"]), int(proxy["port"]))
+    api_url = "http://pubproxy.com/api/proxy?https=true&last_check=5&speed=10&type=http"
+
+    # Add specified options
+    if country is not None:
+        api_url += f"&country={country}"
+    if multiple:
+        api_url += "&limit=5"
+
+    # Fetch the list
+    firefox_browser = FirefoxBrowser(
+        config=config,
+        url=f"view-source:{api_url}",
+        proxy=tor_proxy,
+        use_proxy_type="tor",
+        export_har=False,
+    )
+
+    firefox_browser.setup()
+    firefox_browser.connect()
+    firefox_browser.fetch()
+    result = firefox_browser.driver.find_element_by_tag_name("pre").text
+    firefox_browser.close()
+
+    # Convert to JSON
+    result = json.loads(result)
+
+    # Create list of tuples
+    result_tuple_list = [
+        (str(proxy["ip"]), int(proxy["port"])) for proxy in result["data"]
+    ]
+
+    if multiple:
+        return result_tuple_list
+    return result_tuple_list[0]
 
 
 def get_traceback_information() -> str:
