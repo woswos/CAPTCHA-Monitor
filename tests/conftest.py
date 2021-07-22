@@ -1,4 +1,4 @@
-# pylint: disable=C0115,C0116,W0212
+# pylint: disable=C0115,C0116,W0212,W0621
 
 import configparser
 
@@ -79,9 +79,14 @@ def tor_proxy():
 
 
 @pytest.fixture(scope="session")
-def http_proxy():
-    proxy = get_random_http_proxy()
-    return proxy
+def http_proxy(request, config, tor_proxy):
+    if hasattr(request, "param"):
+        country = request.param.get("country", None)
+        multiple = request.param.get("multiple", False)
+        return get_random_http_proxy(
+            config=config, tor_proxy=tor_proxy, country=country, multiple=multiple
+        )
+    return get_random_http_proxy(config=config, tor_proxy=tor_proxy)
 
 
 @pytest.fixture(scope="session")
