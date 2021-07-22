@@ -29,6 +29,7 @@ class BaseFetcher:
         page_timeout: int = 30,
         script_timeout: int = 30,
         url_change_timeout: int = 30,
+        export_har: bool = True,
         options: Optional[dict] = None,
     ) -> None:
         """
@@ -48,6 +49,8 @@ class BaseFetcher:
         :type script_timeout: int
         :param url_change_timeout: Maximum time allowed while waiting for driver URL to change, defaults to 30
         :type url_change_timeout: int
+        :param export_har: Should I record and export the HAR file?, defaults to True
+        :type export_har: bool
         :param options: Dictionary of options to pass to the fetcher, defaults to None
         :type options: Optional[dict], optional
         :raises MissingProxy: If use_proxy_type is not None but no proxy provided
@@ -58,6 +61,7 @@ class BaseFetcher:
         self.page_timeout: int = page_timeout
         self.script_timeout: int = script_timeout
         self.url_change_timeout: int = url_change_timeout
+        self.export_har: bool = export_har
         self.options: Optional[dict] = options
         self.gdpr_remove: bool = False
         self.gdpr_wait_for_url_change: bool = False
@@ -119,8 +123,9 @@ class BaseFetcher:
             "asset_har_export_extension_crx"
         ]
 
-        self._check_extension_validity(self._har_export_extension_xpi, ".xpi")
-        self._check_extension_validity(self._har_export_extension_crx, ".crx")
+        if self.export_har:
+            self._check_extension_validity(self._har_export_extension_xpi, ".xpi")
+            self._check_extension_validity(self._har_export_extension_crx, ".crx")
 
     @staticmethod
     def _get_selenium_executor_url(container_host: str, container_port: str) -> str:
@@ -232,25 +237,31 @@ class BaseFetcher:
         )
 
         # Install the extensions
-        self._install_har_export_extension_xpi(ff_profile.extensionsDir)
+        if self.export_har:
+            self._install_har_export_extension_xpi(ff_profile.extensionsDir)
 
-        # Enable the network monitoring tools to record HAR
-        ff_profile.set_preference("devtools.netmonitor.enabled", True)
-        ff_profile.set_preference("devtools.toolbox.selectedTool", "netmonitor")
-        ff_profile.set_preference("devtools.netmonitor.har.compress", False)
-        ff_profile.set_preference(
-            "devtools.netmonitor.har.includeResponseBodies", False
-        )
-        ff_profile.set_preference("devtools.netmonitor.har.jsonp", False)
-        ff_profile.set_preference("devtools.netmonitor.har.jsonpCallback", False)
-        ff_profile.set_preference("devtools.netmonitor.har.forceExport", False)
-        ff_profile.set_preference(
-            "devtools.netmonitor.har.enableAutoExportToFile", False
-        )
-        ff_profile.set_preference("devtools.netmonitor.har.pageLoadedTimeout", "2500")
+            # Enable the network monitoring tools to record HAR
+            ff_profile.set_preference("devtools.netmonitor.enabled", True)
+            ff_profile.set_preference("devtools.toolbox.selectedTool", "netmonitor")
+            ff_profile.set_preference("devtools.netmonitor.har.compress", False)
+            ff_profile.set_preference(
+                "devtools.netmonitor.har.includeResponseBodies", False
+            )
+            ff_profile.set_preference("devtools.netmonitor.har.jsonp", False)
+            ff_profile.set_preference("devtools.netmonitor.har.jsonpCallback", False)
+            ff_profile.set_preference("devtools.netmonitor.har.forceExport", False)
+            ff_profile.set_preference(
+                "devtools.netmonitor.har.enableAutoExportToFile", False
+            )
+            ff_profile.set_preference(
+                "devtools.netmonitor.har.pageLoadedTimeout", "2500"
+            )
 
         # Stop updates
         ff_profile.set_preference("app.update.enabled", False)
+
+        # Disable JSON view page
+        ff_profile.set_preference("devtools.jsonview.enabled", False)
 
         # Set connections to Tor if we need to use Tor
         if self.use_proxy_type == "tor":
@@ -278,7 +289,9 @@ class BaseFetcher:
         self._desired_capabilities = webdriver.DesiredCapabilities.FIREFOX.copy()
         self._selenium_options = webdriver.FirefoxOptions()
         self._selenium_options.profile = ff_profile
-        self._selenium_options.add_argument("--devtools")
+
+        if self.export_har:
+            self._selenium_options.add_argument("--devtools")
 
     def _setup_common_chromium_based_fetcher(self) -> None:
         """
@@ -292,10 +305,11 @@ class BaseFetcher:
         self._selenium_options = webdriver.ChromeOptions()
 
         # Install the extensions
-        self._install_har_export_extension_crx(self._selenium_options)
+        if self.export_har:
+            self._install_har_export_extension_crx(self._selenium_options)
 
-        # Enable the network monitoring tools to record HAR
-        self._selenium_options.add_argument("--auto-open-devtools-for-tabs")
+            # Enable the network monitoring tools to record HAR
+            self._selenium_options.add_argument("--auto-open-devtools-for-tabs")
 
         # Set connections to Tor if we need to use Tor
         if self.use_proxy_type == "tor":
@@ -370,13 +384,15 @@ class BaseFetcher:
         self.page_source = self.driver.page_source
         self.page_cookies = self.driver.get_cookies()
         self.page_title = self.driver.title
-        har_dict = self.driver.execute_async_script(
-            """
-            var callback = arguments[arguments.length - 1];
-            HAR.triggerExport().then((harLog) => { callback(harLog) });
-            """
-        )
-        self.page_har = json.dumps({"log": har_dict})
+
+        if self.export_har:
+            har_dict = self.driver.execute_async_script(
+                """
+                var callback = arguments[arguments.length - 1];
+                HAR.triggerExport().then((harLog) => { callback(harLog) });
+                """
+            )
+            self.page_har = json.dumps({"log": har_dict})
 
     def get_selenium_logs(self) -> dict:
         """
