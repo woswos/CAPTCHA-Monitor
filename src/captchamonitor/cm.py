@@ -3,6 +3,8 @@ import time
 import logging
 from typing import Optional
 
+from sqlalchemy.exc import IntegrityError
+
 from captchamonitor.core.worker import Worker
 from captchamonitor.utils.config import Config
 from captchamonitor.utils.models import MetaData
@@ -68,8 +70,12 @@ class CaptchaMonitor:
         # Obtain the session from database module
         self.__db_session = self.__database.session()
 
-        if self.__db_session.query(MetaData).count == 0:
-            insert_fixtures(self.__db_session, self.__config, "metadata.json")
+        try:
+            if self.__db_session.query(MetaData).count == 0:
+                insert_fixtures(self.__db_session, self.__config, "metadata.json")
+        except IntegrityError:
+            # We can skip if we are inserting the same values again by mistake
+            pass
 
     def update_domains(self) -> None:
         """
