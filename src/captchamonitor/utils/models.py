@@ -108,11 +108,11 @@ class Proxy(BaseModel):
     # fmt: off
     host = Column(String, nullable=False)                    # Proxy host
     port = Column(Integer, nullable=False)                   # Proxy port
-    country = Column(String, nullable=False)                 # Proxy Country
+    country = Column(String, nullable=False)                 # ISO 3166 alpha-2 country code
     google_pass = Column(Boolean)                            # True or False based on whether the Google passes on the proxy
-    anonymity = Column(String, nullable=False)               # Describes the anonymity of a proxy
-    incoming_ip_different_from_outgoing_ip = Column(Boolean) # True or False based on whether the proxy has incoming ip different from outgoing ip
-    ssl = Column(Boolean, nullable=False)                    # True or False based on whether the proxy supports ssl or not
+    anonymity = Column(String, nullable=False)               # Describes the anonymity of the proxy
+    incoming_ip_different_from_outgoing_ip = Column(Boolean) # True or False based on whether the proxy has incoming IP different from outgoing IP
+    ssl = Column(Boolean, nullable=False)                    # True or False based on whether the proxy supports SSL or not
     # fmt: on
 
 
@@ -124,11 +124,11 @@ class Fetcher(BaseModel):
     __tablename__ = "fetcher"
 
     # fmt: off
-    method = Column(String, nullable=False)    # Name of the fetchers coded (Tor Browser, Firefox, Chromium, etc.)
-    uses_proxy_type = Column(String)           # Defines what kind of proxy this fetcher uses: tor, http, or None
-    version = Column(String, nullable=False)   # Version of the tool
-    options = Column(JSON)                     # Options, if there is any
-    comment = Column(String)                   # Comments, if there is any
+    method = Column(String, nullable=False)  # Name of the fetchers coded (Tor Browser, Firefox, Chromium, etc.)
+    uses_proxy_type = Column(String)         # Defines what kind of proxy this fetcher uses: tor, http, or None
+    version = Column(String, nullable=False) # Version of the tool
+    options = Column(JSON)                   # Options, if there is any
+    comment = Column(String)                 # Comments, if there is any
     # fmt: on
 
 
@@ -241,11 +241,11 @@ class AnalyzeCompleted(BaseModel):
         return Column(Integer, ForeignKey("fetch_completed.id"), nullable=False)
 
     # fmt: off
-    captcha_checker = Column(Integer)           # Checks if the website contains captcha or not
-    dom_analyze = Column(Integer)               # Analyzes the DOM structure to find out if the website appears to be same or different
-    status_check = Column(Integer)              # Checks for the HTTP statuses received by the websites on different clients
-    consensus_lite_dom = Column(Integer)        # Analyzes the proxy lists to produce the Consensus Lite Dom
-    consensus_lite_captcha = Column(Integer)    # Analyzes the proxy lists to produce the Consensus Lite Captcha and check for captchas
+    captcha_checker = Column(Integer)        # Checks if the website contains CAPTCHA or not
+    dom_analyze = Column(Integer)            # Analyzes the DOM structure to find out if the website appears to be same or different
+    status_check = Column(Integer)           # Checks for the HTTP statuses received by the websites on different clients
+    consensus_lite_dom = Column(Integer)     # Analyzes the proxy lists to produce the Consensus Lite DOM
+    consensus_lite_captcha = Column(Integer) # Analyzes the proxy lists to produce the Consensus Lite CAPTCHA and check for CAPTCHAs
     # fmt: on
 
     # References to the foreign keys, gives access to these tables
