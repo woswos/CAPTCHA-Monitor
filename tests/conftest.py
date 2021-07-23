@@ -203,7 +203,7 @@ def tor_proxy():
     tor_launcher.close()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def http_proxy(request, tor_proxy):
     """
     Find and return random HTTP proxies
