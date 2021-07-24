@@ -17,6 +17,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      nginx:
+        condition: service_healthy
       tor-browser-container:
         condition: service_healthy
       firefox-browser-container:
@@ -54,7 +56,7 @@ services:
       - -m
       - captchamonitor
       - --analyzer
-      
+
   cm-updater:
     <<: *captchamonitor_base_service
     restart: always
@@ -63,6 +65,15 @@ services:
       - -m
       - captchamonitor
       - --updater
+
+  cm-dashboard:
+    <<: *captchamonitor_base_service
+    restart: always
+    entrypoint:
+      - python
+      - -m
+      - captchamonitor
+      - --dashboard
 
   postgres:
     <<: *default-logging-options
@@ -82,6 +93,19 @@ services:
       timeout: 5s
       retries: 5
 
+  nginx:
+    <<: *default-logging-options
+    image: nginx
+    ports:
+      - "5000:80"
+    volumes:
+      - ./src/captchamonitor/dashboard/www:/usr/share/nginx/html:ro
+    healthcheck:
+      test: ["CMD", "service", "nginx", "status"]
+      interval: 60s
+      timeout: 30s
+      retries: 5
+ 
   tor-container:
     <<: *default-logging-options
     image: captchamonitor-tor-container:latest
@@ -92,6 +116,11 @@ services:
       # Basically do nothing on purpose, this container will be created and run
       # as needed by the main code
       - /bin/sh
+    healthcheck:
+      test: ["CMD", "service", "tor", "status"]
+      interval: 60s
+      timeout: 30s
+      retries: 5
 
   tor-browser-container:
     <<: *default-logging-options
@@ -181,7 +210,7 @@ services:
       interval: 15s
       timeout: 30s
       retries: 5
-      
+ 
 networks:
   captchamonitor_network:
     driver: bridge

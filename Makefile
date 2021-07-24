@@ -10,7 +10,7 @@ build:
 
 up:
 	@echo "\e[93m>> Running all of the containers\e[0m"
-	docker-compose up -d --scale cm-worker=3 --scale cm-updater=1 --scale cm-analyzer=1
+	docker-compose up -d --scale cm-worker=3 --scale cm-updater=1 --scale cm-analyzer=1 --scale cm-dashboard=1
 
 down:
 	@echo "\e[93m>> Shutting down the containers\e[0m"
@@ -26,7 +26,7 @@ test: pretest
 
 pretest: down
 	@echo "\e[93m>> Preparing the containers for testing\e[0m"
-	docker-compose up -d --scale cm-worker=0 --scale cm-updater=0 --scale cm-analyzer=0
+	docker-compose up -d --scale cm-worker=0 --scale cm-updater=0 --scale cm-analyzer=0 --scale cm-dashboard=0
 
 singletest:
 ifndef TEST
@@ -39,7 +39,7 @@ endif
 
 logs:
 	@echo "\e[93m>> Printing the logs\e[0m"
-	docker-compose logs --tail=100 captchamonitor cm-worker cm-updater cm-analyzer
+	docker-compose logs --tail=100 captchamonitor cm-worker cm-updater cm-analyzer cm-dashboard
 
 init: check_root
 	@echo "\e[93m>> Creating .env file\e[0m"

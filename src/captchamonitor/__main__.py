@@ -29,6 +29,13 @@ parser.add_argument(
     default=False,
     help="Update the URLs and relays in the database",
 )
+parser.add_argument(
+    "-d",
+    "--dashboard",
+    action="store_true",
+    default=False,
+    help="Update the static dashboard code",
+)
 args = parser.parse_args()
 
 # Get the root logger for the package
@@ -55,6 +62,9 @@ elif args.updater:
     schedule.every().hour.do(cm.update_proxies)
     schedule.every().day.do(cm.update_fetchers)
     schedule.every().hour.do(cm.schedule_jobs)
+elif args.dashboard:
+    logger.info("Intializing CAPTCHA Monitor in dashboard update mode")
+    schedule.every(30).minutes.do(cm.render_dashboard)
 
 # Run all scheduled jobs at the beginning
 schedule.run_all()

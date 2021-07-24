@@ -17,6 +17,7 @@ from captchamonitor.core.update_domains import UpdateDomains
 from captchamonitor.core.update_proxies import UpdateProxies
 from captchamonitor.utils.small_scripts import node_id, hasattr_private, insert_fixtures
 from captchamonitor.core.update_fetchers import UpdateFetchers
+from captchamonitor.dashboard.render_dashboard import RenderDashboard
 
 
 class CaptchaMonitor:
@@ -108,6 +109,16 @@ class CaptchaMonitor:
         self.__logger.info("Started updating list of proxies")
 
         UpdateProxies(config=self.__config, db_session=self.__db_session)
+
+    def render_dashboard(self) -> None:
+        """
+        Renders the dashboard HTML code again
+        """
+        self.__logger.info("Rendering the dashboard")
+
+        RenderDashboard(config=self.__config, db_session=self.__db_session)
+
+        self.__logger.info("Done with rendering the dashboard")
 
     def schedule_jobs(self) -> None:
         """
