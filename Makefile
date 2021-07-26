@@ -73,8 +73,6 @@ check: check_root
 	darglint -s sphinx -v 2 ./src
 	@echo "\n\e[93m>> Running jinja ninja\e[0m"
 	jinja-ninja src/captchamonitor/dashboard/templates
-	@echo "\n\e[93m>> Running jinja lint\e[0m"
-	jinjalint src/captchamonitor/dashboard/templates
 	@echo "\n\e[92m>> Everything seems all right!\e[0m"
 
 check_non_root:
