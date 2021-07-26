@@ -88,22 +88,35 @@ class Analyzer:
                 .filter(FetchCompleted.ref_domain == domain)
             )
 
-            query_by_proxy = (
-                self.__db_session.query(FetchCompleted, Proxy).join(Proxy)
-            ).all()
-            query_by_relay = (
-                self.__db_session.query(FetchCompleted, Relay).join(Relay)
-            ).all()
-
-            proxy_countries_html_data = []
-            for query in query_by_proxy:
-                if query.Proxy.country == query_by_relay[0].Relay.country:
-                    proxy_countries_html_data.append(query.FetchCompleted.html_data)
-
             tor = query_by_domain.filter(Fetcher.uses_proxy_type == "tor").first()
             non_tor = query_by_domain.filter(Fetcher.uses_proxy_type == None).first()
+            proxies = query_by_domain.filter(Fetcher.uses_proxy_type == "http").all()
 
             if tor is not None and non_tor is not None:
+
+                query_by_relay = (
+                    self.__db_session.query(FetchCompleted, Relay).join(Relay)
+                ).first()
+
+                proxy_countries_html_data = []
+                for proxy in proxies:
+                    # Checks for the proxy id and proxy location with the same relay location
+                    query_proxy = (
+                        self.__db_session.query(Proxy).filter(
+                            Proxy.id == proxy.proxy_id,
+                            Proxy.country == query_by_relay.Relay.country,
+                        )
+                    ).first()
+                    # Checks for the fetch_completed table to hold off the html_data of that specific proxy
+                    query_proxy_html = (
+                        self.__db_session.query(FetchCompleted).filter(
+                            # pylint: disable=W0143
+                            FetchCompleted.proxy_id
+                            == query_proxy.id
+                        )
+                    ).first()
+                    # Insets the html_data obtained from the proxies of the same websites
+                    proxy_countries_html_data.append(query_proxy_html.html_data)
 
                 # Loads JSON
                 HAR_json_tor = json.loads(tor.http_requests)
@@ -393,6 +406,7 @@ class Analyzer:
                 # When DOM is equal
                 self.__logger.info("Equal")
                 self.dom_analyze_value = 4
+            proxy_node_count = []
 
     def status_check(
         self,
