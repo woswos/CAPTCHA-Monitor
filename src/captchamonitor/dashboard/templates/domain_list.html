@@ -1,29 +1,29 @@
 {% extends 'base.html' %}
 
-{% block title%}Domain List{% endblock %}
+{% block title %} Domain List {% endblock title %}
 
 {% block body %}
-<h1>Domain List</h1>
-<table class="table">
-    <tr>
-        <th scope="col">Domain Name</th>
-        <th scope="col">HTTP Support</th>
-        <th scope="col">HTTPS Support</th>
-        <th scope="col">FTP Support</th>
-        <th scope="col">IPv4 Support</th>
-        <th scope="col">IPv6 Support</th>
-    </tr>
-    <tbody>
-        {% for domain in data %}
+    <h1>Domain List</h1>
+    <table class="table">
         <tr>
-            <td scope="row">{{domain.domain}}</td>
-            <td>{{domain.supports_http}}</td>
-            <td>{{domain.supports_https}}</td>
-            <td>{{domain.supports_ftp}}</td>
-            <td>{{domain.supports_ipv4}}</td>
-            <td>{{domain.supports_ipv6}}</td>
+            <th scope="col">Domain Name</th>
+            <th scope="col">HTTP Support</th>
+            <th scope="col">HTTPS Support</th>
+            <th scope="col">FTP Support</th>
+            <th scope="col">IPv4 Support</th>
+            <th scope="col">IPv6 Support</th>
         </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% endblock %}
+        <tbody>
+            {% for domain in data %}
+                <tr>
+                    <td scope="row">{{ domain.domain }}</td>
+                    <td>{{ domain.supports_http }}</td>
+                    <td>{{ domain.supports_https }}</td>
+                    <td>{{ domain.supports_ftp }}</td>
+                    <td>{{ domain.supports_ipv4 }}</td>
+                    <td>{{ domain.supports_ipv6 }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock body %}

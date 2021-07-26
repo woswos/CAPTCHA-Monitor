@@ -13,6 +13,8 @@ tests:
     - mypy ./src
     - pylint -v ./src ./tests ./tests/unit ./tests/integration
     - darglint -s sphinx -v 2 ./src
+    - jinja-ninja ./src/captchamonitor/dashboard/templates
+    - jjinjalint ./src/captchamonitor/dashboard/templates
     - pytest -v --cov=src/captchamonitor/ --cov-report term-missing --junitxml=report.xml --ci-mode --ignore=tests/integration
     - coverage xml
   artifacts:
