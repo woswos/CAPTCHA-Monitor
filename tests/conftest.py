@@ -1,15 +1,22 @@
-# pylint: disable=C0115,C0116,W0212,W0621
+# pylint: disable=C0115,C0116,W0212,W0621,W0702
 
+import logging
 import configparser
 
 import pytest
 
 from captchamonitor.utils.config import Config
-from captchamonitor.utils.models import Proxy, Relay, Domain, Fetcher
+from captchamonitor.utils.models import Proxy, Relay, Domain, Fetcher, MetaData
 from captchamonitor.utils.database import Database
 from captchamonitor.utils.tor_launcher import TorLauncher
-from captchamonitor.utils.small_scripts import insert_fixtures, get_random_http_proxy
+from captchamonitor.utils.small_scripts import (
+    insert_fixtures,
+    get_random_http_proxy,
+    get_traceback_information,
+)
 from captchamonitor.core.update_fetchers import UpdateFetchers
+
+logger = logging.getLogger(__name__)
 
 
 def pytest_addoption(parser):
@@ -203,6 +210,43 @@ def tor_proxy():
     tor_launcher.close()
 
 
+@pytest.fixture()
+def tor_proxy_to_relay(request, config):
+    """
+    Request parameter is used for specifying a list of exit relays. Tor Launcher
+    tries to connect to one of the specified relays.
+    """
+    tor_launcher = TorLauncher(config)
+
+    # Connect to a specific relay if any specified
+    # Check https://docs.pytest.org/en/stable/example/parametrize.html#indirect-parametrization
+    assert hasattr(
+        request, "param"
+    ), "You need to provide a 'list' of relay fingerprint(s)"
+    assert isinstance(
+        request.param, list
+    ), "You need to provide the relay fingerprint(s) in a list"
+
+    connected = False
+    for relay in request.param:
+        try:
+            tor_launcher.create_new_circuit_to(relay)
+            connected = True
+            logger.info("Connected to exit relay %s", relay)
+        except:
+            error = get_traceback_information()
+            logger.info("Couldn't connect to exit relay %s:\n %s", relay, error)
+        else:
+            break
+
+    # Make sure that the connection is successfull
+    assert connected is True, "Could not connect to any of the provided exit relays"
+
+    proxy = (tor_launcher.ip_address, tor_launcher.socks_port)
+    yield proxy
+    tor_launcher.close()
+
+
 @pytest.fixture(scope="module")
 def http_proxy(request, tor_proxy):
     """
@@ -222,6 +266,13 @@ def http_proxy(request, tor_proxy):
 def config():
     config_local = Config()
     return config_local
+
+
+@pytest.fixture()
+def gdpr_keywords(db_session):
+    return (
+        db_session.query(MetaData).filter(MetaData.key == "gdpr_keywords").one().value
+    )
 
 
 @pytest.fixture()

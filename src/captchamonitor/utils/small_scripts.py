@@ -7,6 +7,7 @@ import traceback
 from typing import Any, List, Tuple, Union, Optional
 
 import docker
+import requests
 from sqlalchemy.orm import sessionmaker
 
 from captchamonitor.utils.config import Config
@@ -102,6 +103,36 @@ def get_random_http_proxy(
     if multiple:
         return result_tuple_list
     return result_tuple_list[0]
+
+
+def get_random_exit_relay(
+    country: Optional[str] = None, multiple: bool = False
+) -> Union[str, List[str]]:
+    """
+    Queries ONIONOO and returns running exit relay(s)
+
+    :param country: 2 letter (for ex. US) country code for proxy location, defaults to None
+    :type country: Optional[str], optional
+    :param multiple: Should I return multiple proxies?, defaults to False
+    :type multiple: bool
+    :return: The exit relay fingerprint
+    :rtype: Union[str, List[str]]
+    """
+    api_url = "https://onionoo.torproject.org/details?fields=fingerprint,exit_addresses&running=true&type=relay&limit=100"
+
+    # Add specified options
+    if country is not None:
+        api_url += f"&country={country}"
+
+    result = requests.get(api_url).json()
+
+    exit_relay_fingerprints = [
+        relay["fingerprint"] for relay in result["relays"] if "exit_addresses" in relay
+    ]
+
+    if multiple:
+        return exit_relay_fingerprints
+    return exit_relay_fingerprints[0]
 
 
 def get_traceback_information() -> str:

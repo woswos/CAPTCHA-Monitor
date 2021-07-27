@@ -327,16 +327,23 @@ class BaseFetcher:
             }
             self._desired_capabilities["acceptSslCerts"] = True
 
-    def _remove_gdpr_popup(self) -> None:
+    @staticmethod
+    def get_gdpr_popup_remover_js_code(gdpr_keywords: List[str]) -> str:
+        """
+        Produces a JavaScript script that can be used to click GDPR buttons on a web page.
+        The script searches for the given keywords and tries clicking them.
 
-        self._logger.debug("Trying to remove the GDPR popup")
-
+        :param gdpr_keywords: List of GDPR keywords
+        :type gdpr_keywords: List[str]
+        :return: JavaScript code
+        :rtype: str
+        """
         # Produce a similar string using the keywords:
         # ["Souhlasím", "Alle akzeptieren", "Jag godkänner"]
-        keywords_str = '", "'.join(map(str, self.gdpr_keywords))
+        keywords_str = '", "'.join(map(str, gdpr_keywords))
         keywords_array_str = f'arr = ["{keywords_str}"]'
 
-        js_gdpr_remover = (
+        return (
             keywords_array_str
             + """
                 for (var i = 0; i < arr.length; i++) {
@@ -354,29 +361,50 @@ class BaseFetcher:
                         }
                     }
                 }
-                """
+              """
         )
+
+    def _remove_gdpr_popup(self) -> None:
+        """
+        Removes GDPR popups on the page and waits if the URL is supposed to be changing
+        """
+        self._logger.debug("Trying to remove the GDPR popup")
 
         # Get a copy of the URL
         old_url = self.driver.current_url
 
         # Execute the GDPR remover
-        self.driver.execute_script(js_gdpr_remover)
+        self.driver.execute_script(
+            self.get_gdpr_popup_remover_js_code(self.gdpr_keywords)
+        )
 
+        # Wait for URL to change
         if self.gdpr_wait_for_url_change:
             WebDriverWait(self.driver, self.url_change_timeout).until(
-                EC.url_changes(old_url)
+                EC.url_changes(old_url),
+                message="The URL didn't change within the specified timeout duration for GDPR",
             )
             WebDriverWait(self.driver, self.url_change_timeout).until(
                 lambda driver: driver.execute_script("return document.readyState")
-                == "complete"
+                == "complete",
+                message="document.readyState wasn't established within the specified timeout duration for GDPR",
             )
 
     def _fetch_with_selenium_remote_web_driver(self) -> None:
         """
         Fetches the given URL with the remote web driver
         """
+        # Get a copy of the URL
+        old_url = self.driver.current_url
+
+        # Fetch the target URL
         self.driver.get(self.url)
+
+        # Make sure that the page was fetched and the URL was changed
+        WebDriverWait(self.driver, self.url_change_timeout).until(
+            EC.url_changes(old_url),
+            message="The URL didn't change within the specified timeout duration for fetching",
+        )
 
         if self.gdpr_remove:
             self._remove_gdpr_popup()
