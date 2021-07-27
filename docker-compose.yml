@@ -17,8 +17,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      nginx:
-        condition: service_healthy
       tor-browser-container:
         condition: service_healthy
       firefox-browser-container:
@@ -68,6 +66,12 @@ services:
 
   cm-dashboard:
     <<: *captchamonitor_base_service
+    image: captchamonitor-dashboard-container
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nginx:
+        condition: service_healthy
     restart: always
     entrypoint:
       - python

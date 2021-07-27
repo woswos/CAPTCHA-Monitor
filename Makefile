@@ -75,6 +75,10 @@ check: check_root
 	jinja-ninja src/captchamonitor/dashboard/templates
 	@echo "\n\e[92m>> Everything seems all right!\e[0m"
 
+render_dashboard:
+	@echo "\e[93m>> Rendering the dashboard and checking for changes\e[0m"
+	find src/captchamonitor/dashboard/  -not -path "*www*" | entr -s 'echo -e "\e[92m" && echo -n `date +">> Detected a change at %a %d %b %Y %H:%M:%S %Z"` && echo -e " \e[0m" && docker-compose kill cm-dashboard && docker-compose up -d cm-dashboard && echo -e "\e[92m>> Done!\e[0m"'
+
 check_non_root:
 ifeq ($(shell id -u), 0)
 	@echo "\n\e[93m>> Please run this command without sudo\e[0m"
