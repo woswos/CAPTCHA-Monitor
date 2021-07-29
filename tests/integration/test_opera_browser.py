@@ -14,6 +14,7 @@ class TestOperaBrowser:
         opera_browser = OperaBrowser(
             config=config,
             url=self.target_url,
+            explicit_wait_duration=0,
         )
 
         opera_browser.setup()
@@ -30,6 +31,7 @@ class TestOperaBrowser:
             url=self.target_url,
             proxy=tor_proxy,
             use_proxy_type="tor",
+            explicit_wait_duration=0,
         )
 
         opera_browser.setup()
@@ -50,6 +52,7 @@ class TestOperaBrowser:
             url=self.target_url,
             proxy=http_proxy,
             use_proxy_type="http",
+            explicit_wait_duration=0,
         )
 
         opera_browser.setup()

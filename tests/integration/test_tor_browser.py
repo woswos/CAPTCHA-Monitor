@@ -18,6 +18,7 @@ class TestTorBrowser:
             url=self.target_url,
             proxy=tor_proxy,
             use_proxy_type="tor",
+            explicit_wait_duration=0,
             options={"tbb_security_level": "standard"},
         )
 
@@ -45,6 +46,7 @@ class TestTorBrowser:
             url=self.target_url,
             proxy=tor_proxy,
             use_proxy_type="tor",
+            explicit_wait_duration=0,
             options={"tbb_security_level": "standard"},
         )
 
@@ -58,6 +60,7 @@ class TestTorBrowser:
             url=self.target_url,
             proxy=tor_proxy,
             use_proxy_type="tor",
+            explicit_wait_duration=0,
             options={"tbb_security_level": None},
         )
 
@@ -70,6 +73,7 @@ class TestTorBrowser:
             url=self.target_url,
             proxy=tor_proxy,
             use_proxy_type="tor",
+            explicit_wait_duration=0,
         )
 
         # Try to setup the browser
@@ -81,6 +85,7 @@ class TestTorBrowser:
             url=self.target_url,
             proxy=tor_proxy,
             use_proxy_type="tor",
+            explicit_wait_duration=0,
             options={"tbb_security_level": "safer"},
         )
 
@@ -104,6 +109,7 @@ class TestTorBrowser:
             url=self.target_url,
             proxy=tor_proxy,
             use_proxy_type="tor",
+            explicit_wait_duration=0,
             options={"tbb_security_level": "safest"},
         )
 
@@ -125,6 +131,7 @@ class TestTorBrowser:
             url=self.target_url,
             proxy=http_proxy,
             use_proxy_type="http",
+            explicit_wait_duration=0,
         )
 
         tor_browser.setup()

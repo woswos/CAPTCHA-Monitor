@@ -30,6 +30,7 @@ class BaseFetcher:
         page_timeout: int = 30,
         script_timeout: int = 30,
         url_change_timeout: int = 30,
+        explicit_wait_duration: int = 5,
         export_har: bool = True,
         remove_gdpr: bool = True,
         disable_javascript: bool = False,
@@ -47,12 +48,14 @@ class BaseFetcher:
         :type proxy: Optional[Tuple[str, int]], optional
         :param use_proxy_type: Proxy type to use: "tor" or "http", defaults to None
         :type use_proxy_type: Optional[str], optional
-        :param page_timeout: Maximum time allowed for a web page to load, defaults to 30
+        :param page_timeout: Maximum time allowed in seconds for a web page to load, defaults to 30
         :type page_timeout: int
-        :param script_timeout: Maximum time allowed for a JS script to respond, defaults to 30
+        :param script_timeout: Maximum time allowed in seconds for a JS script to respond, defaults to 30
         :type script_timeout: int
-        :param url_change_timeout: Maximum time allowed while waiting for driver URL to change, defaults to 30
+        :param url_change_timeout: Maximum time allowed in seconds while waiting for driver URL to change, defaults to 30
         :type url_change_timeout: int
+        :param explicit_wait_duration: Amount of time in seconds to wait after fetching a page, defaults to 5
+        :type explicit_wait_duration: int
         :param export_har: Should I record and export the HAR file?, defaults to True
         :type export_har: bool
         :param remove_gdpr: Should I click or remove GDPR cookie related popups?, defaults to True
@@ -61,7 +64,7 @@ class BaseFetcher:
         :type disable_javascript: bool
         :param disable_cookies: Disable cookies completely, defaults to False
         :type disable_cookies: bool
-        :param options: Dictionary of options to pass to the fetcher, defaults to None
+        :param options: Dictionary of additional options to pass to the fetcher, defaults to None
         :type options: Optional[dict], optional
         :raises MissingProxy: If use_proxy_type is not None but no proxy provided
         """
@@ -71,6 +74,7 @@ class BaseFetcher:
         self.page_timeout: int = page_timeout
         self.script_timeout: int = script_timeout
         self.url_change_timeout: int = url_change_timeout
+        self.explicit_wait_duration: int = explicit_wait_duration
         self.export_har: bool = export_har
         self.remove_gdpr: bool = remove_gdpr
         self.disable_javascript: bool = disable_javascript
@@ -93,8 +97,6 @@ class BaseFetcher:
         self._selenium_options: Any
         self._selenium_executor_url: str
         self._desired_capabilities: webdriver.DesiredCapabilities
-        self._num_retries_on_fail: int = 3
-        self._delay_in_seconds_between_retries: int = 3
 
         # Check if use_proxy_type is set to True but proxy is not passed
         if (self.use_proxy_type is not None) and (self._proxy is None):
@@ -107,10 +109,21 @@ class BaseFetcher:
 
         # Update default options with the specified ones
         if self.options is not None:
+            self.export_har = self.options.get("export_har", export_har)
+            self.remove_gdpr = self.options.get("remove_gdpr", remove_gdpr)
+
+            self.disable_javascript = self.options.get(
+                "disable_javascript", disable_javascript
+            )
+            self.disable_cookies = self.options.get("disable_cookies", disable_cookies)
+
             self.page_timeout = self.options.get("page_timeout", page_timeout)
             self.script_timeout = self.options.get("script_timeout", script_timeout)
             self.url_change_timeout = self.options.get(
                 "url_change_timeout", url_change_timeout
+            )
+            self.explicit_wait_duration = self.options.get(
+                "explicit_wait_duration", explicit_wait_duration
             )
 
         # Add the extensions only if JavaScript is enabled
@@ -415,8 +428,8 @@ class BaseFetcher:
             message="The URL didn't change within the specified timeout duration for fetching",
         )
 
-        # Wait 5 more seconds to allow finalizing any ongoing background connections
-        time.sleep(5)
+        # Wait more to allow finalizing any ongoing background connections
+        time.sleep(self.explicit_wait_duration)
 
         self.page_source = self.driver.page_source
         self.page_cookies = self.driver.get_cookies()

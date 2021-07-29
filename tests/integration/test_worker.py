@@ -24,6 +24,7 @@ class TestWorker:
                 fetcher_id=firefox_id,
                 domain_id=1,
                 relay_id=1,
+                options={"explicit_wait_duration": 0},
             )
         )
 
@@ -56,6 +57,7 @@ class TestWorker:
                 fetcher_id=firefox_id,
                 domain_id=2,
                 relay_id=1,
+                options={"explicit_wait_duration": 0},
             )
         )
 
@@ -90,6 +92,7 @@ class TestWorker:
                 fetcher_id=firefox_tor_proxy_id,
                 domain_id=1,
                 relay_id=1,
+                options={"explicit_wait_duration": 0},
             )
         )
 
@@ -122,6 +125,7 @@ class TestWorker:
                 fetcher_id=firefox_tor_proxy_id,
                 domain_id=2,
                 relay_id=1,
+                options={"explicit_wait_duration": 0},
             )
         )
 

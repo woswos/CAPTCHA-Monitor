@@ -84,6 +84,7 @@ def get_random_http_proxy(
         proxy=tor_proxy,
         use_proxy_type="tor",
         export_har=False,
+        explicit_wait_duration=0,
     )
 
     firefox_browser.setup()
