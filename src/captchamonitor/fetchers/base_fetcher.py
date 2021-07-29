@@ -1,8 +1,9 @@
 import os
 import json
+import time
 import shutil
 import logging
-from typing import Any, List, Tuple, Union, Optional
+from typing import Any, Tuple, Union, Optional
 
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
@@ -30,6 +31,7 @@ class BaseFetcher:
         script_timeout: int = 30,
         url_change_timeout: int = 30,
         export_har: bool = True,
+        remove_gdpr: bool = True,
         options: Optional[dict] = None,
     ) -> None:
         """
@@ -51,6 +53,8 @@ class BaseFetcher:
         :type url_change_timeout: int
         :param export_har: Should I record and export the HAR file?, defaults to True
         :type export_har: bool
+        :param remove_gdpr: Should I click or remove GDPR cookie related popups?, defaults to True
+        :type remove_gdpr: bool
         :param options: Dictionary of options to pass to the fetcher, defaults to None
         :type options: Optional[dict], optional
         :raises MissingProxy: If use_proxy_type is not None but no proxy provided
@@ -62,10 +66,8 @@ class BaseFetcher:
         self.script_timeout: int = script_timeout
         self.url_change_timeout: int = url_change_timeout
         self.export_har: bool = export_har
+        self.remove_gdpr: bool = remove_gdpr
         self.options: Optional[dict] = options
-        self.gdpr_remove: bool = False
-        self.gdpr_wait_for_url_change: bool = False
-        self.gdpr_keywords: List[str] = ["Accept"]
         self.container_host: str
         self.container_port: str
         self.driver: webdriver.Remote
@@ -97,35 +99,42 @@ class BaseFetcher:
 
         # Update default options with the specified ones
         if self.options is not None:
-            self.gdpr_remove = self.options.get("gdpr_remove", self.gdpr_remove)
-            self.gdpr_wait_for_url_change = self.options.get(
-                "gdpr_wait_for_url_change", self.gdpr_wait_for_url_change
-            )
-            self.gdpr_keywords = self.options.get("gdpr_keywords", self.gdpr_keywords)
             self.page_timeout = self.options.get("page_timeout", page_timeout)
             self.script_timeout = self.options.get("script_timeout", script_timeout)
             self.url_change_timeout = self.options.get(
                 "url_change_timeout", url_change_timeout
             )
 
-        # Get the extension path for xpi
+        # Add the extensions
+        self._add_extensions()
+
+    def _add_extensions(self) -> None:
+        """
+        Locate and verify the extensions for the browsers
+        """
+        # Add "HAR export trigger" extension
         self._har_export_extension_xpi: str = self._config[
             "asset_har_export_extension_xpi"
         ]
-
-        # Get the extension id for xpi
         self._har_export_extension_xpi_id: str = self._config[
             "asset_har_export_extension_xpi_id"
         ]
-
-        # Get the extension path for crx
         self._har_export_extension_crx: str = self._config[
             "asset_har_export_extension_crx"
         ]
 
+        # Add "I don't care about cookies" extension
+        self._gdpr_extension_xpi: str = self._config["asset_gdpr_extension_xpi"]
+        self._gdpr_extension_xpi_id: str = self._config["asset_gdpr_extension_xpi_id"]
+        self._gdpr_extension_crx: str = self._config["asset_gdpr_extension_crx"]
+
         if self.export_har:
             self._check_extension_validity(self._har_export_extension_xpi, ".xpi")
             self._check_extension_validity(self._har_export_extension_crx, ".crx")
+
+        if self.remove_gdpr:
+            self._check_extension_validity(self._gdpr_extension_xpi, ".xpi")
+            self._check_extension_validity(self._gdpr_extension_crx, ".crx")
 
     @staticmethod
     def _get_selenium_executor_url(container_host: str, container_port: str) -> str:
@@ -200,29 +209,39 @@ class BaseFetcher:
             )
             raise HarExportExtensionError
 
-    def _install_har_export_extension_xpi(self, directory: str) -> None:
+    @staticmethod
+    def _install_xpi_extension(
+        extension_xpi: str, extension_id: str, directory: str
+    ) -> None:
         """
-        Installs the HAR Export Trigger extension to Firefox based browsers
+        Installs extensions to Firefox based browsers
 
+        :param extension_xpi: Absolute path to the XPI file for the extension
+        :type extension_xpi: str
+        :param extension_id: ID of the extension (found in manifest.json of the extension)
+        :type extension_id: str
         :param directory: Absolute directory path to install the extension
         :type directory: str
         """
-        addon_path = os.path.join(directory, self._har_export_extension_xpi_id)
+        addon_path = os.path.join(directory, extension_id)
         if not os.path.exists(directory):
             os.makedirs(directory)
             os.chmod(directory, 0o755)
-        shutil.copy(self._har_export_extension_xpi, addon_path + ".xpi")
+        shutil.copy(extension_xpi, addon_path + ".xpi")
 
-    def _install_har_export_extension_crx(
-        self, chrome_options: webdriver.ChromeOptions
+    @staticmethod
+    def _install_crx_extension(
+        extension_crx: str, chrome_options: webdriver.ChromeOptions
     ) -> None:
         """
-        Installs the HAR Export Trigger extension to Chromium based browsers
+        Installs extensions to Chromium based browsers
 
+        :param extension_crx: Absolute path to the CRX file for the extension
+        :type extension_crx: str
         :param chrome_options: webdriver.ChromeOptions from the Selenium driver
         :type chrome_options: webdriver.ChromeOptions
         """
-        chrome_options.add_extension(self._har_export_extension_crx)
+        chrome_options.add_extension(extension_crx)
 
     def _setup_common_firefox_based_fetcher(self, ff_profile: FirefoxProfile) -> None:
         """
@@ -237,8 +256,19 @@ class BaseFetcher:
         )
 
         # Install the extensions
+        if self.remove_gdpr:
+            self._install_xpi_extension(
+                self._gdpr_extension_xpi,
+                self._gdpr_extension_xpi_id,
+                ff_profile.extensionsDir,
+            )
+
         if self.export_har:
-            self._install_har_export_extension_xpi(ff_profile.extensionsDir)
+            self._install_xpi_extension(
+                self._har_export_extension_xpi,
+                self._har_export_extension_xpi_id,
+                ff_profile.extensionsDir,
+            )
 
             # Enable the network monitoring tools to record HAR
             ff_profile.set_preference("devtools.netmonitor.enabled", True)
@@ -305,8 +335,15 @@ class BaseFetcher:
         self._selenium_options = webdriver.ChromeOptions()
 
         # Install the extensions
+        if self.remove_gdpr:
+            self._install_crx_extension(
+                self._gdpr_extension_crx, self._selenium_options
+            )
+
         if self.export_har:
-            self._install_har_export_extension_crx(self._selenium_options)
+            self._install_crx_extension(
+                self._har_export_extension_crx, self._selenium_options
+            )
 
             # Enable the network monitoring tools to record HAR
             self._selenium_options.add_argument("--auto-open-devtools-for-tabs")
@@ -327,69 +364,6 @@ class BaseFetcher:
             }
             self._desired_capabilities["acceptSslCerts"] = True
 
-    @staticmethod
-    def get_gdpr_popup_remover_js_code(gdpr_keywords: List[str]) -> str:
-        """
-        Produces a JavaScript script that can be used to click GDPR buttons on a web page.
-        The script searches for the given keywords and tries clicking them.
-
-        :param gdpr_keywords: List of GDPR keywords
-        :type gdpr_keywords: List[str]
-        :return: JavaScript code
-        :rtype: str
-        """
-        # Produce a similar string using the keywords:
-        # ["Souhlasím", "Alle akzeptieren", "Jag godkänner"]
-        keywords_str = '", "'.join(map(str, gdpr_keywords))
-        keywords_array_str = f'arr = ["{keywords_str}"]'
-
-        return (
-            keywords_array_str
-            + """
-                for (var i = 0; i < arr.length; i++) {
-                    if (document.documentElement.innerHTML.includes(arr[i])) {
-                        s = (arr[i]);
-                        path = "//*[contains(., '" + s + "')]";
-                        console.log(path);
-                        x = document.evaluate(path, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-                        for (var j = 0; j < x.snapshotLength; j++) {
-                            try {
-                                x.snapshotItem(j).click();
-                            } catch (err) {
-                                console.log(err)
-                            }
-                        }
-                    }
-                }
-              """
-        )
-
-    def _remove_gdpr_popup(self) -> None:
-        """
-        Removes GDPR popups on the page and waits if the URL is supposed to be changing
-        """
-        self._logger.debug("Trying to remove the GDPR popup")
-
-        # Get a copy of the URL
-        old_url = self.driver.current_url
-
-        # Execute the GDPR remover
-        self.driver.execute_script(
-            self.get_gdpr_popup_remover_js_code(self.gdpr_keywords)
-        )
-
-        # Wait for URL to change
-        if self.gdpr_wait_for_url_change:
-            WebDriverWait(self.driver, self.url_change_timeout).until(
-                EC.url_changes(old_url),
-                message="The URL didn't change within the specified timeout duration for GDPR",
-            )
-            WebDriverWait(self.driver, self.url_change_timeout).until(
-                lambda driver: driver.execute_script("return document.readyState")
-                == "complete",
-                message="document.readyState wasn't established within the specified timeout duration for GDPR",
-            )
-
     def _fetch_with_selenium_remote_web_driver(self) -> None:
         """
         Fetches the given URL with the remote web driver
@@ -406,8 +380,8 @@ class BaseFetcher:
             message="The URL didn't change within the specified timeout duration for fetching",
         )
 
-        if self.gdpr_remove:
-            self._remove_gdpr_popup()
+        # Wait 5 more seconds to allow finalizing any ongoing background connections
+        time.sleep(5)
 
         self.page_source = self.driver.page_source
         self.page_cookies = self.driver.get_cookies()

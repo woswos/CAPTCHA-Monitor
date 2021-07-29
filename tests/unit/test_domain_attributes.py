@@ -18,7 +18,6 @@ class TestDomainAttributes:
         assert domain_attributes.requires_multiple_requests is True
 
         assert domain_attributes.supports_ftp is False
-        assert domain_attributes.gdpr_wait_for_url_change is False
 
         domain_attributes_2 = DomainAttributes("neverssl.com")
 
@@ -29,7 +28,6 @@ class TestDomainAttributes:
 
         assert domain_attributes_2.supports_ipv6 is False
         assert domain_attributes_2.supports_ftp is False
-        assert domain_attributes_2.gdpr_wait_for_url_change is False
 
     @staticmethod
     def test_non_existing_domain():

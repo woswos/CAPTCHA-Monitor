@@ -30,7 +30,6 @@ class DomainAttributes:
         self.supports_https: bool = self.__protocol_checker("https")
         self.supports_ftp: bool = self.__protocol_checker("ftp")
         self.requires_multiple_requests: bool = self.__multiple_requests_checker()
-        self.gdpr_wait_for_url_change: bool = self.__gdpr_url_change_test()
 
     def __dns_resolver(self, record_type: str) -> bool:
         """
@@ -94,16 +93,3 @@ class DomainAttributes:
         """
         # TODO: Implement the actual functionality
         return True
-
-    @staticmethod
-    def __gdpr_url_change_test() -> bool:
-        """
-        Returns True if the URL changes after clicking the GDPR button.
-
-        Assuming False for now
-
-        :return: Whether URL changes after clicking the GDPR button or not
-        :rtype: bool
-        """
-        # TODO: Implement the actual functionality
-        return False

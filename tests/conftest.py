@@ -6,7 +6,7 @@ import configparser
 import pytest
 
 from captchamonitor.utils.config import Config
-from captchamonitor.utils.models import Proxy, Relay, Domain, Fetcher, MetaData
+from captchamonitor.utils.models import Proxy, Relay, Domain, Fetcher
 from captchamonitor.utils.database import Database
 from captchamonitor.utils.tor_launcher import TorLauncher
 from captchamonitor.utils.small_scripts import (
@@ -257,7 +257,10 @@ def http_proxy(request, tor_proxy):
         country = request.param.get("country", None)
         multiple = request.param.get("multiple", False)
         return get_random_http_proxy(
-            config=config_local, tor_proxy=tor_proxy, country=country, multiple=multiple
+            config=config_local,
+            tor_proxy=tor_proxy,
+            country=country,
+            multiple=multiple,
         )
     return get_random_http_proxy(config=config_local, tor_proxy=tor_proxy)
 
@@ -266,13 +269,6 @@ def http_proxy(request, tor_proxy):
 def config():
     config_local = Config()
     return config_local
-
-
-@pytest.fixture()
-def gdpr_keywords(db_session):
-    return (
-        db_session.query(MetaData).filter(MetaData.key == "gdpr_keywords").one().value
-    )
 
 
 @pytest.fixture()

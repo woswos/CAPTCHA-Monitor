@@ -1,17 +1,12 @@
 import time
 import logging
-from typing import List, Union, Optional
+from typing import Union, Optional
 
 from sqlalchemy import text
 from sqlalchemy.orm import sessionmaker
 
 from captchamonitor.utils.config import Config
-from captchamonitor.utils.models import (
-    MetaData,
-    FetchQueue,
-    FetchFailed,
-    FetchCompleted,
-)
+from captchamonitor.utils.models import FetchQueue, FetchFailed, FetchCompleted
 from captchamonitor.utils.exceptions import FetcherNotFound
 from captchamonitor.utils.tor_launcher import TorLauncher
 from captchamonitor.utils.small_scripts import (
@@ -58,12 +53,6 @@ class Worker:
         self.__worker_id: str = worker_id
         self.__tor_launcher: TorLauncher = TorLauncher(self.__config)
         self.__job_queue_delay: float = float(self.__config["job_queue_delay"])
-        self.__gdpr_keywords: List[str] = (
-            self.__db_session.query(MetaData)
-            .filter(MetaData.key == "gdpr_keywords")
-            .one()
-            .value
-        )
         self.__fetcher: Union[TorBrowser, FirefoxBrowser, ChromeBrowser, OperaBrowser]
 
         # Loop over the jobs
@@ -121,17 +110,6 @@ class Worker:
             # Check if the proxy type is http, if so: add host and port into the proxy tuple
             elif job.ref_fetcher.uses_proxy_type == "http":
                 proxy = (job.ref_proxy.host, job.ref_proxy.port)
-
-            # If we need to use an exit relay and if the exit relay is located
-            # in Europe, enable GDPR removing functionality
-            if job.ref_fetcher.uses_proxy_type == "tor":
-                if job.ref_relay.continent in ("Europe", None):
-                    options_dict.update(
-                        {
-                            "gdpr_remove": True,
-                            "gdpr_keywords": self.__gdpr_keywords,
-                        }
-                    )
 
             # Fetch it using a fetcher
             if job.ref_fetcher.method == TorBrowser.method_name_in_db:
