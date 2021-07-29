@@ -32,6 +32,8 @@ class BaseFetcher:
         url_change_timeout: int = 30,
         export_har: bool = True,
         remove_gdpr: bool = True,
+        disable_javascript: bool = False,
+        disable_cookies: bool = False,
         options: Optional[dict] = None,
     ) -> None:
         """
@@ -55,6 +57,10 @@ class BaseFetcher:
         :type export_har: bool
         :param remove_gdpr: Should I click or remove GDPR cookie related popups?, defaults to True
         :type remove_gdpr: bool
+        :param disable_javascript: Disable JavaScript completely, defaults to False
+        :type disable_javascript: bool
+        :param disable_cookies: Disable cookies completely, defaults to False
+        :type disable_cookies: bool
         :param options: Dictionary of options to pass to the fetcher, defaults to None
         :type options: Optional[dict], optional
         :raises MissingProxy: If use_proxy_type is not None but no proxy provided
@@ -67,6 +73,8 @@ class BaseFetcher:
         self.url_change_timeout: int = url_change_timeout
         self.export_har: bool = export_har
         self.remove_gdpr: bool = remove_gdpr
+        self.disable_javascript: bool = disable_javascript
+        self.disable_cookies: bool = disable_cookies
         self.options: Optional[dict] = options
         self.container_host: str
         self.container_port: str
@@ -105,8 +113,15 @@ class BaseFetcher:
                 "url_change_timeout", url_change_timeout
             )
 
-        # Add the extensions
-        self._add_extensions()
+        # Add the extensions only if JavaScript is enabled
+        if not self.disable_javascript:
+            self._add_extensions()
+        else:
+            self._logger.info(
+                "Extensions rely on JavaScript and disabled the extensions since `disable_javascript` is set to True"
+            )
+            self.export_har = False
+            self.remove_gdpr = False
 
     def _add_extensions(self) -> None:
         """
@@ -312,6 +327,9 @@ class BaseFetcher:
             ff_profile.set_preference("network.proxy.ftp", str(self._proxy_host))
             ff_profile.set_preference("network.proxy.ftp_port", int(self._proxy_port))
 
+        if self.disable_cookies:
+            ff_profile.set_preference("network.cookie.cookieBehavior", 2)
+
         # Apply the preferences
         ff_profile.update_preferences()
 
@@ -319,6 +337,13 @@ class BaseFetcher:
         self._desired_capabilities = webdriver.DesiredCapabilities.FIREFOX.copy()
         self._selenium_options = webdriver.FirefoxOptions()
         self._selenium_options.profile = ff_profile
+
+        if self.disable_javascript:
+            self._selenium_options.preferences.update(
+                {
+                    "javascript.enabled": False,
+                }
+            )
 
         if self.export_har:
             self._selenium_options.add_argument("--devtools")
@@ -363,6 +388,16 @@ class BaseFetcher:
                 "proxyType": "MANUAL",
             }
             self._desired_capabilities["acceptSslCerts"] = True
+
+        prefs = {}
+        if self.disable_javascript:
+            prefs["profile.managed_default_content_settings.javascript"] = 2
+
+        if self.disable_cookies:
+            prefs["profile.managed_default_content_settings.cookies"] = 2
+
+        if len(prefs) > 0:
+            self._selenium_options.add_experimental_option("prefs", prefs)
 
     def _fetch_with_selenium_remote_web_driver(self) -> None:
         """
