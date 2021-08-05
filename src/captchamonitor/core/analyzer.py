@@ -5,12 +5,11 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from bs4 import BeautifulSoup
+from sqlalchemy import func
 from sqlalchemy.orm import sessionmaker
 
 from captchamonitor.utils.config import Config
 from captchamonitor.utils.models import (
-    Proxy,
-    Relay,
     Domain,
     Fetcher,
     MetaData,
@@ -75,6 +74,7 @@ class Analyzer:
             self.process_next_batch_of_domains()
             time.sleep(self.__job_queue_delay)
 
+    # pylint: disable=R0914
     def process_next_batch_of_domains(self) -> None:
         """
         Loop over the domain list and get corresponding website data from the database
@@ -93,30 +93,10 @@ class Analyzer:
             proxies = query_by_domain.filter(Fetcher.uses_proxy_type == "http").all()
 
             if tor is not None and non_tor is not None:
-
-                query_by_relay = (
-                    self.__db_session.query(FetchCompleted, Relay).join(Relay)
-                ).first()
-
                 proxy_countries_html_data = []
                 for proxy in proxies:
-                    # Checks for the proxy id and proxy location with the same relay location
-                    query_proxy = (
-                        self.__db_session.query(Proxy).filter(
-                            Proxy.id == proxy.proxy_id,
-                            Proxy.country == query_by_relay.Relay.country,
-                        )
-                    ).first()
-                    # Checks for the fetch_completed table to hold off the html_data of that specific proxy
-                    query_proxy_html = (
-                        self.__db_session.query(FetchCompleted).filter(
-                            # pylint: disable=W0143
-                            FetchCompleted.proxy_id
-                            == query_proxy.id
-                        )
-                    ).first()
-                    # Insets the html_data obtained from the proxies of the same websites
-                    proxy_countries_html_data.append(query_proxy_html.html_data)
+                    if proxy.url == tor.url:
+                        proxy_countries_html_data.append(proxy.html_data)
 
                 # Loads JSON
                 HAR_json_tor = json.loads(tor.http_requests)
@@ -137,18 +117,27 @@ class Analyzer:
                     proxy_countries_html_data,
                 )
 
-                # Tor from the FetchCompleted
-                analyzer_val_t = AnalyzeCompleted(
-                    captcha_checker=self.captcha_checker_value,
-                    status_check=self.status_check_value,
-                    dom_analyze=self.dom_analyze_value,
-                    consensus_lite_dom=self.consensus_lite_dom_value,
-                    consensus_lite_captcha=self.consensus_lite_captcha_value,
-                    fetch_completed_id=tor.id,
-                )
+                fetch_completed_present = (
+                    self.__db_session.query(
+                        func.count(AnalyzeCompleted.fetch_completed_id)
+                    ).filter(
+                        AnalyzeCompleted.fetch_completed_id  # pylint: disable=W0143
+                        == tor.id
+                    )
+                ).all()
+                if fetch_completed_present[0][0] == 0:
+                    # Tor from the FetchCompleted
+                    analyzer_val_t = AnalyzeCompleted(
+                        captcha_checker=self.captcha_checker_value,
+                        status_check=self.status_check_value,
+                        dom_analyze=self.dom_analyze_value,
+                        consensus_lite_dom=self.consensus_lite_dom_value,
+                        consensus_lite_captcha=self.consensus_lite_captcha_value,
+                        fetch_completed_id=tor.id,
+                    )
 
-                self.__db_session.add(analyzer_val_t)
-                self.__db_session.commit()
+                    self.__db_session.add(analyzer_val_t)
+                    self.__db_session.commit()
 
     def consensus_lite_captcha(self) -> None:
         """
