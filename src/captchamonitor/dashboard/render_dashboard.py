@@ -1,15 +1,62 @@
 import os
+import json
 import shutil
 import logging
-from typing import Any, List, Tuple, Optional
+from typing import Any, Set, Dict, List, Optional
+from collections import defaultdict
 
 import matplotlib.pyplot as plt
 from jinja2 import Environment, FileSystemLoader
-from sqlalchemy import Date, or_, cast
+from sqlalchemy import func
 from sqlalchemy.orm import sessionmaker
 
 from captchamonitor.utils.config import Config
 from captchamonitor.utils.models import Relay, Domain, FetchCompleted, AnalyzeCompleted
+
+
+class Json:
+    """
+    Maps the Data into Json ready format
+    """
+
+    def __init__(self, rid: str, date: str, data: str) -> None:
+        """
+        Structuring in JSON format
+
+        :param rid: Entry for relay_id
+        :type rid: str
+        :param date: Entry for timestamp
+        :type date: str
+        :param data: Entry for the analyzed data
+        :type data: str
+        """
+        self.rid = rid
+        self.date = date
+        self.data = data
+        self.relay()
+
+    def relay(self) -> Any:
+        """
+        Populates Relay with id and results
+        :return: relay part of the JSON
+        """
+        d: Dict[Any, Any] = {}
+        d["id"] = self.rid[0]
+        d["result"] = self.result()
+        return str(d).replace("'", '"')
+
+    def result(self) -> List[Any]:
+        """
+        Populates the inner list of the Json
+        :return: List of results (Date and Data)
+        """
+        list_res = []
+        for i, j in enumerate(self.date):
+            d = {}
+            d["date"] = j
+            d["data"] = self.data[i]
+            list_res.append(d)
+        return list_res
 
 
 class RenderDashboard:
@@ -37,8 +84,14 @@ class RenderDashboard:
         self.__jinja_environment = Environment(
             loader=FileSystemLoader(self.__template_location)
         )
-        self.graph_name: List[str] = []
+        # self.graph_name: List[str] = []
+        self.graph_name: Dict[Any, List] = defaultdict(list)
+        # self.global_fingerprint = []
+        self.global_fingerprint: Set[str] = set()
+        self.image_name: List[str] = []
         self.graph_string: Optional[Any] = []
+
+        self.data_for_graph: Dict[Any, Any] = self.prepare_data_for_graph()
         # Clean the www directory
         self.cleanup_www_folder()
         # Get hold of the docstrings
@@ -48,17 +101,19 @@ class RenderDashboard:
         self.graph_string.append(self.graph_for_tor_none_block.__doc__)
         # Render all pages
         self.render_index()
+        # self.render_dashboard()
         self.render_domain_list()
         # Render graph: blocked websites for Tor
         self.graph_for_tor_block()
         # Render graph: partially blocked websites for Tor
         self.graph_for_tor_partial_block()
-        # Render graph: blocked websites for both Tor and non-Tor nodes
+        # # Render graph: blocked websites for both Tor and non-Tor nodes
         self.graph_for_both_block()
-        # Render graph: accessible websites for Tor
+        # # Render graph: accessible websites for Tor
         self.graph_for_tor_none_block()
-        # Export graph to the website
+        # # Export graph to the website
         self.export_graph()
+        self.render_dashboard()
 
     def __write_to_file(self, filename: str, html_data: str) -> None:
         """
@@ -125,202 +180,292 @@ class RenderDashboard:
 
         self.__write_to_file(filename=filename, html_data=html_data)
 
-    def render_graph(
+    # pylint: disable=R0914
+    def prepare_data_for_graph(self) -> Dict[Any, Any]:
+        """
+        Synthesize Data for different graphs.
+
+        :return: JSON data to generate the graph. Like Scores for y axis, Timestamps for x axis, Total query, Obtained Query, Relay Fingerprint
+        """
+        data_point = (
+            self.__db_session.query(
+                func.count(AnalyzeCompleted.id),
+                func.date(AnalyzeCompleted.created_at),
+                FetchCompleted.relay_id,
+            )
+            .join(
+                # pylint: disable=W0143
+                FetchCompleted,
+                AnalyzeCompleted.fetch_completed_id == FetchCompleted.id,
+            )
+            .group_by(func.date(AnalyzeCompleted.created_at))
+            .group_by(FetchCompleted.relay_id)
+            .order_by(FetchCompleted.relay_id)
+            .order_by(func.date(AnalyzeCompleted.created_at))
+            .all()
+        )
+
+        time: List[str] = []
+        relay_id: List[str] = []
+        uu: Set[Any] = set()
+        relay_data_test: Dict[Any, List] = defaultdict(list)
+
+        for k, y in enumerate(data_point):
+            tt = f"{y[1].year}-{y[1].month}-{y[1].day}"
+            relay_id.append(y[2])
+            if relay_data_test[relay_id[k]] == []:
+                uu = set()
+            uu.add(tt)
+            relay_data_test[relay_id[k]] = list(uu)
+
+        collect: List[Any] = []
+        for key, time in relay_data_test.items():
+            merge_work_data = []
+            fingerprint_set: Set[Any] = set()
+            time_set: Set[Any] = set()
+            fingerprint = (
+                self.__db_session.query(Relay.fingerprint).filter(Relay.id == key).all()
+            )
+            fingerprint = fingerprint[0][0]
+            for time_ in time:
+                work_data: List[Any] = []
+                analyzed_data = (
+                    self.__db_session.query(func.count(AnalyzeCompleted.id))
+                    .join(
+                        # pylint: disable=W0143
+                        FetchCompleted,
+                        AnalyzeCompleted.fetch_completed_id == FetchCompleted.id,
+                    )
+                    .filter(FetchCompleted.relay_id == key)  # pylint: disable=W0143
+                    .filter(func.date(AnalyzeCompleted.created_at) == time_)
+                    .all()
+                )
+                fingerprint_set.add(fingerprint)
+                time_set.add(time_)
+
+                # Test
+                test_data = (
+                    self.__db_session.query(func.count(AnalyzeCompleted.id))
+                    .join(
+                        FetchCompleted,
+                        AnalyzeCompleted.fetch_completed_id  # pylint: disable=W0143
+                        == FetchCompleted.id,
+                    )
+                    .filter(FetchCompleted.relay_id == key)  # pylint: disable=W0143
+                    .filter(func.date(AnalyzeCompleted.created_at) == time_)
+                    .filter(AnalyzeCompleted.status_check == 0)
+                    .all()
+                )
+                tor_block = test_data[0][0]
+                test_data = (
+                    self.__db_session.query(func.count(AnalyzeCompleted.id))
+                    .join(
+                        FetchCompleted,
+                        AnalyzeCompleted.fetch_completed_id  # pylint: disable=W0143
+                        == FetchCompleted.id,
+                    )
+                    .filter(FetchCompleted.relay_id == key)  # pylint: disable=W0143
+                    .filter(func.date(AnalyzeCompleted.created_at) == time_)
+                    .filter(AnalyzeCompleted.status_check == 1)
+                    .all()
+                )
+                all_block = test_data[0][0]
+
+                test_data = (
+                    self.__db_session.query(func.count(AnalyzeCompleted.id))
+                    .join(
+                        FetchCompleted,
+                        AnalyzeCompleted.fetch_completed_id  # pylint: disable=W0143
+                        == FetchCompleted.id,
+                    )
+                    .filter(FetchCompleted.relay_id == key)  # pylint: disable=W0143
+                    .filter(func.date(AnalyzeCompleted.created_at) == time_)
+                    .filter(AnalyzeCompleted.dom_analyze.in_([1, 4]))
+                    .all()
+                )
+                all_work = test_data[0][0]
+
+                test_data = (
+                    self.__db_session.query(func.count(AnalyzeCompleted.id))
+                    .join(
+                        FetchCompleted,
+                        AnalyzeCompleted.fetch_completed_id  # pylint: disable=W0143
+                        == FetchCompleted.id,
+                    )
+                    .filter(FetchCompleted.relay_id == key)  # pylint: disable=W0143
+                    .filter(func.date(AnalyzeCompleted.created_at) == time_)
+                    .filter(AnalyzeCompleted.dom_analyze == 0)
+                    .all()
+                )
+                partial_block = test_data[0][0]
+
+                work_data.append(round(tor_block / analyzed_data[0][0] * 100, 2))
+                work_data.append(round(partial_block / analyzed_data[0][0] * 100, 2))
+                work_data.append(round(all_block / analyzed_data[0][0] * 100, 2))
+                work_data.append(round(all_work / analyzed_data[0][0] * 100, 2))
+                work_data.append(analyzed_data[0][0])
+
+                merge_work_data.append(work_data)
+                print(merge_work_data)
+
+            rr = []
+            rr.append(list(fingerprint_set))
+            rr.append(list(time_set))
+            rr.append(merge_work_data)
+            collect.append(rr)
+
+        concat_json = ""
+        for _ in enumerate(collect):
+            a = Json(rid=_[1][0], date=_[1][1], data=_[1][2])
+            concat_json += f"{(a.relay())},"
+
+        new_string = f'"relay_id" : [{concat_json[:-1]}]'
+        new_string = "{" + new_string + "}"
+
+        self.__logger.debug("JSON data generated: %s", json.loads(new_string))
+        return json.loads(new_string)
+
+    def render_graph_new(
         self,
-        data_for_graph: List[List[Any]],
+        kth: int,
+        fingerprint: str,
+        data_for_graph: Dict[Any, Any],
         ylabel: str,
         title: str,
-        graph_type: str,
+        graph_type: int,
         color: str,
     ) -> None:
         """
-        Renders the graph view.
+        Renders the graph.
 
-        :param data_for_graph: Contains the data for the graph to be generated.Like: Scores for y axis, Timestamps for x axis, Total query, Obtained Query, Relay Fingerprint"
-        :type data_for_graph: List[List[Any]]
-        :param ylabel: Contains the label to be put in y-axis
+        :param kth: Gets the detail of K th Relay_id
+        :type kth: int
+        :param fingerprint: The fingerprint taken into consideration
+        :type fingerprint: str
+        :param data_for_graph: Details of all Relays with different timestamp and the analyzed data
+        :type data_for_graph: (Dict[Any, Any])
+        :param ylabel: ylabel for the Graph
         :type ylabel: str
-        :param title: The Title of the Graph
-        :type title: str
-        :param graph_type: The type of the graph which is generated. Also put to differentiate from other graph names
-        :type graph_type: str
-        :param color: The color of the graph
+        :param title: Title of the Graph
+        :param graph_type: The type of graph one wants to associate the plot with (Block, partial block, all block, none blocked)
+        :type graph_type: int
+        :param color: color for the graph to be generated
         :type color: str
         """
+        time = []
+        data = []
+        websites = 0
+        x = len(data_for_graph["relay_id"][kth]["result"])
+        for i in range(x):
+            # x axis
+            time.append(data_for_graph["relay_id"][kth]["result"][i]["date"])
+            data.append(
+                data_for_graph["relay_id"][kth]["result"][i]["data"][graph_type]
+            )
+            websites += data_for_graph["relay_id"][kth]["result"][i]["data"][4]
+
         fig = plt.figure(figsize=(20, 10))  # pylint: disable=W0612
         plt.ylim(top=100)
-        plt.bar(data_for_graph[1], data_for_graph[0], width=0.25, color=color)
+        plt.bar(time, data, width=0.25, color=color)
         plt.xlabel("Timestamp in days")
 
         plt.ylabel(ylabel)
         plt.title(title)
-        txt_str = f"No of websites that has been evaluated: {data_for_graph[3][2]}"
+        txt_str = f"No of websites that has been evaluated: {websites/x}"
         plt.figtext(0.02, 0.035, txt_str)
-        txt_str = f"total websites: {data_for_graph[2][2]}"
-        plt.figtext(0.02, 0.005, txt_str)
+        plt.rcParams.update({"font.size": 18})
+        plt.rc("xtick", labelsize=26)
+        plt.rc("ytick", labelsize=26)
 
         images_location = os.path.join(
             self.__config["dashboard_location"], "static/images/"
         )
-        plt.savefig(images_location + f"relay_{data_for_graph[-1]}_{graph_type}.png")
-        self.graph_name.append(f"relay_{data_for_graph[-1]}_{graph_type}.png")
-
-    # pylint: disable=R0914
-    def prepare_data_for_graph(self, filters: List[Any]) -> List[List[Any]]:
-        """
-        Synthesize Data for different graphs.
-
-        :param filters: Contains the details of filters according to which the data is filtered
-        :type filters: List[Any]
-        :return: List of data to generate the graph. Like Scores for y axis, Timestamps for x axis, Total query, Obtained Query, Relay Fingerprint
-        """
-        self.__logger.debug("Prepare data for different graphs")
-        analyze_db_data = self.__db_session.query(AnalyzeCompleted).all()
-        timestamp_store = set()
-
-        data_for_graph: List[List[Any]] = []
-        sc = []
-        dt = []
-        total_job_query = []
-        total_query = []
-        time: Tuple[int, str] = (0, "")
-        for _ in analyze_db_data:
-            timestamp_store.add(
-                f"{_.created_at.year}-{_.created_at.month}-{_.created_at.day}"
-            )
-
-        timestamp_list = sorted(list(timestamp_store))
-        self.__logger.info(timestamp_list)
-
-        # Gets hold of all relays
-        relay_db_data = self.__db_session.query(Relay).all()
-
-        for _ in relay_db_data:
-            fetch_relay = (
-                self.__db_session.query(FetchCompleted).filter(
-                    FetchCompleted.relay_id == _.id  # pylint: disable=W0143
-                )
-            ).all()
-
-            fetch_ids = []
-
-            # Relays which are Fetched successfully
-            for y in fetch_relay:
-                fetch_ids.append(y.id)
-
-            relay_fingerprint = _.fingerprint
-
-            for time in enumerate(timestamp_list):
-                total_query_ = (
-                    self.__db_session.query(AnalyzeCompleted)
-                    .filter(
-                        cast(AnalyzeCompleted.created_at, Date)
-                        >= f"{time[1]} 00:00:00",
-                        cast(AnalyzeCompleted.created_at, Date)
-                        <= f"{time[1]} 23:59:59",
-                        AnalyzeCompleted.fetch_completed_id.in_(
-                            fetch_ids
-                        ),  # pylint: disable=E1101
-                    )
-                    .all()
-                )
-                # pylint: disable=E1101
-                job_query = (
-                    self.__db_session.query(AnalyzeCompleted)
-                    .filter(
-                        cast(AnalyzeCompleted.created_at, Date)
-                        >= f"{time[1]} 00:00:00",
-                        cast(AnalyzeCompleted.created_at, Date)
-                        <= f"{time[1]} 23:59:59",
-                        AnalyzeCompleted.fetch_completed_id.in_(fetch_ids),
-                    )
-                    .filter(or_(*filters))
-                    .all()
-                )
-
-                count_total_query = len(total_query_)
-                count_job_query = len(job_query)
-
-                if count_total_query == 0:
-                    break
-                score = count_job_query / count_total_query * 100
-
-                self.__logger.info(score)
-                sc.append(score)
-                dt.append(time[1])
-                total_query.append(count_total_query)
-                total_job_query.append(count_job_query)
-
-        data_for_graph.append(sc)
-        data_for_graph.append(dt)
-        data_for_graph.append(total_query)
-        data_for_graph.append(total_job_query)
-        data_for_graph.append(relay_fingerprint)
-
-        return data_for_graph
+        plt.savefig(images_location + f"relay_{fingerprint}_{graph_type}.png")
+        self.graph_name[fingerprint].append(f"relay_{fingerprint}_{graph_type}.png")
 
     def graph_for_tor_block(self) -> None:
         """
         Basic plot for the percentage of websites blocking the given Tor exit relay.
         """
-        data_for_graph = self.prepare_data_for_graph(
-            filters=[AnalyzeCompleted.status_check == 0]
-        )
-        title = f"Graph for relay ids: Fetches the websites using relay: {data_for_graph[4]}, \n and checks the percentage of blocked websites"
+        title = "Checks the percentage of blocked websites"
         ylabel = "Percentage where Tor is blocked (status_check) (%)"
-        self.__logger.debug(data_for_graph)
-        self.render_graph(
-            data_for_graph, ylabel, title, graph_type="tor_blocked", color="maroon"
-        )
+        length = len(self.data_for_graph["relay_id"])
+        for i in range(0, length):
+            fingerprint = self.data_for_graph["relay_id"][i]["id"]
+            self.global_fingerprint.add(fingerprint)
+            self.__logger.debug("%s [relay: %s ]", title, fingerprint)
+            self.render_graph_new(
+                i,
+                fingerprint,
+                self.data_for_graph,
+                ylabel,
+                title,
+                graph_type=0,
+                color="maroon",
+            )
 
     def graph_for_tor_partial_block(self) -> None:
         """
         Basic graph for the percentage of websites partially blocking tor for the given Tor exit relay.
         """
-        data_for_graph = self.prepare_data_for_graph(
-            filters=[AnalyzeCompleted.dom_analyze == 0]
-        )
-        title = f"Graph for relay ids: Fetches the websites using relay: {data_for_graph[4]}, \n and checks the percentage of websites partially blocking tor nodes"
-        ylabel = "Percentage where Tor partially-blocked percentage (dom_analyze) (%)"
-        self.__logger.debug(data_for_graph)
-        self.render_graph(
-            data_for_graph,
-            ylabel,
-            title,
-            graph_type="partially_blocked",
-            color="orange",
-        )
+        title = "Checks the percentage of websites partially blocking tor nodes"
+        ylabel = "Percentage where Tor partially-blocked percentage\n (dom_analyze) (%)"
+        length = len(self.data_for_graph["relay_id"])
+        for i in range(0, length):
+            fingerprint = self.data_for_graph["relay_id"][i]["id"]
+            self.global_fingerprint.add(fingerprint)
+            self.__logger.debug("%s [relay: %s ]", title, fingerprint)
+            self.render_graph_new(
+                i,
+                fingerprint,
+                self.data_for_graph,
+                ylabel,
+                title,
+                graph_type=1,
+                color="orange",
+            )
 
     def graph_for_both_block(self) -> None:
         """
         Contains the basic graph for the percentage of websites blocking both Tor and Control Nodes
         """
-        data_for_graph = self.prepare_data_for_graph(
-            filters=[AnalyzeCompleted.status_check == 1]
-        )
-        title = f"Graph for relay ids: Fetches the websites using relay: {data_for_graph[4]}, \n and checks the percentage of websites blocking both the control nodes and tor nodes"
-        ylabel = "Percentage where Both control nodes and tor blocked  percentage (status_check) (%)"
-        self.__logger.debug(data_for_graph)
-        self.render_graph(
-            data_for_graph, ylabel, title, graph_type="both_blocked", color="yellow"
-        )
+        title = "Checks the percentage of websites:\n blocking both the control nodes and tor nodes"
+        ylabel = "Percentage of websites: \n Both control nodes & tor are blocked\n (status_check) (%)"
+        length = len(self.data_for_graph["relay_id"])
+        for i in range(0, length):
+            fingerprint = self.data_for_graph["relay_id"][i]["id"]
+            self.global_fingerprint.add(fingerprint)
+            self.__logger.debug("%s [relay: %s ]", title, fingerprint)
+            self.render_graph_new(
+                i,
+                fingerprint,
+                self.data_for_graph,
+                ylabel,
+                title,
+                graph_type=2,
+                color="yellow",
+            )
 
     def graph_for_tor_none_block(self) -> None:
         """
         Contains the basic graph for the percentage of websites that let's Tor exit relay access them.
         """
-        data_for_graph = self.prepare_data_for_graph(
-            filters=[
-                AnalyzeCompleted.dom_analyze == 1,
-                AnalyzeCompleted.dom_analyze == 4,
-            ]
-        )
-        title = f"Graph for relay ids: Fetches the websites using relay: {data_for_graph[4]}, \n and checks the percentage of websites unblocked by Tor"
-        ylabel = "Percentage where Websites are unblocked by Tor (%)"
-        self.__logger.debug(data_for_graph)
-        self.render_graph(
-            data_for_graph, ylabel, title, graph_type="none_blocked", color="green"
-        )
+        title = "Checks the percentage of websites unblocked by Tor"
+        ylabel = "Percentage:\n Websites unblocked by Tor (%)"
+        length = len(self.data_for_graph["relay_id"])
+        for i in range(0, length):
+            fingerprint = self.data_for_graph["relay_id"][i]["id"]
+            self.global_fingerprint.add(fingerprint)
+            self.__logger.debug("%s [relay: %s ]", title, fingerprint)
+            self.render_graph_new(
+                i,
+                fingerprint,
+                self.data_for_graph,
+                ylabel,
+                title,
+                graph_type=3,
+                color="green",
+            )
 
     def export_graph(self, filename: str = "reanalyze.html") -> None:
         """
@@ -329,7 +474,25 @@ class RenderDashboard:
         :param filename: Name of the HTML file to export, defaults to "reanalyze.html"
         :type filename: str
         """
-        template = self.__jinja_environment.get_template("reanalyze.html")
-        html_data = template.render(data=self.graph_name, string=self.graph_string)
+        # create an empty webpage with relay.html
+        template = self.__jinja_environment.get_template(filename)
+
+        for _, i in enumerate(list(self.global_fingerprint)):
+            html_data = template.render(
+                fingerprint=i, data=self.graph_name[i], string=self.graph_string
+            )
+            self.__write_to_file(filename=f"{i}.html", html_data=html_data)
+
+    def render_dashboard(self, filename: str = "dashboard.html") -> None:
+        """
+        Render the index page, which visitors first see
+
+        :param filename: Name of the HTML file to export, defaults to "index.html"
+        :type filename: str
+        """
+        self.__logger.debug("Rendering %s", filename)
+
+        template = self.__jinja_environment.get_template("dashboard.html")
+        html_data = template.render(data=self.data_for_graph)
 
         self.__write_to_file(filename=filename, html_data=html_data)

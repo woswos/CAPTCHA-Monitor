@@ -3,8 +3,11 @@
 {% block title %}CAPTCHA Monitor{% endblock title %}
 
 {% block body %}
-<h2>Graphs for Relay: {{ data[0][6:-17] }}</h2>
+
+<h2>Graphs for Relay: {{ fingerprint }}</h2>
+
 <h1>{% for n in range(data | length) %}</h1>
+
 <div class="container">
     <div class="row">
       <div class="col-md-8">
@@ -15,7 +18,7 @@
   
         <div class="row align-items-center h-100">
           <div class="col">
-            <h4>About Image: {{ loop.index }}</h4>
+            <h4>About Image: {{ n+1 }}</h4>
             <p>{{string[n]}}</p>
           </div>
         </div> 
