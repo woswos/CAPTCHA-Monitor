@@ -19,20 +19,17 @@ class Json:
     Maps the Data into Json ready format
     """
 
-    def __init__(self, rid: str, date: str, data: str) -> None:
+    def __init__(self, rid: str, date_data: dict) -> None:
         """
         Structuring in JSON format
 
         :param rid: Entry for relay_id
         :type rid: str
-        :param date: Entry for timestamp
-        :type date: str
-        :param data: Entry for the analyzed data
-        :type data: str
+        :param date_data: Entry for the analyzed data and dates
+        :type date_data: dict
         """
         self.rid = rid
-        self.date = date
-        self.data = data
+        self.date_data = date_data
         self.relay()
 
     def relay(self) -> Any:
@@ -40,8 +37,8 @@ class Json:
         Populates Relay with id and results
         :return: relay part of the JSON
         """
-        d: Dict[Any, Any] = {}
-        d["id"] = self.rid[0]
+        d: Dict[str, Any] = {}
+        d["id"] = self.rid
         d["result"] = self.result()
         return str(d).replace("'", '"')
 
@@ -51,11 +48,15 @@ class Json:
         :return: List of results (Date and Data)
         """
         list_res = []
-        for i, j in enumerate(self.date):
-            d = {}
-            d["date"] = j
-            d["data"] = self.data[i]
-            list_res.append(d)
+        temp = {}
+        # print(type(self.date_data))
+        for i in self.date_data:
+            # print(i,self.date_data[i])
+            temp["date"] = i
+            temp["data"] = self.date_data[i]
+
+            list_res.append(temp)
+            temp = {}
         return list_res
 
 
@@ -204,30 +205,32 @@ class RenderDashboard:
             .order_by(func.date(AnalyzeCompleted.created_at))
             .all()
         )
+        print("Data point: ", data_point)
 
-        time: List[str] = []
+        time: Any = []
         relay_id: List[str] = []
-        uu: Set[Any] = set()
-        relay_data_test: Dict[Any, List] = defaultdict(list)
+        relay_data_test: Dict[Any, Dict] = defaultdict(dict)
 
         for k, y in enumerate(data_point):
             tt = f"{y[1].year}-{y[1].month}-{y[1].day}"
             relay_id.append(y[2])
-            if relay_data_test[relay_id[k]] == []:
-                uu = set()
-            uu.add(tt)
-            relay_data_test[relay_id[k]] = list(uu)
+            if relay_data_test[relay_id[k]] == {}:
+                uu: Dict[Any, List] = defaultdict(list)
+            uu[tt] = []
+            relay_data_test[relay_id[k]] = dict(uu)
 
-        collect: List[Any] = []
+        print("relay data test: ", dict(relay_data_test))
+
+        fingerprint_set: Set[Any] = set()
+        time_set: Set[Any] = set()
         for key, time in relay_data_test.items():
-            merge_work_data = []
-            fingerprint_set: Set[Any] = set()
-            time_set: Set[Any] = set()
+            print("Time in loop: ", time)
             fingerprint = (
                 self.__db_session.query(Relay.fingerprint).filter(Relay.id == key).all()
             )
             fingerprint = fingerprint[0][0]
-            for time_ in time:
+            for time_ in time.keys():
+                # print("time_ variable: ", time_)
                 work_data: List[Any] = []
                 analyzed_data = (
                     self.__db_session.query(func.count(AnalyzeCompleted.id))
@@ -240,6 +243,7 @@ class RenderDashboard:
                     .filter(func.date(AnalyzeCompleted.created_at) == time_)
                     .all()
                 )
+
                 fingerprint_set.add(fingerprint)
                 time_set.add(time_)
 
@@ -256,6 +260,7 @@ class RenderDashboard:
                     .filter(AnalyzeCompleted.status_check == 0)
                     .all()
                 )
+
                 tor_block = test_data[0][0]
                 test_data = (
                     self.__db_session.query(func.count(AnalyzeCompleted.id))
@@ -269,6 +274,7 @@ class RenderDashboard:
                     .filter(AnalyzeCompleted.status_check == 1)
                     .all()
                 )
+
                 all_block = test_data[0][0]
 
                 test_data = (
@@ -305,24 +311,32 @@ class RenderDashboard:
                 work_data.append(round(all_work / analyzed_data[0][0] * 100, 2))
                 work_data.append(analyzed_data[0][0])
 
-                merge_work_data.append(work_data)
-                print(merge_work_data)
+                relay_data_test[key][time_] = work_data  # pylint: disable=R1733
 
-            rr = []
-            rr.append(list(fingerprint_set))
-            rr.append(list(time_set))
-            rr.append(merge_work_data)
-            collect.append(rr)
+        print("relay data test: ", dict(relay_data_test))
+
+        add = []
+        y = tuple()
+        for i in relay_data_test.keys():
+            fingerprint = (
+                self.__db_session.query(Relay.fingerprint).filter(Relay.id == i).all()
+            )
+            y = (fingerprint[0][0], i)
+            add.append(y)
+
+        print(add)
+        for i in add:
+            relay_data_test[i[0]] = relay_data_test.pop(i[1])
 
         concat_json = ""
-        for _ in enumerate(collect):
-            a = Json(rid=_[1][0], date=_[1][1], data=_[1][2])
+        new_string = ""
+
+        for key in relay_data_test:
+            a = Json(rid=key, date_data=relay_data_test[key])
             concat_json += f"{(a.relay())},"
+            new_string = f'"relay_id" : [{concat_json[:-1]}]'
+            new_string = "{" + new_string + "}"
 
-        new_string = f'"relay_id" : [{concat_json[:-1]}]'
-        new_string = "{" + new_string + "}"
-
-        self.__logger.debug("JSON data generated: %s", json.loads(new_string))
         return json.loads(new_string)
 
     def render_graph_new(
@@ -373,7 +387,7 @@ class RenderDashboard:
         plt.title(title)
         txt_str = f"No of websites that has been evaluated: {websites/x}"
         plt.figtext(0.02, 0.035, txt_str)
-        plt.rcParams.update({"font.size": 18})
+        plt.rcParams.update({"font.size": 20})
         plt.rc("xtick", labelsize=26)
         plt.rc("ytick", labelsize=26)
 
@@ -382,6 +396,7 @@ class RenderDashboard:
         )
         plt.savefig(images_location + f"relay_{fingerprint}_{graph_type}.png")
         self.graph_name[fingerprint].append(f"relay_{fingerprint}_{graph_type}.png")
+        plt.close()
 
     def graph_for_tor_block(self) -> None:
         """

@@ -1,87 +1,96 @@
 <html lang="en">
-    <head>
-      <meta charset="UTF-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <link rel="shortcut icon" href="images/favicon.ico" />
-      <link rel="stylesheet" href="css/bootstrap.min.css" />
-      <link rel="stylesheet" href="css/app.css" />
-      <title></title>
-    </head>
-    ​
-    <body>
-      <div class="container">
-        <h1>Relay</h1>
-        <div id="searchWrapper">
-          <input
-            type="text"
-            name="searchBar"
-            id="searchBar"
-            placeholder="Relay fingerprint"
-            disabled="disabled"
-          />
-  
-          <h6 style="margin-top: 2%;">Please click on the Relay id to get more information regarding individual Relay fingerprints</h6>
-  
-        </div>
-        
-        <div id="charactersList" style="margin-top: 5%">
-          <table class="table">
-            <tbody>
-              <tr>
-                <th scope="col">Relay Fingerprint</th>
-                <th scope="col">Timestamp</th>
-                <th scope="col">Websites Blocking Tor<br />(%)</th>
-                <th scope="col">Websites Partially Blocking Tor<br />(%)</th>
-                <th scope="col">
-                  Websites Blocking both Relay and control Nodes<br />(%)
-                </th>
-                <th scope="col">Websites accessible by Tor<br />(%)</th>
-                <th scope="col">Total number of Websites Checked</th>
-              </tr>
-            </tbody>
-            <tbody id="dynamic">
-            </tbody>
-          </table>
-        </div>
-  
-        ​
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="images/favicon.ico" />
+    <link rel="stylesheet" href="css/bootstrap.min.css" />
+    <link rel="stylesheet" href="css/app.css" />
+    <title></title>
+  </head>
+  ​
+  <body>
+    <div class="container">
+      <h1>Relay</h1>
+      <div id="searchWrapper">
+        <input
+          type="text"
+          name="searchBar"
+          id="searchBar"
+          placeholder="Search Relay fingerprint"
+        />
+
+        <h6 style="margin-top: 2%;">Please click on the Relay id to get more information regarding individual Relay fingerprints</h6>
+
       </div>
-      <script>
-          var json_data = JSON.stringify({{ data|safe }});
-    var obj = JSON.parse(json_data);
-    console.log(obj);
-    
-    function generateTable(table, obj) {
-      obj.relay_id.forEach((relay) => {
-        console.log("ID: ", relay.id);
-        let row = table.insertRow();
-        console.log(row);
-        let idCell = row.insertCell();
-        let a = document.createElement('a'); 
-        let idData = document.createTextNode(relay.id);
-        a.appendChild(idData); 
-        a.href = "/"+relay.id+".html"; 
-        idCell.rowSpan = relay.result.length;
-        idCell.appendChild(a)
-        relay.result.forEach((ele, index) => {
-          console.log("Date: ", ele.date);
-          let newRow = index === 0 ? row : table.insertRow();
-          let dateCell = newRow.insertCell();
-          let dateData = document.createTextNode(ele.date);
-          dateCell.appendChild(dateData)
-          
-          ele.data.forEach((point, index) => {
-            let pointCell = newRow.insertCell()
-            let pointData = document.createTextNode(point)
-            pointCell.appendChild(pointData)
+      
+      <div id="charactersList" style="margin-top: 5%">
+        <table class="table">
+          <tbody>
+            <tr>
+              <th scope="col">Relay Fingerprint</th>
+              <th scope="col">Timestamp</th>
+              <th scope="col">Websites Blocking Tor<br />(%)</th>
+              <th scope="col">Websites Partially Blocking Tor<br />(%)</th>
+              <th scope="col">
+                Websites Blocking both Relay and control Nodes<br />(%)
+              </th>
+              <th scope="col">Websites accessible by Tor<br />(%)</th>
+              <th scope="col">Total number of Websites Checked</th>
+            </tr>
+          </tbody>
+
+          <tbody id="dyanmic">
+          </tbody>
+
+        </table>
+      </div>
+    </div>
+    <script>
+        var json_data = JSON.stringify({{ data|safe }});
+        var obj = JSON.parse(json_data);
+
+        function generateTable(table, obj) {
+          while (table.firstChild) {
+            table.removeChild(table.firstChild);
+          }
+          obj.relay_id.forEach((relay) => {
+            console.log("ID: ", relay.id);
+            let row = table.insertRow();
+            let idCell = row.insertCell();
+            let a = document.createElement('a'); 
+              let idData = document.createTextNode(relay.id);
+              a.appendChild(idData); 
+              a.href = "/"+relay.id+".html"; 
+              idCell.rowSpan = relay.result.length;
+              idCell.appendChild(a)
+            relay.result.forEach((ele, index) => {
+              console.log("Date: ", ele.date);
+              let newRow = index === 0 ? row : table.insertRow();
+              let dateCell = newRow.insertCell();
+              let dateData = document.createTextNode(ele.date);
+              dateCell.appendChild(dateData);
+
+              ele.data.forEach((point, index) => {
+                let pointCell = newRow.insertCell();
+                let pointData = document.createTextNode(point);
+                pointCell.appendChild(pointData);
+              });
+            });
           });
+        }
+
+        var searchBar = document.getElementById("searchBar");
+        var search = "";
+        searchBar.addEventListener("keyup", (e) => {
+          search = e.target.value;
+          let filteredObj = obj.relay_id.filter(index =>index.id.includes(search.toUpperCase()));
+          let newJson = {"relay_id":filteredObj}
+          generateTable(table, newJson);
         });
-      });
-    }
-    
-    let table = document.querySelector("table");
-    generateTable(table, obj);
-      </script>
-    </body>
-  </html>
+
+        let table = document.querySelector(".table > tbody:nth-child(2)");
+        generateTable(table, obj);
   
+    </script>
+  </body>
+</html>
